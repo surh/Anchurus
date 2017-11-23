@@ -67,9 +67,10 @@ def get_sample_dirs(args):
     for f in files:
         path = "".join([args.indir, "/", f])
         if os.path.isdir(path):
-            dirs.append(f)
+            dirs.append(path)
         else:
-            not_dirs.append(f)
+            not_dirs.append(path)
+
     if args.notdirs == 'fail':
         try:
             if len(not_dirs) > 0:
