@@ -16,6 +16,31 @@ import argparse
 import os
 
 
+def check_sample_dir(directory, args):
+    """Takes a directory corresponding to a single sample and checks it"""
+
+    # Define whether passed directory was a sample directory or the
+    # actual output directory.
+    species_dir = ''.join([directory, '/', 'species'])
+    snps_dir = ''.join([directory, '/', 'snps'])
+    if not os.path.isdir(species_dir):
+        species_dir = './'
+    if not os.path.isdir(snps_dir):
+        snps_dir = './'
+
+    # Define which comparisons to make
+    if args.which == 'all':
+        args.which = ['species', 'snps']
+
+    # Check species
+    if 'species' in args.which:
+        check_species_output(species_dir)
+
+    # Check snps
+    if 'snps' in args.which:
+        check_snps_output(snps_dir)
+
+
 def get_sample_dirs(args):
     """Gets list of subdirectories withina directory, and checks that
     there are no non-directory entries"""
