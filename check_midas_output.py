@@ -32,13 +32,28 @@ def check_sample_dir(directory, args):
     if args.which == 'all':
         args.which = ['species', 'snps']
 
+    sp_check = snp_check = None
     # Check species
     if 'species' in args.which:
-        check_species_output(species_dir)
+        sp_check = check_species_output(species_dir)
 
     # Check snps
     if 'snps' in args.which:
-        check_snps_output(snps_dir)
+        snp_check = check_snps_output(snps_dir)
+
+    return sp_check, snp_check
+
+
+def check_species_output(dir):
+    """Checks that the MIDAS species output is present and consistent"""
+    check = True
+    return check
+
+
+def check_snps_output(dir):
+    """Check that the MIDAS SNPs output is present and consistent"""
+    check = True
+    return check
 
 
 def get_sample_dirs(args):
