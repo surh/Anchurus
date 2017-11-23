@@ -23,10 +23,11 @@ def check_sample_dir(directory, args):
     # actual output directory.
     species_dir = ''.join([directory, '/', 'species'])
     snps_dir = ''.join([directory, '/', 'snps'])
-    if not os.path.isdir(species_dir):
-        species_dir = './'
-    if not os.path.isdir(snps_dir):
-        snps_dir = './'
+    # Not sure if the following makes sense
+    # if not os.path.isdir(species_dir):
+    #     species_dir = './'
+    # if not os.path.isdir(snps_dir):
+    #     snps_dir = './'
 
     # Define which comparisons to make
     if args.which == 'all':
@@ -130,4 +131,4 @@ if __name__ == "__main__":
 
     # Check directories
     for d in dirs:
-        check_sample_dir(d,args)
+        checks = check_sample_dir(d, args)
