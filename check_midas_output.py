@@ -30,6 +30,7 @@ def check_sample_dir(directory, args):
         snps_dir = './'
 
     sp_check = snp_check = None
+    sp_msg = snp_msg = None
     # Check species
     if 'species' in args.which:
         print("Check species")
@@ -44,7 +45,7 @@ def check_sample_dir(directory, args):
         snp_check, snp_msg = check_snps_output(snps_dir)
         print("\tSNPs:{}\t{}".format(snp_check, snp_msg))
 
-    return sp_check, snp_check
+    return [sp_check, sp_msg, snp_check, snp_msg]
 
 
 def check_species_output(directory, nspecies):
@@ -266,6 +267,10 @@ if __name__ == "__main__":
     # print(args.dirs)
 
     # Check directories
+    checks = []
     for d in args.dirs:
         print("Processing directoy:\n\t{}".format(d))
-        checks = check_sample_dir(d, args)
+        res = check_sample_dir(d, args)
+        checks.append(res)
+
+    print(checks)
