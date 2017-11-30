@@ -46,6 +46,11 @@ def check_species_output(dir):
     if not os.path.isdir(dir):
         return False
 
+    # If the species profile file does not existt
+    sp_profile = ''.join([d, '/species_profile.txt'])
+    if not os.path.isfile(sp_profile):
+        return False
+
     check = True
     return check
 
