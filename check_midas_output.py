@@ -14,6 +14,7 @@
 
 import argparse
 import os
+import gzip
 
 
 def check_sample_dir(directory, args):
@@ -124,16 +125,42 @@ def check_snps_output(directory):
     if not os.path.isdir(out_dir):
         return False, 'outdir'
     else:
+        # Check number of files matches
         file_list = os.listdir(out_dir)
         # print(len(file_list))
         if len(file_list) != nspecies:
             return False, 'outnum'
 
+        # Check output for every species
         for s in sp_list:
             s_file = ''.join([out_dir, '/', s, '.snps.gz'])
-            print(s_file)
+            # print(s_file)
+            if not os.path.isfile(s_file):
+                return False, 'speciesout'
+            else:
+                if not check_species_output_file(s_file):
+                    return False, 'outsnps'
 
     return True, 'all'
+
+
+def check_species_output_file(f):
+    """Check species output file from MIDAS SNPs"""
+    # print(f)
+    with gzip.open(f, 'r') as fh:
+        header = fh.readline()
+        header = header.decode()
+        header = header.rstrip()
+        # print(header)
+        # print("Hola")
+        exp_header = "\t".join(['ref_id', 'ref_pos', 'ref_allele',
+                                'depth', 'count_a', 'count_c',
+                                'count_g', 'count_t'])
+        check = exp_header == header
+        # print(check)
+    fh.close()
+
+    return check
 
 
 def count_remaining_lines(fh):
