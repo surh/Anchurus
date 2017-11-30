@@ -38,7 +38,7 @@ def check_sample_dir(directory, args):
 
     # Check snps
     if 'snps' in args.which:
-        snp_check = check_snps_output(snps_dir)
+        snp_check, snp_msg = check_snps_output(snps_dir)
 
     return sp_check, snp_check
 
@@ -77,8 +77,8 @@ def check_species_output(directory, nspecies):
 
 def check_snps_output(dir):
     """Check that the MIDAS SNPs output is present and consistent"""
-    check = True
-    return check
+
+    return True, 'all'
 
 
 def get_sample_dirs(args):
