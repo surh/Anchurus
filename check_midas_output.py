@@ -202,11 +202,20 @@ def get_sample_dirs(args):
 
 
 def write_output_file(check, args):
+    print("Writing output file {}".format(args.outfile))
     with open(args.outfile, 'w') as fh:
+        # Write header
+        header = "\t".join(['sample', 'dir',
+                            'sp_check', 'sp_msg',
+                            'snp_check', 'snp_msg'])
+        header = ''.join([header, "\n"])
+        fh.write(header)
         for res in check:
-            sample = os.path.basename(res[1])
-            print(sample)
-            line = "\t".join(res.extend())
+            sample = os.path.basename(res[0])
+            line = [sample]
+            line.extend(res)
+            line = [str(i) for i in line]
+            line = "\t".join(line)
             line = ''.join([line, "\n"])
             fh.write(line)
     fh.close()
