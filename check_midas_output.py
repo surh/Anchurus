@@ -31,7 +31,9 @@ def check_sample_dir(directory, args):
     sp_check = snp_check = None
     # Check species
     if 'species' in args.which:
-        sp_check = check_species_output(species_dir)
+        print("Check species")
+        print("\t{}".format(species_dir))
+        sp_check, sp_msg = check_species_output(species_dir, args.nspecies)
 
     # Check snps
     if 'snps' in args.which:
@@ -40,19 +42,36 @@ def check_sample_dir(directory, args):
     return sp_check, snp_check
 
 
-def check_species_output(dir):
+def check_species_output(directory, nspecies):
     """Checks that the MIDAS species output is present and consistent"""
     # If the directory does not exist
-    if not os.path.isdir(dir):
-        return False
+    if not os.path.isdir(directory):
+        return False, 'speciesdir'
 
     # If the species profile file does not existt
-    sp_profile = ''.join([d, '/species_profile.txt'])
+    sp_profile = ''.join([directory, '/species_profile.txt'])
     if not os.path.isfile(sp_profile):
-        return False
+        return False, 'speciesprof'
 
-    check = True
-    return check
+    # Check file starts correctly and count lines
+    with open(sp_profile) as f:
+        # Check header
+        header = f.readline()
+        header = header.rstrip()
+        exp_header = "\t".join(['species_id', 'count_reads', 'coverage',
+                                'relative_abundance'])
+        if header != exp_header:
+            return False, 'profhead'
+
+        # Count lines
+        nlines = 0
+        for l in f:
+            nlines = nlines + 1
+        if nlines != args.nspecies:
+            return False, 'nspecies'
+    f.close()
+
+    return True, 'all'
 
 
 def check_snps_output(dir):
