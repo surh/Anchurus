@@ -24,14 +24,9 @@ def check_sample_dir(directory, args):
     species_dir = ''.join([directory, '/', 'species'])
     snps_dir = ''.join([directory, '/', 'snps'])
     # Not sure if the following makes sense
-    # if not os.path.isdir(species_dir):
-    #     species_dir = './'
-    # if not os.path.isdir(snps_dir):
-    #     snps_dir = './'
 
-    # Define which comparisons to make
-    if args.which == 'all':
-        args.which = ['species', 'snps']
+    if not os.path.isdir(snps_dir):
+        snps_dir = './'
 
     sp_check = snp_check = None
     # Check species
@@ -47,6 +42,10 @@ def check_sample_dir(directory, args):
 
 def check_species_output(dir):
     """Checks that the MIDAS species output is present and consistent"""
+    # If the directory does not exist
+    if not os.path.isdir(dir):
+        return False
+
     check = True
     return check
 
@@ -111,6 +110,9 @@ def process_arguments():
                                            "non directory entries"),
                         choices=['ignore', 'fail'],
                         default='ignore')
+    parser.add_argument("--nspecies", help=("Number of species in database"),
+                        type=int,
+                        default=5952)
 
     # Still needs output options
     print("Reading arguments")
@@ -134,6 +136,10 @@ def process_arguments():
         print("ERROR: Incorrect type of directory passed")
         raise ValueError
 
+    # Define which comparisons to make
+    if args.which == 'all':
+        args.which = ['species', 'snps']
+
     return args
 
 
@@ -144,4 +150,5 @@ if __name__ == "__main__":
 
     # Check directories
     for d in args.dirs:
+        print("Processing directoy:\n\t{}".format(d))
         checks = check_sample_dir(d, args)
