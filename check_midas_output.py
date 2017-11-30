@@ -34,6 +34,7 @@ def check_sample_dir(directory, args):
         print("Check species")
         print("\t{}".format(species_dir))
         sp_check, sp_msg = check_species_output(species_dir, args.nspecies)
+        print("\tSpecies:{}\t{}".format(sp_check, sp_msg))
 
     # Check snps
     if 'snps' in args.which:
