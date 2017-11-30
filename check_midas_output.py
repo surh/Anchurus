@@ -125,22 +125,23 @@ def process_arguments():
         print("ERROR:Indir ({}) is not a directory".format(args.indir))
         raise
 
+    # Prepare list of directories
+    if args.type == 'multi':
+        args.dirs = get_sample_dirs(args)
+    elif args.type == 'single':
+        args.dirs = [args.indir]
+    else:
+        print("ERROR: Incorrect type of directory passed")
+        raise ValueError
+
     return args
 
 
 if __name__ == "__main__":
     # Arguments
     args = process_arguments()
-
-    # Prepare list of directories
-    if os.type == 'multi':
-        dirs = get_sample_dirs(args)
-    elif os.type == 'single':
-        dirs = [args.indir]
-    else:
-        print("ERROR: Incorrect type of directory passed")
-        raise ValueError
+    # print(args.dirs)
 
     # Check directories
-    for d in dirs:
+    for d in args.dirs:
         checks = check_sample_dir(d, args)
