@@ -38,7 +38,10 @@ def check_sample_dir(directory, args):
 
     # Check snps
     if 'snps' in args.which:
+        print("Check SNPs")
+        print("\t{}".format(snps_dir))
         snp_check, snp_msg = check_snps_output(snps_dir)
+        print("\tSNPs:{}\t{}".format(snp_check, snp_msg))
 
     return sp_check, snp_check
 
@@ -65,9 +68,7 @@ def check_species_output(directory, nspecies):
             return False, 'profhead'
 
         # Count lines
-        nlines = 0
-        for l in f:
-            nlines = nlines + 1
+        nlines = count_remaining_lines(f)
         if nlines != args.nspecies:
             return False, 'nspecies'
     f.close()
@@ -75,10 +76,60 @@ def check_species_output(directory, nspecies):
     return True, 'all'
 
 
-def check_snps_output(dir):
+def check_snps_output(directory):
     """Check that the MIDAS SNPs output is present and consistent"""
+    # If the directory does not exist
+    if not os.path.isdir(directory):
+        return False, 'snpdir'
+
+    # Check and read list of species with SNPs
+    sp_file = ''.join([directory, '/', 'species.txt'])
+    if not os.path.isfile(sp_file):
+        return False, 'specieslist'
+    else:
+        sp_list = []
+        with open(sp_file) as f:
+            for s in f:
+                sp_list.append(s.rstrip())
+        f.close()
+        nspecies = len(sp_list)
+        # print(nspecies)
+        # print(sp_list)
+
+    # Check summary file
+    summary_file = ''.join([directory, '/', 'summary.txt'])
+    if not os.path.isfile(summary_file):
+        return False, 'summaryfile'
+    else:
+        with open(summary_file) as f:
+            # Check header in summary
+            header = f.readline()
+            header = header.rstrip()
+            exp_header = "\t".join(['species_id', 'genome_length',
+                                    'covered_bases', 'fraction_covered',
+                                    'mean_coverage', 'aligned_reads',
+                                    'mapped_reads'])
+            if header != exp_header:
+                return False, 'summaryhead'
+
+            # Make sure number of species in summary matches number
+            # in species list
+            nlines = count_remaining_lines(f)
+            if nlines != nspecies:
+                return False, 'summarynum'
+        f.close()
 
     return True, 'all'
+
+
+def count_remaining_lines(fh):
+    """Counts remaining lines in a file handle"""
+    # Count lines
+    nlines = 0
+    for l in fh:
+        nlines = nlines + 1
+
+    return nlines
 
 
 def get_sample_dirs(args):
