@@ -124,12 +124,16 @@ def check_snps_output(directory):
     if not os.path.isdir(out_dir):
         return False, 'outdir'
     else:
-        file_list = os.path.listdir(out_dir)
-        print(file_list)
+        file_list = os.listdir(out_dir)
+        # print(len(file_list))
+        if len(file_list) != nspecies:
+            return False, 'outnum'
 
+        for s in sp_list:
+            s_file = ''.join([out_dir, '/', s, '.snps.gz'])
+            print(s_file)
 
     return True, 'all'
-
 
 
 def count_remaining_lines(fh):
