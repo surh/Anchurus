@@ -119,7 +119,17 @@ def check_snps_output(directory):
                 return False, 'summarynum'
         f.close()
 
+    # Check output dir
+    out_dir = ''.join([directory, '/output'])
+    if not os.path.isdir(out_dir):
+        return False, 'outdir'
+    else:
+        file_list = os.path.listdir(out_dir)
+        print(file_list)
+
+
     return True, 'all'
+
 
 
 def count_remaining_lines(fh):
