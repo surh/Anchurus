@@ -84,7 +84,10 @@ def get_sample_dirs(args):
     return dirs
 
 
-if __name__ == "__main__":
+def process_arguments():
+    """Reads command line arguments, and performs checks and processes
+    if any of the arguments require it"""
+
     # Read arguments
     parser_format = argparse.ArgumentDefaultsHelpFormatter
     parser = argparse.ArgumentParser(formatter_class=parser_format)
@@ -113,12 +116,21 @@ if __name__ == "__main__":
     print("Reading arguments")
     args = parser.parse_args()
 
+    # Check and process arguments
     # Check that a directory is passed
     try:
         if not os.path.isdir(args.indir):
             raise ValueError
     except:
         print("ERROR:Indir ({}) is not a directory".format(args.indir))
+        raise
+
+    return args
+
+
+if __name__ == "__main__":
+    # Arguments
+    args = process_arguments()
 
     # Prepare list of directories
     if os.type == 'multi':
