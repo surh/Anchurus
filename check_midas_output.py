@@ -201,6 +201,19 @@ def get_sample_dirs(args):
     return dirs
 
 
+def write_output_file(check, args):
+    with open(args.outfile, 'w') as fh:
+        for res in check:
+            sample = os.path.basename(res[1])
+            print(sample)
+            line = "\t".join(res.extend())
+            line = ''.join([line, "\n"])
+            fh.write(line)
+    fh.close()
+
+    return 0
+
+
 def process_arguments():
     """Reads command line arguments, and performs checks and processes
     if any of the arguments require it"""
@@ -231,6 +244,9 @@ def process_arguments():
     parser.add_argument("--nspecies", help=("Number of species in database"),
                         type=int,
                         default=5952)
+    parser.add_argument("--outfile", help=("Name of the filw to write "
+                                           "output"),
+                        type=str, default='midas_check_results.txt')
 
     # Still needs output options
     print("Reading arguments")
@@ -270,7 +286,9 @@ if __name__ == "__main__":
     checks = []
     for d in args.dirs:
         print("Processing directoy:\n\t{}".format(d))
-        res = check_sample_dir(d, args)
+        res = [d]
+        res.extend(check_sample_dir(d, args))
         checks.append(res)
+    #print(checks)
 
-    print(checks)
+    write_output_file(checks, args)
