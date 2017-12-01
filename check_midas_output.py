@@ -309,6 +309,6 @@ if __name__ == "__main__":
         res = [d]
         res.extend(check_sample_dir(d, args))
         checks.append(res)
-    #print(checks)
+    # print(checks)
 
     write_output_file(checks, args)
