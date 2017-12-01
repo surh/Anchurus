@@ -2,15 +2,13 @@
 # Copyright (C) 2017 Sur Herrera Paredes
 
 # This script checks whether the output files from midas for
-# species and/or snp are present
+# species and/or snp are present and in the right format
 
 # Planned features:
-# 1.Takes a directory as input, as well as an instruction indicating
-# if it should take every sub-directory as a sample or as a single sample
-# 2.Takes a list of options to check (species, snps or all [eventually genes])
-# 3.Queries database and checks whether results are consistent with records in
+# 1.Check genes output
+# 2.Queries database and checks whether results are consistent with records in
 # database
-# 4.Updates database with results of checks.
+# 3.Updates database with results of checks.
 
 import argparse
 import os
@@ -230,6 +228,19 @@ def process_arguments():
     # Read arguments
     parser_format = argparse.ArgumentDefaultsHelpFormatter
     parser = argparse.ArgumentParser(formatter_class=parser_format)
+
+    # Define description
+    parser.description = ("This script checks whether the output files "
+                          "from midas for species and/or snp are present "
+                          "and in the right format.\n\n"
+                          "This script takes a directory as input, as well "
+                          "as an instruction indicating if it should take "
+                          "every sub-directory as a sample, or if the passed "
+                          "directory corresponds to a single sample\nn"
+                          "Can check species, SNPs or both.\n\n"
+                          "Eventually genes and database support.")
+
+    # Define arguments
     required = parser.add_argument_group("Required arguments")
     required.add_argument("--indir", help=("Path to directory where MIDAS "
                                            "output is located"),
