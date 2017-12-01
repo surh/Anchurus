@@ -27,8 +27,10 @@ if __name__ == "__main__":
                          type = str, default = "logs")
     parser.add_argument("--submissions_dir", help = "Directory where to store submission dirs",
                         type = str, default = "submissions")
-    parser.add_argument("--queue", help = "If method is  'slurm, the partition to use", default = "hbfraser",
-                        choices = ['hbfraser','owners','bigmem'], type = str)
+    parser.add_argument("--queue", help = "If method is  'slurm, the partition to use",
+                        default = "hbfraser",
+                        choices = ['hbfraser', 'owners', 'bigmem', 'hns'],
+                        type = str)
     parser.add_argument("--memory", help = "Amount of memory to request", default = "10G", type = str)
     parser.add_argument("--time", help = "If method is slurm, amount of time to reserve",
                         type = str, default = "4:00:00")
