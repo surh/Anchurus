@@ -41,7 +41,7 @@ if __name__ == "__main__":
 
     # Process arguments
     if args.queue == 'all':
-        args.queue = 'hbfraser,owners,hns,normal'
+        args.queue = 'hbfraser,owners,hns,normal,bigmem'
 
     # args.sample_col -= 1
 
