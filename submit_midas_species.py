@@ -11,7 +11,9 @@ if __name__ == "__main__":
 
     # Required arguments
     required = parser.add_argument_group("Required arguments")
-    required.add_argument("--samples", help = "File with samples (one per line) to be processed",
+    required.add_argument("--samples", help=("File with samples "
+                                             "(one per line) to be "
+                                             "processed"),
                           type = str, required = True)
     required.add_argument("--indir", help ="Directory where sample files are located",
                           type = str, required = True)
@@ -29,14 +31,19 @@ if __name__ == "__main__":
                         type = str, default = "submissions")
     parser.add_argument("--queue", help = "If method is  'slurm, the partition to use",
                         default = "hbfraser",
-                        choices = ['hbfraser', 'owners', 'bigmem', 'hns'],
+                        choices = ['hbfraser', 'owners', 'bigmem', 'hns','all'],
                         type = str)
     parser.add_argument("--memory", help = "Amount of memory to request", default = "10G", type = str)
     parser.add_argument("--time", help = "If method is slurm, amount of time to reserve",
                         type = str, default = "4:00:00")
 
     args = parser.parse_args()
-    #args.sample_col -= 1
+
+    # Process arguments
+    if args.queue == 'all':
+        args.queue = 'hbfraser,owners,hns,normal'
+
+    # args.sample_col -= 1
 
     # Read samples
     samples = sutilspy.io.return_column(infile=args.samples,
@@ -102,19 +109,19 @@ if __name__ == "__main__":
                                                   errorfile = errorfile,
                                                   nodes = nodes)
             elif args.method == 'slurm':
-                #memory = "16G"
+                # memory = "16G"
                 nodes = "1"
                 cpus = "8"
-                sutilspy.io.write_slurm_submission(fh = fh,
-                                                   commands = commands,
-                                                   name = job_name,
-                                                   memory = args.memory,
-                                                   logfile = logfile,
-                                                   errorfile = errorfile,
-                                                   queue = args.queue,
-                                                   nodes = '1',
-                                                   cpus = '8',
-                                                   time = args.time)
+                sutilspy.io.write_slurm_submission(fh=fh,
+                                                   commands=commands,
+                                                   name=job_name,
+                                                   memory=args.memory,
+                                                   logfile=logfile,
+                                                   errorfile=errorfile,
+                                                   queue=args.queue,
+                                                   nodes='1',
+                                                   cpus='8',
+                                                   time=args.time)
             else:
                 raise ValueError("Invalid method {}".format(args.method))
         fh.close()
