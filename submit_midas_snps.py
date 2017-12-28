@@ -91,43 +91,62 @@ def process_arguments():
 
     # Define other arguments
     # Optional arguments
-    parser.add_argument("--sample_col",help = "Column where sample id is located in --samples",
-                        default = 1, type = int)
-    parser.add_argument("--method", help = "Method to use for submissions. qsub are slurm are kept for legacy reasons, it is strongly recommended to use fyrd always",
-                        type = str, default = 'fyrd', choices = ['qsub','slurm','fyrd'])
-    parser.add_argument("--logdir", help = "If method is cluster-based, where to store the logfiles",
-                         type = str, default = "logs")
-    parser.add_argument("--submissions_dir", help = "Directory where to store submission dirs",
-                        type = str, default = "submissions")
+    parser.add_argument("--sample_col",
+                        help="Column where sample id is located in --samples",
+                        default=1, type=int)
+    parser.add_argument("--method",
+                        help="Method to use for submissions. qsub are slurm are kept for legacy reasons, it is strongly recommended to use fyrd always",
+                        type=str, default='fyrd',
+                        choices=['qsub', 'slurm', 'fyrd'])
+    parser.add_argument("--logdir",
+                        help="If method is cluster-based, where to store the logfiles",
+                        type=str, default="logs")
+    parser.add_argument("--submissions_dir",
+                        help="Directory where to store submission dirs",
+                        type=str, default="submissions")
     parser.add_argument("--queue",
                         help="If method is  'slurm, the partition to use",
                         default="all",
-                        choices=['hbfraser','owners','batch','bigmem','all','hns'],
+                        choices=['hbfraser', 'owners', 'batch',
+                                 'bigmem', 'all', 'hns'],
                         type=str)
-    parser.add_argument("--memory", help = "Amount of memory to request",
-                        default = "10G", type = str)
-    parser.add_argument("--time", help = "If method is slurm, amount of time to reserve",
-                        type = str, default = "4:00:00")
-    parser.add_argument("--species_cov", help = "Include species with greated coverage than identified",
-                        type = float, default = 3.0)
-    parser.add_argument("--mapid", help = "Minimum mapping identity", type = float,
-                        default = 94.0)
-    parser.add_argument("--mapq", help = "Minumum mappping quality",
-                        type = int, default = 20)
-    parser.add_argument("--baseq", help = "Discard bases with quality under the specified value",
-                        type = int, default = 30)
-    parser.add_argument("--readq", help = "Minimum read quality",
-                        type = int, default = 30)
-    parser.add_argument("--trim", help = "Trim N base-pairs from 3' end of the read",
-                        type = int, default = 0)
-    parser.add_argument("--discard", help = "Flag to discard discordant read pairs",
-                        action = "store_true")
-    parser.add_argument("--baq", help = "Flag to enable per-base alignment quality (BAQ)",
-                        action = "store_true")
-    parser.add_argument("--adjust_mq", help = "Adjust MAPQ",
-                        action = "store_true")
-    parser.add_argument("--steps", help = "Steps to perform for <run_midas.py snps. Either build the database and align. Or call SNPs",
-                        default = "align", choices = ['align','call'])
+    parser.add_argument("--memory",
+                        help="Amount of memory to request",
+                        default="10G", type=str)
+    parser.add_argument("--time",
+                        help="If method is slurm, amount of time to reserve",
+                        type=str, default="4:00:00")
+    parser.add_argument("--species_cov",
+                        help="Include species with greated coverage than identified",
+                        type=float, default=3.0)
+    parser.add_argument("--mapid",
+                        help="Minimum mapping identity", type=float,
+                        default=94.0)
+    parser.add_argument("--mapq",
+                        help="Minumum mappping quality",
+                        type=int, default=20)
+    parser.add_argument("--baseq",
+                        help="Discard bases with quality under the specified value",
+                        type=int, default=30)
+    parser.add_argument("--readq",
+                        help="Minimum read quality",
+                        type=int, default=30)
+    parser.add_argument("--trim",
+                        help="Trim N base-pairs from 3' end of the read",
+                        type=int, default=0)
+    parser.add_argument("--discard",
+                        help="Flag to discard discordant read pairs",
+                        action="store_true", default=False)
+    parser.add_argument("--baq",
+                        help="Flag to enable per-base alignment quality (BAQ)",
+                        action="store_true", default=False)
+    parser.add_argument("--adjust_mq",
+                        help="Adjust MAPQ",
+                        action="store_true", default=False)
+    parser.add_argument("--steps",
+                        help="Steps to perform for <run_midas.py snps. Either build the database and align. Or call SNPs",
+                        default="align", type=str,
+                        choices = ['align', 'call'])
 
     # Read arguments
     print("Reading arguments")
