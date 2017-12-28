@@ -107,7 +107,7 @@ if __name__ == "__main__":
                         action = "store_true")
     parser.add_argument("--adjust_mq", help = "Adjust MAPQ",
                         action = "store_true")
-    parser.add_argument("--steps", help = "Steps to perform for <run_midas.py snps>. Either build the database and align. Or call SNPs",
+    parser.add_argument("--steps", help = "Steps to perform for <run_midas.py snps. Either build the database and align. Or call SNPs",
                         default = "align", choices = ['align','call'])
     args = parser.parse_args()
     #args.sample_col -= 1
