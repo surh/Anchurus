@@ -2,48 +2,78 @@
 # Copyright (C) 2017 Sur Herrera Paredes
 import sutilspy
 import os
+import argparse
 
-if __name__ == "__main__":
-    import argparse
+def process_arguments():
+    # Read arguments
+    parser_format = argparse.ArgumentDefaultsHelpFormatter
+    parser = argparse.ArgumentParser(formatter_class=parser_format)
+    required = parser.add_argument_group("Required arguments")
 
-    # Parse arguments
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    # Define description
+    parser.description = ("This script takes a list of sample IDs, "
+                          "and submits all those samples to MIDAS "
+                          "script <run_midas.py snps>. It must "
+                          "be run after <run_midas.py species> "
+                          "since it requires the output of this script.\n\n"
+                          "It creates a job per sample and it can utilize "
+                          "fyrd, slurm or torque.")
 
-    # Required arguments
+    # Define required arguments
     required = parser.add_argument_group("Required arguments")
     required.add_argument("--samples", help=("File with samples "
                                              "(one per line) to be "
                                              "processed"),
-                          type = str, required = True)
-    required.add_argument("--indir", help ="Directory where sample files are located",
-                          type = str, required = True)
-    required.add_argument("--outdir", help = "Directory where to save output",
-                          type = str, required = True)
+                          type=str, required=True)
+    required.add_argument("--indir",
+                          help=("Directory where raw reads for each sample "
+                                "are located"),
+                          type=str, required=True)
+    required.add_argument("--outdir",
+                          help=("Directory where to save output. It must "
+                                "be also the directory where the output from "
+                                "<run_midas.py species> is located."),
+                          type=str, required=True)
 
-    # Optional arguments
-    parser.add_argument("--sample_col",help = "Column where sample id is located in --samples",
-                        default = 1, type = int)
-    parser.add_argument("--method", help = "Method to use for submissions", type = str,
-                        default = 'qsub', choices = ['qsub','slurm'])
-    parser.add_argument("--logdir", help = "If method is cluster-based, where to store the logfiles",
-                         type = str, default = "logs")
-    parser.add_argument("--submissions_dir", help = "Directory where to store submission dirs",
-                        type = str, default = "submissions")
-    parser.add_argument("--queue", help = "If method is  'slurm, the partition to use",
-                        default = "hbfraser",
-                        choices = ['hbfraser', 'owners', 'bigmem', 'hns','all'],
-                        type = str)
-    parser.add_argument("--memory", help = "Amount of memory to request", default = "10G", type = str)
-    parser.add_argument("--time", help = "If method is slurm, amount of time to reserve",
-                        type = str, default = "4:00:00")
+    # Define other arguments
+    parser.add_argument("--sample_col",
+                        help="Column where sample id is located in --samples",
+                        default=1, type=int)
+    parser.add_argument("--method",
+                        help="Method to use for submissions",
+                        type=str, default='qsub', choices=['qsub', 'slurm'])
+    parser.add_argument("--logdir",
+                        help="If method is cluster-based, where to store the logfiles",
+                        type=str, default="logs")
+    parser.add_argument("--submissions_dir",
+                        help="Directory where to store submission dirs",
+                        type=str, default="submissions")
+    parser.add_argument("--queue",
+                        help="If method is  'slurm, the partition to use",
+                        default="all",
+                        choices=['hbfraser', 'owners', 'bigmem', 'hns', 'all'],
+                        type=str)
+    parser.add_argument("--memory",
+                        help="Amount of memory to request",
+                        default="10G", type=str)
+    parser.add_argument("--time",
+                        help="If method is slurm, amount of time to reserve",
+                        type=str, default="4:00:00")
 
+    # Read arguments
+    print("Reading arguments")
     args = parser.parse_args()
 
     # Process arguments
     if args.queue == 'all':
         args.queue = 'hbfraser,owners,hns,normal,bigmem'
 
-    # args.sample_col -= 1
+    return args
+
+
+if __name__ == "__main__":
+
+    args = process_arguments()
 
     # Read samples
     samples = sutilspy.io.return_column(infile=args.samples,
