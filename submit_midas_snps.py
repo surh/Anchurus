@@ -6,20 +6,20 @@ import fyrd
 
 def build_midas_command(sample,read1,read2,bin,args):
     """Build run_midas.py snps command
-    
+
     Builds a command line command for MIDAS run_midas.py  script,
     in the snps mode
-    
+
     Args:
         sample (str): Sample ID. typically starts with SRS
         read1 (str): File path to read1 files.
         read2 (str): File path to read2 files
         bin (str): Executable path to run_midas.py
         args (Namespace): Resuts from argparse ArgumentParser.parse_args method
-        
+
     Returns: A string corresponding to a run_midas.py command
     """
-    
+
     # Build MIDAS comand
     midas_command = [bin,"snps",args.outdir + "/" + sample,
                          "-1", read1,
@@ -48,20 +48,20 @@ def build_midas_command(sample,read1,read2,bin,args):
         midas_command.append("--pileup")
     else:
         raise ValueError("Incorrect --steps option ({})".format(args.steps))
-        
+
     midas_command = " ".join(midas_command)
     #print("#######")
     #print(midas_command)
     #print("#######")
-    
+
     return(midas_command)
 
 if __name__ == "__main__":
     import argparse
-    
+
     # Parse arguments
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    
+
     # Required arguments
     required = parser.add_argument_group("Required arguments")
     required.add_argument("--samples", help = "File with samples (one per line) to be processed",
@@ -70,7 +70,7 @@ if __name__ == "__main__":
                           type = str, required = True)
     required.add_argument("--outdir", help = "Directory where to save output",
                           type = str, required = True)
-    
+
     # Optional arguments
     parser.add_argument("--sample_col",help = "Column where sample id is located in --samples",
                         default = 1, type = int)
@@ -80,8 +80,11 @@ if __name__ == "__main__":
                          type = str, default = "logs")
     parser.add_argument("--submissions_dir", help = "Directory where to store submission dirs",
                         type = str, default = "submissions")
-    parser.add_argument("--queue", help = "If method is  'slurm, the partition to use", default = "hbfraser",
-                        choices = ['hbfraser','owners','batch'], type = str)
+    parser.add_argument("--queue",
+                        help="If method is  'slurm, the partition to use",
+                        default="all",
+                        choices=['hbfraser','owners','batch','bigmem','all','hns'],
+                        type=str)
     parser.add_argument("--memory", help = "Amount of memory to request",
                         default = "10G", type = str)
     parser.add_argument("--time", help = "If method is slurm, amount of time to reserve",
@@ -108,8 +111,11 @@ if __name__ == "__main__":
                         default = "align", choices = ['align','call'])
     args = parser.parse_args()
     #args.sample_col -= 1
-    
-    
+
+if args.queue == 'all':
+    args.queue = 'hbfraser,owners,hns,normal,bigmem'
+
+
     # Read samples
     samples = sutilspy.io.return_column(infile = args.samples,
                                         col = args.sample_col,
@@ -123,47 +129,47 @@ if __name__ == "__main__":
         if not os.path.isdir(args.submissions_dir):
             print("Creating directory {}".format(args.submissions_dir))
             os.mkdir(args.submissions_dir)
-    
-    
+
+
     #print(samples)
-    
+
     pre_commands = []
-    
+
     # Add module dependencies
     #pre_commands.append("module load MIDAS/1.2.1")
     pre_commands.append("module load MIDAS/1.3.1")
     pre_commands.append("echo MIDAS database is $MIDAS_DB")
     bin = "run_midas.py"
-    
+
     for sample in samples:
         print("== Processing sample {}".format(sample))
         sample_file_base = args.indir + "/" + sample
         read1 = sample_file_base + "_read1.fastq.bz2"
         read2 = sample_file_base + "_read2.fastq.bz2"
-        
+
         # We need to check if the read files exist
         if not os.path.isfile(read1):
             raise FileNotFoundError("File {} not found".format(read1))
         if not os.path.isfile(read2):
             raise FileNotFoundError("File {} not found".format(read2))
-        
+
         # We also need to check if the species coverage file exists
         species_file = args.outdir + "/" + sample + "/species/species_profile.txt"
         if not os.path.isfile(species_file):
             raise FileNotFoundError("File {} not found".format(species_file))
-        
+
         midas_command = build_midas_command(sample, read1, read2, bin, args)
-        
+
         # Final list of commands
         commands = pre_commands[:]
         commands.append(midas_command)
-        
-        job_name = sample + ".midas"     
+
+        job_name = sample + ".midas"
         logfile = args.logdir + "/midas.snps." + sample + ".log"
         errorfile = args.logdir + "/midas.snps." + sample + ".err"
-   
+
         submission_file = args.submissions_dir + "/midas.snps." + sample + ".bash"
-        
+
         # Create submission file or job if method is fyrd
         if args.method == 'qsub':
             with open(submission_file, 'w') as fh:
@@ -195,7 +201,7 @@ if __name__ == "__main__":
             fh.close()
             os.chmod(submission_file, 0o744)
         elif args.method == 'fyrd':
-            print("\tCreating fyrd.Job")            
+            print("\tCreating fyrd.Job")
             midas_job = fyrd.Job(midas_command,runpath = os.getcwd(),outpath = args.logdir,
                                   scriptpath = args.submissions_dir, clean_files = False,
                                   clean_outputs = False, mem = args.memory, name = job_name,
@@ -204,12 +210,12 @@ if __name__ == "__main__":
                                   partition = args.queue,
                                   nodes = 1, cores = 8, time = args.time,
                                   modules = "MIDAS/1.3.1")
-            
+
         else:
             raise ValueError("Invalid method {}".format(args.method))
-        
-        
-        
+
+
+
         # Submit submission file
         if args.method == 'qsub':
             #print(submission_file)
@@ -226,4 +232,3 @@ if __name__ == "__main__":
             midas_job.submit(max_jobs = 1000)
         else:
             raise ValueError("Incorrect method supplie ({})".format(args.method))
-    
