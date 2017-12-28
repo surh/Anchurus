@@ -22,18 +22,18 @@ def build_midas_command(sample,read1,read2,bin,args):
     """
 
     # Build MIDAS comand
-    midas_command = [bin,"snps",args.outdir + "/" + sample,
-                         "-1", read1,
-                         "-2", read2,
-                         "-t","8",
-                         "--species_cov",str(args.species_cov),
-                         "--mapid", str(args.mapid),
-                         "--mapq", str(args.mapq),
-                         "--baseq", str(args.baseq),
-                         "--readq", str(args.readq),
-                         "--aln_cov", "0.75",
-                         "-m", 'local']
-                         #"--species_id","Haemophilus_parainfluenzae_62356"]
+    midas_command = [bin, "snps", args.outdir + "/" + sample,
+                     "-1", read1,
+                     "-2", read2,
+                     "-t", "8",
+                     "--species_cov", str(args.species_cov),
+                     "--mapid", str(args.mapid),
+                     "--mapq", str(args.mapq),
+                     "--baseq", str(args.baseq),
+                     "--readq", str(args.readq),
+                     "--aln_cov", "0.75",
+                     "-m", 'local']
+                     #"--species_id","Haemophilus_parainfluenzae_62356"]
     if args.trim > 0:
         midas_command.extend(["--trim",str(args.trim)])
     if args.discard:
@@ -163,12 +163,12 @@ if __name__ == "__main__":
     args = process_arguments()
 
     # Read samples
-    samples = sutilspy.io.return_column(infile = args.samples,
-                                        col = args.sample_col,
-                                        separator = '\t',
-                                        header = False)
+    samples = sutilspy.io.return_column(infile=args.samples,
+                                        col=args.sample_col,
+                                        separator='\t',
+                                        header=False)
     # Prepare directories
-    if args.method in ['qsub','slurm','fyrd']:
+    if args.method in ['qsub', 'slurm', 'fyrd']:
         if not os.path.isdir(args.logdir):
             print("Creating directory {}".format(args.logdir))
             os.mkdir(args.logdir)
@@ -176,13 +176,10 @@ if __name__ == "__main__":
             print("Creating directory {}".format(args.submissions_dir))
             os.mkdir(args.submissions_dir)
 
-
-    #print(samples)
-
     pre_commands = []
 
     # Add module dependencies
-    #pre_commands.append("module load MIDAS/1.2.1")
+    # pre_commands.append("module load MIDAS/1.2.1")
     pre_commands.append("module load MIDAS/1.3.1")
     pre_commands.append("echo MIDAS database is $MIDAS_DB")
     bin = "run_midas.py"
