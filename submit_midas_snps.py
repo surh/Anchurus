@@ -3,6 +3,7 @@
 import sutilspy
 import os
 import fyrd
+import argparse
 
 def build_midas_command(sample,read1,read2,bin,args):
     """Build run_midas.py snps command
@@ -50,27 +51,45 @@ def build_midas_command(sample,read1,read2,bin,args):
         raise ValueError("Incorrect --steps option ({})".format(args.steps))
 
     midas_command = " ".join(midas_command)
-    #print("#######")
-    #print(midas_command)
-    #print("#######")
+    # print("#######")
+    # print(midas_command)
+    # print("#######")
 
     return(midas_command)
 
-if __name__ == "__main__":
-    import argparse
 
-    # Parse arguments
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-
-    # Required arguments
+def process_arguments():
+    # Read arguments
+    parser_format = argparse.ArgumentDefaultsHelpFormatter
+    parser = argparse.ArgumentParser(formatter_class=parser_format)
     required = parser.add_argument_group("Required arguments")
-    required.add_argument("--samples", help = "File with samples (one per line) to be processed",
-                          type = str, required = True)
-    required.add_argument("--indir", help ="Directory where sample files are located",
-                          type = str, required = True)
-    required.add_argument("--outdir", help = "Directory where to save output",
-                          type = str, required = True)
 
+    # Define description
+    parser.description = ("This script takes a list of sample IDs, "
+                          "and submits all those samples to MIDAS "
+                          "script <run_midas.py species>. It must "
+                          "be run after <run_midas.py species> "
+                          "since it requires the output of this script.\n\n"
+                          "It creates a job per sample and it can utilize "
+                          "fyrd, slurm or torque.")
+
+    # Define required arguments
+    required = parser.add_argument_group("Required arguments")
+    required.add_argument("--samples",
+                          help=("File with samples (one per line) to "
+                                "be processed."),
+                          type=str, required=True)
+    required.add_argument("--indir",
+                          help=("Directory where the raw reads files per "
+                                "sample are located."),
+                          type=str, required=True)
+    required.add_argument("--outdir",
+                          help=("Directory where to save output. It must "
+                                "be also the directory where the output from "
+                                "<run_midas.py species> is located."),
+                          type=str, required=True)
+
+    # Define other arguments
     # Optional arguments
     parser.add_argument("--sample_col",help = "Column where sample id is located in --samples",
                         default = 1, type = int)
@@ -109,12 +128,20 @@ if __name__ == "__main__":
                         action = "store_true")
     parser.add_argument("--steps", help = "Steps to perform for <run_midas.py snps. Either build the database and align. Or call SNPs",
                         default = "align", choices = ['align','call'])
+
+    # Read arguments
+    print("Reading arguments")
     args = parser.parse_args()
-    #args.sample_col -= 1
 
-if args.queue == 'all':
-    args.queue = 'hbfraser,owners,hns,normal,bigmem'
+    # Processing goes here if needed
+    if args.queue == 'all':
+        args.queue = 'hbfraser,owners,hns,normal,bigmem'
 
+    return args
+
+
+if __name__ == "__main__":
+    args = process_arguments()
 
     # Read samples
     samples = sutilspy.io.return_column(infile = args.samples,
