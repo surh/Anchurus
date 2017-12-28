@@ -13,11 +13,10 @@ def process_arguments():
     # Define description
     parser.description = ("This script takes a list of sample IDs, "
                           "and submits all those samples to MIDAS "
-                          "script <run_midas.py snps>. It must "
-                          "be run after <run_midas.py species> "
-                          "since it requires the output of this script.\n\n"
+                          "script <run_midas.py species>.\n\n"
                           "It creates a job per sample and it can utilize "
-                          "fyrd, slurm or torque.")
+                          "slurm or torque.\n\n"
+                          "Support for  fyrd shoulr be coming.")
 
     # Define required arguments
     required = parser.add_argument_group("Required arguments")
@@ -30,9 +29,8 @@ def process_arguments():
                                 "are located"),
                           type=str, required=True)
     required.add_argument("--outdir",
-                          help=("Directory where to save output. It must "
-                                "be also the directory where the output from "
-                                "<run_midas.py species> is located."),
+                          help=("Directory where to save output. It will "
+                                "create a directory per sample."),
                           type=str, required=True)
 
     # Define other arguments
