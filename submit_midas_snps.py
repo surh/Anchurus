@@ -5,7 +5,8 @@ import os
 import fyrd
 import argparse
 
-def build_midas_command(sample,read1,read2,bin,args):
+
+def build_midas_command(sample, read1, read2, bin, args):
     """Build run_midas.py snps command
 
     Builds a command line command for MIDAS run_midas.py  script,
@@ -248,33 +249,28 @@ if __name__ == "__main__":
             os.chmod(submission_file, 0o744)
         elif args.method == 'fyrd':
             print("\tCreating fyrd.Job")
-            midas_job = fyrd.Job(midas_command,runpath = os.getcwd(),outpath = args.logdir,
-                                  scriptpath = args.submissions_dir, clean_files = False,
-                                  clean_outputs = False, mem = args.memory, name = job_name,
-                                  outfile = "midas.snps." + sample + ".log",
-                                  errfile = "midas.snps." + sample + ".err",
-                                  partition = args.queue,
-                                  nodes = 1, cores = 8, time = args.time,
-                                  modules = "MIDAS/1.3.1")
-
+            midas_job = fyrd.Job(midas_command,
+                                 runpath=os.getcwd(), outpath=args.logdir,
+                                 scriptpath=args.submissions_dir,
+                                 clean_files=False, clean_outputs=False,
+                                 mem=args.memory, name=job_name,
+                                 outfile="midas.snps." + sample + ".log",
+                                 errfile="midas.snps." + sample + ".err",
+                                 partition=args.queue,
+                                 nodes=1, cores=8, time=args.time,
+                                 modules="MIDAS/1.3.1")
         else:
             raise ValueError("Invalid method {}".format(args.method))
 
-
-
         # Submit submission file
         if args.method == 'qsub':
-            #print(submission_file)
             sutilspy.io.qsub_submissions([submission_file],args.logdir)
         elif args.method == 'slurm':
-            #print(submission_file)
             sutilspy.io.sbatch_submissions([submission_file], args.logdir)
         elif args.method == 'bash':
             sutilspy.io.run_command(submission_file)
         elif args.method == 'fyrd':
-            #midas_job.write(overwrite = True)
-            #print("\tWriting submission scripts")
             print("\tSubmitting job")
-            midas_job.submit(max_jobs = 1000)
+            midas_job.submit(max_jobs=1000)
         else:
             raise ValueError("Incorrect method supplie ({})".format(args.method))
