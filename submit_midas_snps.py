@@ -33,9 +33,10 @@ def build_midas_command(sample,read1,read2,bin,args):
                      "--readq", str(args.readq),
                      "--aln_cov", "0.75",
                      "-m", 'local']
-                     #"--species_id","Haemophilus_parainfluenzae_62356"]
+    # "--species_id","Haemophilus_parainfluenzae_62356"]
+
     if args.trim > 0:
-        midas_command.extend(["--trim",str(args.trim)])
+        midas_command.extend(["--trim", str(args.trim)])
     if args.discard:
         midas_command.append("--discard")
     if args.baq:
@@ -47,6 +48,8 @@ def build_midas_command(sample,read1,read2,bin,args):
         midas_command.append("--align")
     elif args.steps == 'call':
         midas_command.append("--pileup")
+    elif args.steps == 'all':
+        pass
     else:
         raise ValueError("Incorrect --steps option ({})".format(args.steps))
 
@@ -145,8 +148,8 @@ def process_arguments():
                         action="store_true", default=False)
     parser.add_argument("--steps",
                         help="Steps to perform for <run_midas.py snps. Either build the database and align. Or call SNPs",
-                        default="align", type=str,
-                        choices = ['align', 'call'])
+                        default="all", type=str,
+                        choices=['align', 'call', 'all'])
 
     # Read arguments
     print("Reading arguments")
