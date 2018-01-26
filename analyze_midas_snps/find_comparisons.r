@@ -2,6 +2,8 @@ library(AMOR)
 
 # covfile <- commandArgs(trailingOnly = TRUE)[1]
 # mapfile <- commandArgs(trailingOnly = TRUE)[2]
+# covfile <- "coverage.txt"
+# mapfile <- "map_for_comp.txt"
 covfile <- opts[1]
 mapfile <- opts[2]
 
