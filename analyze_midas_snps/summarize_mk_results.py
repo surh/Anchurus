@@ -30,7 +30,7 @@ if __name__ == "__main__":
                 n_p2 = sum(dat.hg_p < 0.05)
 
                 res = [d, f, str(ngenes), str(n_Dn),
-                       str(n_Ds), str(n_D), str(n_P)
+                       str(n_Ds), str(n_D), str(n_P),
                        str(n_p), str(n_p2)]
                 # print(d)
                 # print(f)
