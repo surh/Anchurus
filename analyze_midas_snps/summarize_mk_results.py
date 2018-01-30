@@ -22,20 +22,26 @@ if __name__ == "__main__":
                 # print(dat.head())
 
                 ngenes = dat.shape[0]
-                n_dn = sum(dat.Dn > 0)
+                n_Dn = sum(dat.Dn > 0)
+                n_Ds = sum(dat.Ds > 0)
+                n_D = sum((dat.Dn + dat.Ds) > 0)
                 n_p = sum(dat.hg_p < 0.1)
                 n_p2 = sum(dat.hg_p < 0.05)
 
-                res = [d, f, str(ngenes), str(n_dn), str(n_p), str(n_p2)]
-                print(d)
-                print(f)
-                print(ngenes)
-                print(n_dn)
-                print(n_p)
-                print(res)
+                res = [d, f, str(ngenes), str(n_Dn),
+                       str(n_Ds), str(n_D),
+                       str(n_p), str(n_p2)]
+                # print(d)
+                # print(f)
+                # print(ngenes)
+                # print(n_dn)
+                # print(n_p)
+                # print(res)
                 Res.append(res)
 
     print(Res)
     with open('summary.txt', 'w') as o:
+        o.write("\t".join(['Strain', 'Comparison', 'n_Dn', 'n_Ds',
+                           'n_D', 'p0.1', 'p0.05']))
         for r in Res:
             o.write("\t".join(r) + "\n")
