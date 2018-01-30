@@ -41,7 +41,8 @@ if __name__ == "__main__":
 
     print(Res)
     with open('summary.txt', 'w') as o:
-        o.write("\t".join(['Strain', 'Comparison', 'n_Dn', 'n_Ds',
-                           'n_D', 'p0.1', 'p0.05']))
+        o.write("\t".join(['Strain', 'Comparison', 'ngenes', 'n_Dn',
+                           'n_Ds',
+                           'n_D', 'p0.1', 'p0.05']) + "\n")
         for r in Res:
             o.write("\t".join(r) + "\n")
