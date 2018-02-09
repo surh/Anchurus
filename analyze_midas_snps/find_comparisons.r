@@ -6,6 +6,7 @@ library(AMOR)
 # mapfile <- "map_for_comp.txt"
 covfile <- opts[1]
 mapfile <- opts[2]
+covthres <- opts[3]
 
 # tab <- read.am("~/micropopgen/exp/2017/2017-08-07.abundances/merge.species/coverage.txt")
 tab <- read.am(covfile)
@@ -29,8 +30,8 @@ Res <- apply(comparisons, 2, function(x){
   
   dat <- subset(Dat,Group %in% x)
   dat <- clean(dat)
-  dat <- measurable_taxa(dat,min_reads_otu = 3, min_samples_otu = 4)
-  thres <- 3
+  dat <- measurable_taxa(dat,min_reads_otu = covthres, min_samples_otu = 4)
+  thres <- covthres
   
   Res <- NULL
   for(s in taxa(dat)){
