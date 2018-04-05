@@ -24,14 +24,15 @@ import numpy as np
 import scipy.stats as stats
 import argparse
 
+
 class GenomeSite:
     """A class for represintinc sites in genome that have potential SNPS"""
 
-    def __init__(self,site_id, contig, position, ref_allele = '',
-                 major_allele = '',
-                 minor_allele = '', locus_type = '', gene_id = '',
-                 aminoacid_A = '',
-                 aminoacid_C = '', aminoacid_G = '', aminoacid_T = ''):
+    def __init__(self, site_id, contig, position, ref_allele='',
+                 major_allele='',
+                 minor_allele='', locus_type='', gene_id='',
+                 aminoacid_A='',
+                 aminoacid_C='', aminoacid_G='', aminoacid_T=''):
         self.id = site_id
         self.contig = contig
         self.position = position
