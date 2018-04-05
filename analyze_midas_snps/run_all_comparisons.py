@@ -48,7 +48,8 @@ def process_arguments():
     required.add_argument('--mk_bin', help=('Executable for MKtest.py'),
                           type=str, required=True)
     required.add_argument('--outdir', help=('Output directory. Will create '
-                                            'a subdirectory per species')
+                                            'a subdirectory per species'),
+                          type=str, required=True)
 
     # Define other arguments
 
