@@ -1,5 +1,20 @@
 #!/usr/bin/env python
 # Copyright (C) 2017 Sur Herrera Paredes
+# This file is based on the MarkerScanner.pl script of the AMPHORA
+# pipeline by Martin Wu.
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # Imports
 import os
@@ -11,7 +26,7 @@ import argparse
 
 class GenomeSite:
     """A class for represintinc sites in genome that have potential SNPS"""
-    
+
     def __init__(self,site_id, contig, position, ref_allele = '',
                  major_allele = '',
                  minor_allele = '', locus_type = '', gene_id = '',
@@ -29,7 +44,7 @@ class GenomeSite:
         self.aminoC = aminoacid_C
         self.aminoG = aminoacid_G
         self.aminoT = aminoacid_T
-    
+
     def codon_aminoacid(self, base):
         if base in ['A','a']:
             return(self.aminoA)
@@ -41,19 +56,19 @@ class GenomeSite:
             return(self.aminoT)
         else:
             raise ValueError("base must be one of the four canonical nucleoties")
-    
+
     def substitution_type(self):
         substitution_type = ''
         if self.codon_aminoacid(base = self.major_allele) == self.codon_aminoacid(base = self.minor_allele):
             substitution_type = 'synonymous'
         else:
             substitution_type = 'non-synonymous'
-        
+
         return(substitution_type)
 
 class Gene:
     """A class for representing a gene"""
-    
+
     def __init__(self, gene_id,contig,start,end, strand = ''):
         if(start > end):
             raise ValueError("Start cannot be greater than end")
@@ -62,14 +77,14 @@ class Gene:
         self.start = int(start)
         self.end = int(end)
         self.strand = strand
-    
+
     def extend(self, pos):
         pos = int(pos)
         if pos > self.end:
             self.end = pos
         elif pos < self.start:
             self.start = pos
-    
+
     def info(self):
         print("===Gene===")
         print(">Gene id: {}".format(self.id))
@@ -79,46 +94,46 @@ class Gene:
 
 class MKtest:
     """A class for holding the McDonald-Kreitmant test"""
-    
+
     def __init__(self, name, Ds = 0, Dn = 0, Ps = 0, Pn = 0):
         self.name = name
         self.Dn = Dn
         self.Ds = Ds
         self.Ps = Ps
         self.Pn = Pn
-    
+
     def update(self, Ds = 0, Dn = 0, Ps = 0, Pn = 0):
         """Update the contigency matrix"""
         self.Dn += Dn
         self.Ds += Ds
         self.Ps += Ps
         self.Pn += Pn
-    
+
     def mk_ratio(self, pseudocount = 0):
         """Calculate the McDonald Kreitman ratio (Dn/Ds)/(Pn/Ps)"""
         ratio = ((self.Dn + pseudocount) / (self.Ds + pseudocount)) / ((self.Pn + pseudocount) / (self.Ps + pseudocount))
         return(ratio)
-    
+
     def alpha(self, pseudocount = 0):
         """Calculate the Smith & Eyre-Walker alpha 1 - """
         ni = self.neutrality_index(pseudocount = pseudocount, log = False)
         alpha = 1 - ni
         return(alpha)
-    
+
     def hg_test(self, pseudocount = 0):
         """Hypergeometric (Fisher's exact) test"""
-        
+
         res = stats.fisher_exact([[self.Ds + pseudocount,self.Ps + pseudocount],
                                   [self.Dn + pseudocount,self.Pn + pseudocount]])
         return(res)
-    
+
     def g_test(self, correction, pseudocount = 0):
         """G-test for independence. Original McDonald & Kreitman 1991 suggestion"""
-        
+
         # Create 2x2 contingency matrix
         mat = np.matrix([[self.Ds + pseudocount,self.Ps + pseudocount],
                          [self.Dn + pseudocount,self.Pn + pseudocount]])
-        
+
         if correction == 'none':
             res = stats.chi2_contingency(observed=mat,
                                          lambda_="log-likelihood",
@@ -136,36 +151,36 @@ class MKtest:
             g, p, df, e = stats.chi2_contingency(observed=mat,
                                          lambda_="log-likelihood",
                                          correction=False)
-            
+
             # Calculate q correction. Only for 2 x 2 table
             n = mat.sum()
             q = 1 + (n * (1 / mat.sum(axis = 1)).sum() - 1) * (n * (1 / mat.sum(axis = 0)).sum() - 1) / (6 * n)
-                
+
             # correct g and recalculate p-value
             g = g / q
             p = 1 - stats.chi2.cdf(g, df)
-            
+
             # combine results
             res = [g, p , df, e]
-            
+
         else:
             raise ValueError("Correction must be one of 'none', 'yates' or 'williams'")
-        
+
         return(res)
     def neutrality_index(self, pseudocount = 1, log = True):
         """Calculate neutrality index (Pn/Dn)/(Ps/Ds). Following Li et al. (2008), we add a psedocount and return the -log10(NI)"""
-        
+
         ni = ((self.Pn + pseudocount) / (self.Dn + pseudocount)) / ((self.Ps + pseudocount) / (self.Ds + pseudocount))
-        
+
         if log:
             ni = -np.log10(ni)
-        
+
 
         return(ni)
 
 def process_snp_info_file(args):
     """Process the snps_info.txt file from MIDAS"""
-    
+
     Genes = {}
     Sites = {}
     with open(args.indir + '/snps_info.txt') as info_fh:
@@ -254,12 +269,12 @@ def process_snp_info_file(args):
     #print(Groups)
     print("Number of sites: {}".format(str(len(Sites))))
     print("Number of genes: {}".format(str(len(Genes))))
-    
+
     return Genes, Sites
-    
+
 def process_snps_depth_file(args,Groups,Sites):
     """Use depth to decide which samples to keep. It modifies Sites and returns Counts"""
-    
+
     Counts = {}
     with open(args.indir + '/snps_depth.txt') as depth_fh:
         header = depth_fh.readline()
@@ -278,9 +293,9 @@ def process_snps_depth_file(args,Groups,Sites):
         for row in depth_reader:
             i += 1
             if i > args.nrows:
-                break 
+                break
             #print(row)
-            
+
             # Get site ID and check if it is in Sites (for MK this is
             # equivalent to check if this a gene)
             site_id = row[0]
@@ -292,11 +307,11 @@ def process_snps_depth_file(args,Groups,Sites):
             counts = row[1:]
             counts = list(map(int,counts))
             #print(counts)
-            
+
             # Convert count to presence/absence vector based on
             # threshold of number of counts to use position in sample
             counts = [int(c >= args.min_count) for c in counts]
-            
+
             # Get counts per group
             # GLITCH: Here it fails if map has extra samples not present in files
             #print(set(Groups[args.group1]) & set(indices.keys()))
@@ -304,7 +319,7 @@ def process_snps_depth_file(args,Groups,Sites):
             #print(Groups[args.group1])
             #print(indices.keys())
             #print(set(indices.keys()))
-            
+
             samples1 = [int(counts[ indices[l] - 1 ]) for l in set(Groups[args.group1]) & set(indices.keys())]
             samples2 = [int(counts[ indices[l] - 1 ]) for l in set(Groups[args.group2]) & set(indices.keys())]
             samples1 = sum(samples1)
@@ -327,12 +342,12 @@ def process_snps_depth_file(args,Groups,Sites):
     print("Number of sites: {}".format(str(len(Sites))))
     print("Number of genes: {}".format(str(len(Genes))))
     print("Sites with counts: {}".format(str(len(Counts))))
-        
+
     return Counts
-    
+
 def process_snp_freq_file(args,Counts,Groups,Samples):
     """Process snp_freq.txt from MIDAS. Produces MK table"""
-    
+
     print(Groups)
     MK = {}
     with open(args.indir + '/snps_freq.txt') as freqs_fh:
@@ -422,7 +437,7 @@ def process_snp_freq_file(args,Counts,Groups,Samples):
     print("Number of genes: {}".format(str(len(Genes))))
     print("Sites with counts: {}".format(str(len(Counts))))
     print("Genes with MK: {}".format(str(len(MK))))
-    
+
     return MK
 
 def confirm_midas_merge_files(args):
@@ -440,7 +455,7 @@ def confirm_midas_merge_files(args):
         raise FileNotFoundError("Could not find metadata file {}".format(args.metadata_file))
 
 if __name__ == "__main__":
-    
+
     # Argparse
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     required = parser.add_argument_group("Required arguments")
@@ -452,7 +467,7 @@ if __name__ == "__main__":
                           required = True)
     required.add_argument("--group2", help = "Group2 of comparison",
                           required = True)
-        
+
     parser.add_argument("--test", help = "Eventually specify test to perform",
                         default = "G", type = str)
     parser.add_argument("--outfile", help = "Output file with results",
@@ -465,9 +480,9 @@ if __name__ == "__main__":
                         default = "mk_tables.txt", type = str)
     parser.add_argument("--pseudocount", help = "Pseudocount value to use in contingency tables",
                         default = 1, type = int)
-    
+
     args = parser.parse_args()
-    
+
     ######## Check files #################
     confirm_midas_merge_files(args)
 
@@ -476,16 +491,16 @@ if __name__ == "__main__":
                                           1, 0, header = True)
     Samples = sutilspy.io.process_run_list(args.metadata_file,
                                            0, 1, header = True)
-    
+
     ######## Read info #######
     Genes, Sites = process_snp_info_file(args)
-    
+
     ###### Chose sites based on depth in groups to compare #######
     Counts = process_snps_depth_file(args, Groups, Sites)
-    
+
     ####### Read frequencies and calculate #########
     MK = process_snp_freq_file(args, Counts, Groups, Samples)
-    
+
     ################ Test and results ########
     with open(args.outfile,mode='w') as fh, open(args.tables,mode='w') as th:
         header = ['gene','contig','start','end',
@@ -548,7 +563,7 @@ if __name__ == "__main__":
                 g_williams_df = float('nan')
                 g_williams_E = float('nan')
 
-            # G test for independence with pseududocounts        
+            # G test for independence with pseududocounts
             try:
                 g_none_pseudo, g_none_p_pseudo, g_none_df_pseudo, g_none_E_pseudo = mk.g_test(correction='none',
                                                                                               pseudocount=args.pseudocount)
@@ -569,7 +584,7 @@ if __name__ == "__main__":
 
             try:
                 g_williams_pseudo, g_williams_p_pseudo, g_williams_df_pseudo, g_williams_E_pseudo = mk.g_test(correction='williams',
-                                                                                                              pseudocount=args.pseudocount)                                
+                                                                                                              pseudocount=args.pseudocount)
             except ValueError:
                 g_williams_pseudo = float('nan')
                 g_williams_p_pseudo = float('nan')
@@ -582,10 +597,10 @@ if __name__ == "__main__":
                 alpha = mk.alpha(pseudocount=0)
             except ZeroDivisionError:
                 alpha = float('nan')
-                
+
             alpha_pseudo = mk.alpha(pseudocount=args.pseudocount)
 
-            # prepare res        
+            # prepare res
             res = [gene, Genes[gene].contig, str(Genes[gene].start), str(Genes[gene].end),
                    str(mk.Dn), str(mk.Ds), str(mk.Pn), str(mk.Ps),
                    str(ni), str(ratio), str(ratio_pseudo),
@@ -601,5 +616,3 @@ if __name__ == "__main__":
             #print("MK alpha is: {}".format(str(alpha)))
     fh.close()
     th.close()
-    
-
