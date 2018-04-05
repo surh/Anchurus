@@ -22,6 +22,45 @@ import os
 import sutilspy
 
 
+def process_arguments():
+    # Read arguments
+    parser_format = argparse.ArgumentDefaultsHelpFormatter
+    parser = argparse.ArgumentParser(formatter_class=parser_format)
+    required = parser.add_argument_group("Required arguments")
+
+    # Define description
+    parser.description = ("Takes a directory with midas outputs and "
+                          "a mapping file for samples and submits "
+                          "all comparisons to MKtest.py")
+
+    # Define required arguments
+    required.add_argument("--comparisons_file", help=("File with comparisons "
+                                                      "to make"),
+                          type=str, required=True)
+    required.add_argument("--indir", help=("Directory wher output from "
+                                           "merge_midas is stored. One "
+                                           "subdirectory per species"),
+                          type=str, required=True)
+    required.add_argument('--map_file', help=("Mapping tab-delimited file, "
+                                              "must contain and ID and Groups "
+                                              "columns"),
+                          type=str, required=True)
+    required.add_argument('--mk_bin', help=('Executable for MKtest.py'),
+                          type=str, required=True)
+    required.add_argument('--outdir', help=('Output directory. Will create '
+                                            'a subdirectory per species')
+
+    # Define other arguments
+
+    # Read arguments
+    print("Reading arguments")
+    args = parser.parse_args()
+
+    # Processing goes here if needed
+
+    return args
+
+
 if __name__ == '__main__':
     # comparisons_file = '/home/sur/micropopgen/exp/2017/today4/comparisons.txt'
     # indir = '/godot/hmp/midas/merged.snps/'
@@ -29,18 +68,7 @@ if __name__ == '__main__':
     # mk_bin = '/home/sur/micropopgen/src/micropopgen/analyze_midas_snps/MKtest.py'
     # outdir = './out/'
 
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    required = parser.add_argument_group("Required arguments")
-    required.add_argument("--comparisons_file", help = "File with comparisons to make",
-                          type = str, required = True)
-    required.add_argument("--indir", help = "Directory wher output from merge_midas is stored. One subdirectory per species",
-                   type = str, required = True)
-    required.add_argument('--map_file', help = "Mapping tab-delimited file, must contain and ID and Groups columns",
-                      type = str, required = True)
-    required.add_argument('--mk_bin', help = 'Executable for MKtest.py',
-                    type = str, required = True)
-    required.add_argument('--outdir', help = 'Output directory. Will create a subdirectory per species')
-    args = parser.parse_args()
+    args = process_arguments()
 
     # Read list of comparisons
     comparisons = pd.read_csv(args.comparisons_file, sep="\t")
