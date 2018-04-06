@@ -132,7 +132,7 @@ if __name__ == '__main__':
                '--tables', species_tables]
 
         # If not equal to default, pass it
-        if args.nrow != float('inf'):
+        if args.nrows != float('inf'):
             cmd.append('--nrows', args.nrows)
 
         # Append output logging
