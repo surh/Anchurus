@@ -78,6 +78,32 @@ def process_arguments():
     return args
 
 
+def make_output_directories(args):
+    """Prepare the required directories"""
+
+    # Create overall outptut directory
+    print("Creating output directory")
+    try:
+        os.mkdir(args.outdir)
+    except FileExistsError:
+        raise("Directory already exists")
+
+    # Make fyrd directories
+    if args.mode == 'fyrd':
+            if os.path.isdir(args.logs):
+                raise FileExistsError("Directory for fyrd logs ({}) "
+                                      "already exists".format([args.logs]))
+            else:
+                os.mkdir(args.logs)
+            if os.path.isdir(args.scripts):
+                raise FileExistsError("Directory for fyrd scripts ({}) "
+                                      "already exists".format([args.scripts]))
+            else:
+                os.mkdir(args.scripts)
+
+    return
+
+
 if __name__ == '__main__':
     args = process_arguments()
 
@@ -85,12 +111,8 @@ if __name__ == '__main__':
     comparisons = pd.read_csv(args.comparisons_file, sep="\t")
     # comparisons.head()
 
-    # Create overall outptu directory
-    print("Creating output directory")
-    try:
-        os.mkdir(args.outdir)
-    except FileExistsError:
-        raise("Directory already exists")
+    # Make output directories
+    make_output_directories(args)
 
     print("========ITERATING OVER COMPARISONS========")
     # For every comparison
@@ -164,6 +186,7 @@ if __name__ == '__main__':
                            outpath='logs',
                            scriptpath='scripts')
             print("\tSubmitting job")
+            job.submit(max_jobs=args.maxjobs)
             job.submit(max_jobs=args.maxjobs)
             jobs.append(job)
         else:
