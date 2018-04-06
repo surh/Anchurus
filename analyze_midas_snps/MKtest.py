@@ -462,13 +462,20 @@ def confirm_midas_merge_files(args):
     # Check files exist in input directory
     file_list = os.listdir(args.indir)
     if 'snps_freq.txt' not in file_list:
-        raise FileNotFoundError("Could not find snps_freq.txt at {}".format(args.indir))
+        msg = "Could not find snps_freq.txt at {}".format(args.indir)
+        raise FileNotFoundError(msg)
     if 'snps_info.txt' not in file_list:
-        raise FileNotFoundError("Could not find snps_info.txt at {}".format(args.indir))
+        msg = "Could not find snps_info.txt at {}".format(args.indir)
+        raise FileNotFoundError(msg)
     if 'snps_depth.txt' not in file_list:
-        raise FileNotFoundError("Could not find snps_depth.txt at {}".format(args.indir))
+        msg = "Could not find snps_depth.txt at {}".format(args.indir)
+        raise FileNotFoundError(msg)
     if not os.path.isfile(args.metadata_file):
-        raise FileNotFoundError("Could not find metadata file {}".format(args.metadata_file))
+        msg = "Could not find metadata file {}".format(args.metadata_file)
+        raise FileNotFoundError(msg)
+
+    print("\tAll files found")
+    return
 
 
 def process_arguments():
@@ -512,6 +519,10 @@ def process_arguments():
     parser.add_argument("--pseudocount", help=("Pseudocount value to use "
                                                "in contingency tables"),
                         default=1, type=int)
+    parser.add_argument("--permutations", help=("Number of permutations to "
+                                                "perform to establish "
+                                                "significance"),
+                        type=int, default=0)
 
     # Read arguments
     print("Reading arguments")
@@ -526,15 +537,20 @@ if __name__ == "__main__":
     args = process_arguments()
 
     # Check midas files
-    print("################ Checking MIDAS files ################")
+    print("Checking MIDAS files exist")
     confirm_midas_merge_files(args)
-    print("################ Done checking MIDAS files ################")
 
-    #### Read metadata ####
+    # Read mapping files
+    # Create dictionaries that have all the samples per group (Groups),
+    # and the group to which each sample belongs (Samples)
+    # Probably should change this to pandas
+    print("Read metadata")
     Groups = sutilspy.io.process_run_list(args.metadata_file,
-                                          1, 0, header = True)
+                                          sample_col=1, run_col=0,
+                                          header=True)
     Samples = sutilspy.io.process_run_list(args.metadata_file,
-                                           0, 1, header = True)
+                                           sample_col=0,
+                                           run_col=1, header=True)
 
     ######## Read info #######
     Genes, Sites = process_snp_info_file(args)
