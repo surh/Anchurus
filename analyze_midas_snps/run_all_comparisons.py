@@ -63,6 +63,8 @@ def process_arguments():
     parser.add_argument("--nrows", help=('Number of rows to read. '
                                          'Useful to limit time when testing'),
                         type=float, default=float('inf'))
+    parser.add_argument("--maxjobs", help=('Maximum number of fyrd jobs'),
+                        type=int, default=100)
 
     # Read arguments
     print("Reading arguments")
@@ -94,38 +96,36 @@ if __name__ == '__main__':
         species_indir = ''.join([args.indir, '/',
                                  r['Species'],
                                  '/'])
-        #print(species_dir)
 
         # Create output directory
+        print("\tCreating species output directory")
         species_outdir = ''.join([args.outdir,
-                                  '/',r['Species'],
+                                  '/', r['Species'],
                                   '/'])
         try:
             os.mkdir(species_outdir)
-            print("Creating output directory")
         except FileExistsError:
             print("Directory already exists")
 
         suffix = r['A'] + '_' + r['B']
-        suffix = suffix.replace(' ','.')
-        #print(suffix)
+        suffix = suffix.replace(' ', '.')
 
         species_outfile = ''.join([species_outdir,
-                                   '/','mk_results.',
-                                   suffix,'.txt'])
-        species_tables = ''.join([species_outdir,'/',
-                                  'mk_tables.',suffix,
+                                   '/', 'mk_results.',
+                                   suffix, '.txt'])
+        species_tables = ''.join([species_outdir, '/',
+                                  'mk_tables.', suffix,
                                   '.txt'])
-        species_log = ''.join([species_outdir,'/',
-                               suffix,'.log'])
-        species_err = ''.join([species_outdir,'/',
-                               suffix,'.err'])
+        species_log = ''.join([species_outdir, '/',
+                               suffix, '.log'])
+        species_err = ''.join([species_outdir, '/',
+                               suffix, '.err'])
 
-        group1 = ''.join(["'",r['A'],"'"])
-        group2 = ''.join(["'",r['B'],"'"])
+        group1 = ''.join(["'", r['A'], "'"])
+        group2 = ''.join(["'", r['B'], "'"])
 
         cmd = [args.mk_bin, '--indir', species_indir,
-              '--metadata_file', args.map_file,
+               '--metadata_file', args.map_file,
                '--group1', group1,
                '--group2', group2,
                '--outfile', species_outfile,
@@ -140,7 +140,5 @@ if __name__ == '__main__':
                     '2>', species_err])
 
         cmd = ' '.join(cmd)
-        #print(cmd)
+        # print(cmd)
         sutilspy.io.run_command(cmd)
-
-        #/micropopgen/src/micropopgen/analyze_midas_snps/MKtest.py --indir /godot/hmp/midas/merged.snps/Porphyromonas_sp_57899/ --metadata_file map.txt --group1 'Supragingival plaque' --group2 'Tongue dorsum' --outfile Porphyromonas_sp_57899_mk_results.txt --tables Porphyromonas_sp_57899_mk_tables.txt 1> log 2> err
