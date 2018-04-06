@@ -56,6 +56,10 @@ def process_arguments():
                                            'to calculate p-value. If 0 '
                                            'no permutations will be done.'),
                         type=int, default=0)
+    parser.add_argument("--mode", helpt=('Whether to use fyrd to '
+                                         'parallelize per comparison or '
+                                         'submit serially'),
+                        type=str, default='fyrd', choices=['fyrd', 'bash'])
 
     # Read arguments
     print("Reading arguments")
@@ -71,8 +75,9 @@ if __name__ == '__main__':
 
     # Read list of comparisons
     comparisons = pd.read_csv(args.comparisons_file, sep="\t")
-    comparisons.head()
+    # comparisons.head()
 
+    print("====")
     # For every comparison
     for i, r in comparisons.iterrows():
         #print(i)
