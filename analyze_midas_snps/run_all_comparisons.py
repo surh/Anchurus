@@ -187,8 +187,8 @@ if __name__ == '__main__':
                            partition='',
                            name=job_name,
                            runpath=os.getcwd(),
-                           outpath='logs',
-                           scriptpath='scripts')
+                           outpath=args.logs,
+                           scriptpath=args.scripts)
             print("\tSubmitting job")
             job.submit(max_jobs=args.maxjobs)
             job.submit(max_jobs=args.maxjobs)
