@@ -20,6 +20,7 @@ import pandas as pd
 import argparse
 import os
 import sutilspy
+import fyrd
 
 
 def process_arguments():
@@ -65,6 +66,8 @@ def process_arguments():
                         type=float, default=float('inf'))
     parser.add_argument("--maxjobs", help=('Maximum number of fyrd jobs'),
                         type=int, default=100)
+    parser.add_argument("--wait", help=('Wait for all fyrd jobs to finish'),
+                        action='store_true')
 
     # Read arguments
     print("Reading arguments")
@@ -107,6 +110,7 @@ if __name__ == '__main__':
         except FileExistsError:
             print("Directory already exists")
 
+        print("\tCreating MKtest.py command")
         suffix = r['A'] + '_' + r['B']
         suffix = suffix.replace(' ', '.')
 
@@ -141,4 +145,25 @@ if __name__ == '__main__':
 
         cmd = ' '.join(cmd)
         # print(cmd)
-        sutilspy.io.run_command(cmd)
+
+        if args.mode == 'bash':
+            sutilspy.io.run_command(cmd)
+        elif args.mode == 'fyrd':
+            job_name = 'mktest' + r['species']
+            print("\tCreating fyrd job {}".format(job_name))
+            job = fyrd.Job(cmd,
+                           clean_files=False,
+                           clean_outputs=False,
+                           nodes=1, cores=1,
+                           time='00:20:00',
+                           mem='1000mb',
+                           partition='',
+                           name=job_name,
+                           runpath=os.getcwd(),
+                           outpath='logs',
+                           scriptpath='scripts')
+            print("\tSubmitting job")
+            job.submit(max_jobs=args.maxjobs)
+
+        else:
+            raise ValueError("Unreconized mode")
