@@ -92,8 +92,9 @@ if __name__ == '__main__':
     except FileExistsError:
         raise("Directory already exists")
 
-    print("========ITERATIONG OVER COMPARISONS========")
+    print("========ITERATING OVER COMPARISONS========")
     # For every comparison
+    jobs = []
     for i, r in comparisons.iterrows():
         print("Species:{} in {} vs {}".format(r['Species'], r['A'], r['B']))
         species_indir = ''.join([args.indir, '/',
@@ -164,7 +165,16 @@ if __name__ == '__main__':
                            scriptpath='scripts')
             print("\tSubmitting job")
             job.submit(max_jobs=args.maxjobs)
+            jobs.append(job)
         else:
             raise ValueError("Unreconized mode")
 
-    print("========ITERATIONG OVER COMPARISONS========")
+    print("========DONE ITERATING OVER COMPARISONS========")
+
+    if args.mode == 'fyrd' and args.wait:
+        print("========WAITING FOR MKTEST JOBS TO COMPLETE========")
+        for j in jobs:
+            j.wait()
+
+        print("========DONE WAITING FOR MKTEST JOBS TO COMPLETE========")
+            
