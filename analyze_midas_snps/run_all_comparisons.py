@@ -68,6 +68,10 @@ def process_arguments():
                         type=int, default=100)
     parser.add_argument("--wait", help=('Wait for all fyrd jobs to finish'),
                         action='store_true')
+    parser.add_argument("--logs", help='Directory for fyrd logs',
+                        type=str, default='logs/')
+    parser.add_argument("--dir", help='Directory for fyrd scripts',
+                        type=str, default='scripts')
 
     # Read arguments
     print("Reading arguments")
