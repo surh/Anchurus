@@ -549,6 +549,22 @@ def process_metadata_file(mapfile):
     return Samples, Groups
 
 
+def calculate_contingency_tables(Samples, Groups, args):
+    """Take metadata and locations of MIDAS files and
+    calculate MK contingency tables"""
+
+    print("\tRead snps_info.txt")
+    Genes, Sites = process_snp_info_file(args)
+
+    print("\tChose sites based on depth in groups to compare")
+    Counts = process_snps_depth_file(args, Groups, Sites)
+
+    print("\tRead frequencies and calculate")
+    MK = process_snp_freq_file(args, Counts, Groups, Samples)
+
+    return MK
+
+
 if __name__ == "__main__":
     args = process_arguments()
 
@@ -561,21 +577,10 @@ if __name__ == "__main__":
     # and the group to which each sample belongs (Samples)
     # Probably should change this to pandas
     print("Read metadata")
-    Groups = sutilspy.io.process_run_list(args.metadata_file,
-                                          sample_col=1, run_col=0,
-                                          header=True)
-    Samples = sutilspy.io.process_run_list(args.metadata_file,
-                                           sample_col=0,
-                                           run_col=1, header=True)
+    Samples, Groups = process_metadata_file(args.metadata_file)
 
-    ######## Read info #######
-    Genes, Sites = process_snp_info_file(args)
-
-    ###### Chose sites based on depth in groups to compare #######
-    Counts = process_snps_depth_file(args, Groups, Sites)
-
-    ####### Read frequencies and calculate #########
-    MK = process_snp_freq_file(args, Counts, Groups, Samples)
+    print("Calculate MK contingency tables")
+    MK = calculate_contingency_tables(Samples, Groups, args)
 
     ################ Test and results ########
     with open(args.outfile,mode='w') as fh, open(args.tables,mode='w') as th:
