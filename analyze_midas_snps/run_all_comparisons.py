@@ -77,13 +77,11 @@ if __name__ == '__main__':
     comparisons = pd.read_csv(args.comparisons_file, sep="\t")
     # comparisons.head()
 
-    print("====")
+    print("========ITERATIONG OVER COMPARISONS========")
     # For every comparison
     for i, r in comparisons.iterrows():
-        #print(i)
-        #print(r)
-
-        species_indir = ''.join([args.indir,'/',
+        print("\tSpecies:{} in {} vs {}".format(r['Species'], r['A'], r['B']))
+        species_indir = ''.join([args.indir, '/',
                                  r['Species'],
                                  '/'])
         #print(species_dir)
