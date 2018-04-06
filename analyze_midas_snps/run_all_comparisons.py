@@ -52,6 +52,10 @@ def process_arguments():
                           type=str, required=True)
 
     # Define other arguments
+    parser.add_argument("--permute", help=('Number of permutations to use '
+                                           'to calculate p-value. If 0 '
+                                           'no permutations will be done.'),
+                        type=int, default=0)
 
     # Read arguments
     print("Reading arguments")
@@ -63,12 +67,6 @@ def process_arguments():
 
 
 if __name__ == '__main__':
-    # comparisons_file = '/home/sur/micropopgen/exp/2017/today4/comparisons.txt'
-    # indir = '/godot/hmp/midas/merged.snps/'
-    # map_file = '/home/sur/micropopgen/exp/2017/today4/full_map.txt'
-    # mk_bin = '/home/sur/micropopgen/src/micropopgen/analyze_midas_snps/MKtest.py'
-    # outdir = './out/'
-
     args = process_arguments()
 
     # Read list of comparisons
