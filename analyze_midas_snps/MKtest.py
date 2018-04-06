@@ -19,6 +19,7 @@ import os
 import sutilspy
 import csv
 import numpy as np
+import pandas as pd
 import scipy.stats as stats
 import argparse
 
@@ -531,6 +532,21 @@ def process_arguments():
     # Processing goes here if needed
 
     return args
+
+
+def process_metadata_file(mapfile):
+    """Process metadata file"""
+
+    map = pd.read_csv(mapfile, sep='\t')
+
+    Samples = dict(zip(map.ID, map.Group))
+
+    Groups = dict()
+    for g in set(map.Group):
+        samples = list(map.ID[map.Group == g])
+        Groups[g] = samples
+
+    return Samples, Groups
 
 
 if __name__ == "__main__":
