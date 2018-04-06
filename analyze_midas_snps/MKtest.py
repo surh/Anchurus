@@ -408,18 +408,19 @@ def process_snp_freq_file(args, Counts, Groups, Samples, Sites):
 
             # Create MKtest if needed
             if not (gene in MK):
+                # print("adding to MK")
                 MK[gene] = MKtest(name=gene)
 
             # find allele per sample
             allele_freqs = np.array([int(float(f) < 0.5) for f in row[1:]])
-            # print(allele_freqs)
+            # print("allele_freqs", allele_freqs)
 
             # Remove non covered positions
             ii = np.where(present_index)
             group_index = group_index[ii]
             allele_freqs = allele_freqs[ii]
-            # print(group_index)
-            # print(allele_freqs)
+            print("group_index", group_index, len(group_index))
+            print("allele_freqs", allele_freqs, len(allele_freqs))
 
             # Count alleles per group
             group1_count = allele_freqs[np.where(group_index == args.group1)].sum()
@@ -541,7 +542,8 @@ def process_metadata_file(mapfile, permute=False):
     if permute:
         map['Group'] = np.random.permutation(map.Group)
 
-    Samples = dict(zip(map.ID, map.Group))
+    # Samples = dict(zip(map.ID, map.Group))
+    Samples = {map.ID[i]: [map.Group[i]] for i in range(len(map))}
 
     Groups = dict()
     for g in set(map.Group):
