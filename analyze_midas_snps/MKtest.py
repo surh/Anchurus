@@ -45,30 +45,40 @@ class GenomeSite:
         self.aminoT = aminoacid_T
 
     def codon_aminoacid(self, base):
-        if base in ['A','a']:
+        """This function returns the aminoacid that would be coded by
+        the specified base in the site"""
+
+        if base in ['A', 'a']:
             return(self.aminoA)
-        elif base in ['C','c']:
+        elif base in ['C', 'c']:
             return(self.aminoC)
-        elif base in ['G','g']:
+        elif base in ['G', 'g']:
             return(self.aminoG)
-        elif base in ['T','t']:
+        elif base in ['T', 't']:
             return(self.aminoT)
         else:
-            raise ValueError("base must be one of the four canonical nucleoties")
+            raise ValueError(("base must be one of the four canonical "
+                              "nucleotides"))
 
     def substitution_type(self):
+        """This function returns the type of subsitution encoded
+        by the two alleles in the genomic site"""
+
         substitution_type = ''
-        if self.codon_aminoacid(base = self.major_allele) == self.codon_aminoacid(base = self.minor_allele):
+        aa1 = self.codon_aminoacid(base=self.major_allele)
+        aa2 = self.codon_aminoacid(base=self.minor_allele)
+        if aa1 == aa2:
             substitution_type = 'synonymous'
         else:
             substitution_type = 'non-synonymous'
 
         return(substitution_type)
 
+
 class Gene:
     """A class for representing a gene"""
 
-    def __init__(self, gene_id,contig,start,end, strand = ''):
+    def __init__(self, gene_id, contig, start, end, strand=''):
         if(start > end):
             raise ValueError("Start cannot be greater than end")
         self.id = gene_id
@@ -91,47 +101,49 @@ class Gene:
         print(">Gene start: {}".format(str(self.start)))
         print(">Gene end: {}".format(str(self.end)))
 
+
 class MKtest:
     """A class for holding the McDonald-Kreitmant test"""
 
-    def __init__(self, name, Ds = 0, Dn = 0, Ps = 0, Pn = 0):
+    def __init__(self, name, Ds=0, Dn=0, Ps=0, Pn=0):
         self.name = name
         self.Dn = Dn
         self.Ds = Ds
         self.Ps = Ps
         self.Pn = Pn
 
-    def update(self, Ds = 0, Dn = 0, Ps = 0, Pn = 0):
+    def update(self, Ds=0, Dn=0, Ps=0, Pn=0):
         """Update the contigency matrix"""
         self.Dn += Dn
         self.Ds += Ds
         self.Ps += Ps
         self.Pn += Pn
 
-    def mk_ratio(self, pseudocount = 0):
+    def mk_ratio(self, pseudocount=0):
         """Calculate the McDonald Kreitman ratio (Dn/Ds)/(Pn/Ps)"""
         ratio = ((self.Dn + pseudocount) / (self.Ds + pseudocount)) / ((self.Pn + pseudocount) / (self.Ps + pseudocount))
         return(ratio)
 
-    def alpha(self, pseudocount = 0):
+    def alpha(self, pseudocount=0):
         """Calculate the Smith & Eyre-Walker alpha 1 - """
-        ni = self.neutrality_index(pseudocount = pseudocount, log = False)
+        ni = self.neutrality_index(pseudocount=pseudocount, log=False)
         alpha = 1 - ni
         return(alpha)
 
-    def hg_test(self, pseudocount = 0):
+    def hg_test(self, pseudocount=0):
         """Hypergeometric (Fisher's exact) test"""
 
-        res = stats.fisher_exact([[self.Ds + pseudocount,self.Ps + pseudocount],
-                                  [self.Dn + pseudocount,self.Pn + pseudocount]])
+        res = stats.fisher_exact([[self.Ds + pseudocount, self.Ps + pseudocount],
+                                  [self.Dn + pseudocount, self.Pn + pseudocount]])
         return(res)
 
-    def g_test(self, correction, pseudocount = 0):
-        """G-test for independence. Original McDonald & Kreitman 1991 suggestion"""
+    def g_test(self, correction, pseudocount=0):
+        """G-test for independence. Original McDonald & Kreitman 1991
+        suggestion"""
 
         # Create 2x2 contingency matrix
-        mat = np.matrix([[self.Ds + pseudocount,self.Ps + pseudocount],
-                         [self.Dn + pseudocount,self.Pn + pseudocount]])
+        mat = np.matrix([[self.Ds + pseudocount, self.Ps + pseudocount],
+                         [self.Dn + pseudocount, self.Pn + pseudocount]])
 
         if correction == 'none':
             res = stats.chi2_contingency(observed=mat,
@@ -148,34 +160,38 @@ class MKtest:
             # According to McDonald (same as above) biostat handbook,
             # it doesn't make much difference (http://www.biostathandbook.com/small.html)
             g, p, df, e = stats.chi2_contingency(observed=mat,
-                                         lambda_="log-likelihood",
-                                         correction=False)
+                                                 lambda_="log-likelihood",
+                                                 correction=False)
 
             # Calculate q correction. Only for 2 x 2 table
             n = mat.sum()
-            q = 1 + (n * (1 / mat.sum(axis = 1)).sum() - 1) * (n * (1 / mat.sum(axis = 0)).sum() - 1) / (6 * n)
+            q = 1 + (n * (1 / mat.sum(axis=1)).sum() - 1) * (n * (1 / mat.sum(axis=0)).sum() - 1) / (6 * n)
 
             # correct g and recalculate p-value
             g = g / q
             p = 1 - stats.chi2.cdf(g, df)
 
             # combine results
-            res = [g, p , df, e]
+            res = [g, p, df, e]
 
         else:
-            raise ValueError("Correction must be one of 'none', 'yates' or 'williams'")
+            raise ValueError(("Correction must be one of 'none', 'yates' "
+                              "or 'williams'"))
 
         return(res)
-    def neutrality_index(self, pseudocount = 1, log = True):
-        """Calculate neutrality index (Pn/Dn)/(Ps/Ds). Following Li et al. (2008), we add a psedocount and return the -log10(NI)"""
+
+    def neutrality_index(self, pseudocount=1, log=True):
+        """Calculate neutrality index (Pn/Dn)/(Ps/Ds).
+        Following Li et al. (2008), we add a psedocount and
+        return the -log10(NI)"""
 
         ni = ((self.Pn + pseudocount) / (self.Dn + pseudocount)) / ((self.Ps + pseudocount) / (self.Ds + pseudocount))
 
         if log:
             ni = -np.log10(ni)
 
-
         return(ni)
+
 
 def process_snp_info_file(args):
     """Process the snps_info.txt file from MIDAS"""
@@ -186,7 +202,7 @@ def process_snp_info_file(args):
         header = info_fh.readline()
         header = header.split('\t')
         print(header)
-        info_reader = csv.reader(info_fh, delimiter = '\t')
+        info_reader = csv.reader(info_fh, delimiter='\t')
         i = 0
 
         # Set columns
@@ -216,52 +232,53 @@ def process_snp_info_file(args):
             i += 1
             if i > args.nrows:
                 break
-            #print(row)
-            #print(row[gene_id_col], row[site_id_col])
-            #print(row[aminoacids_col])
+            # print(row)
+            # print(row[gene_id_col], row[site_id_col])
+            # print(row[aminoacids_col])
             gene = row[gene_id_col]
             site_id = row[site_id_col]
             aminoacids = row[aminoacids_col]
-            #print(aminoacids)
-            #print(site_id)
+            # print(aminoacids)
+            # print(site_id)
 
             if gene == 'NA':
                 # skip intergenig regions
                 continue
 
-            #print("\tgene")
+            # print("\tgene")
             # Get aminoacid per position
             aa = aminoacids.split(',')
-            #print(aa)
+            # print(aa)
 
             # Define site
-            #print(site_id)
-            Sites[site_id] = GenomeSite(site_id = site_id,
-                                        contig = row[contig_col],
-                                        position = row[pos_col],
-                                        ref_allele = row[ref_allele_col],
-                                        major_allele = row[major_allele_col],
-                                        minor_allele = row[minor_allele_col],
-                                        locus_type = row[locus_type_col],
-                                        gene_id = gene, aminoacid_A = aa[0],
-                                        aminoacid_C = aa[1],
-                                        aminoacid_G = aa[2],
-                                        aminoacid_T = aa[3])
+            # print(site_id)
+            Sites[site_id] = GenomeSite(site_id=site_id,
+                                        contig=row[contig_col],
+                                        position=row[pos_col],
+                                        ref_allele=row[ref_allele_col],
+                                        major_allele=row[major_allele_col],
+                                        minor_allele=row[minor_allele_col],
+                                        locus_type=row[locus_type_col],
+                                        gene_id=gene,
+                                        aminoacid_A=aa[0],
+                                        aminoacid_C=aa[1],
+                                        aminoacid_G=aa[2],
+                                        aminoacid_T=aa[3])
 
             # For genes
             if gene in Genes:
                 # update genes
                 Genes[gene].extend(row[pos_col])
-                #print(gene)
-                #print(Genes[gene])
-                #Genes[gene].info()
+                # print(gene)
+                # print(Genes[gene])
+                # Genes[gene].info()
 
             else:
                 # Define gene
                 Genes[gene] = Gene(gene_id=gene, contig = row[contig_col],
                                    start = row[pos_col], end = row[pos_col])
-                #Genes[gene].info()
-                #print(Genes[gene])
+                # Genes[gene].info()
+                # print(Genes[gene])
 
 
     info_fh.close()
