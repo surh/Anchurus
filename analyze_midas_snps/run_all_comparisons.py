@@ -56,9 +56,9 @@ def process_arguments():
                                            'to calculate p-value. If 0 '
                                            'no permutations will be done.'),
                         type=int, default=0)
-    parser.add_argument("--mode", helpt=('Whether to use fyrd to '
-                                         'parallelize per comparison or '
-                                         'submit serially'),
+    parser.add_argument("--mode", help=('Whether to use fyrd to '
+                                        'parallelize per comparison or '
+                                        'submit serially'),
                         type=str, default='fyrd', choices=['fyrd', 'bash'])
 
     # Read arguments
