@@ -524,20 +524,27 @@ def process_arguments():
                                                 "perform to establish "
                                                 "significance"),
                         type=int, default=0)
+    parser.add_argument("--seed", help="Permutation seed",
+                        type=int, default=None)
 
     # Read arguments
     print("Reading arguments")
     args = parser.parse_args()
 
     # Processing goes here if needed
+    if args.seed is None and args.permutations > 0:
+        args.seed = np.random.randint(1000)*2 + 1
 
     return args
 
 
-def process_metadata_file(mapfile):
+def process_metadata_file(mapfile, permute=False):
     """Process metadata file"""
 
     map = pd.read_csv(mapfile, sep='\t')
+
+    if permute:
+        map['Group'] = np.random.permutation(map.Group)
 
     Samples = dict(zip(map.ID, map.Group))
 
@@ -581,6 +588,14 @@ if __name__ == "__main__":
 
     print("Calculate MK contingency tables")
     MK = calculate_contingency_tables(Samples, Groups, args)
+    if args.permutations > 0:
+        MK = [MK]
+        print("Permuting")
+        print("Seed is {}".format(str(args.seed)))
+        for i in range(args.permutations):
+            Sp, Gp = process_metadata_file(args.metadata_file, permute=True)
+            MK.append(calculate_contingency_tables(Sp, Gp, args))
+
 
     ################ Test and results ########
     with open(args.outfile,mode='w') as fh, open(args.tables,mode='w') as th:
