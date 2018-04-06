@@ -60,6 +60,9 @@ def process_arguments():
                                         'parallelize per comparison or '
                                         'submit serially'),
                         type=str, default='fyrd', choices=['fyrd', 'bash'])
+    parser.add_argument("--nrows", help=('Number of rows to read. '
+                                         'Useful to limit time when testing'),
+                        type=float,default=float('inf'))
 
     # Read arguments
     print("Reading arguments")
@@ -126,9 +129,16 @@ if __name__ == '__main__':
                '--group1', group1,
                '--group2', group2,
                '--outfile', species_outfile,
-               '--tables', species_tables,
-               '1>', species_log,
-               '2>', species_err]
+               '--tables', species_tables]
+
+        # If not equal to default, pass it
+        if args.nrow != float('inf'):
+            cmd.append('--nrows', args.nrows)
+
+        # Append output logging
+        cmd.append(['1>', species_log,
+                    '2>', species_err])
+
         cmd = ' '.join(cmd)
         #print(cmd)
         sutilspy.io.run_command(cmd)
