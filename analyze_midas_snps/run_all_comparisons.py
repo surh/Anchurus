@@ -70,7 +70,7 @@ def process_arguments():
                         action='store_true')
     parser.add_argument("--logs", help='Directory for fyrd logs',
                         type=str, default='logs/')
-    parser.add_argument("--dir", help='Directory for fyrd scripts',
+    parser.add_argument("--scripts", help='Directory for fyrd scripts',
                         type=str, default='scripts')
 
     # Read arguments
