@@ -385,7 +385,7 @@ def process_snp_freq_file(args, Counts, Groups, Samples, Sites):
 
             # Check if site was selected based on sites
             site_id = row[0]
-            print(site_id)
+            # print(site_id)
             if not (site_id in Sites):
                 print("==Skipping")
                 continue
@@ -395,16 +395,16 @@ def process_snp_freq_file(args, Counts, Groups, Samples, Sites):
             present_index = np.array(Counts[site_id])
             group_index = np.array([Samples[s][0] for s in samples])
     #         if site_id == '77719':
-            print("==========================")
-            print(row)
-            print(site_id)
-            print("Major Allele: {}".format(Sites[site_id].major_allele))
-            print("Minor Allele: {}".format(Sites[site_id].minor_allele))
-            print("Substitution type: {}".format(s_type))
-            print("Gene: {}".format(gene))
-            print(present_index)
-            print(group_index)
-            print("==========================")
+            # print("==========================")
+            # print(row)
+            # print(site_id)
+            # print("Major Allele: {}".format(Sites[site_id].major_allele))
+            # print("Minor Allele: {}".format(Sites[site_id].minor_allele))
+            # print("Substitution type: {}".format(s_type))
+            # print("Gene: {}".format(gene))
+            # print(present_index)
+            # print(group_index)
+            # print("==========================")
 
             # Create MKtest if needed
             if not (gene in MK):
@@ -419,8 +419,8 @@ def process_snp_freq_file(args, Counts, Groups, Samples, Sites):
             ii = np.where(present_index)
             group_index = group_index[ii]
             allele_freqs = allele_freqs[ii]
-            print("group_index", group_index, len(group_index))
-            print("allele_freqs", allele_freqs, len(allele_freqs))
+            # print("group_index", group_index, len(group_index))
+            # print("allele_freqs", allele_freqs, len(allele_freqs))
 
             # Count alleles per group
             group1_count = allele_freqs[np.where(group_index == args.group1)].sum()
