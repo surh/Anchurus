@@ -202,7 +202,7 @@ def process_snp_info_file(args):
     with open(args.indir + '/snps_info.txt') as info_fh:
         header = info_fh.readline()
         header = header.split('\t')
-        print(header)
+        # print(header)
         info_reader = csv.reader(info_fh, delimiter='\t')
         i = 0
 
@@ -302,7 +302,7 @@ def process_snps_depth_file(args, Groups, Sites):
         indices = {}
         for s in samples:
             indices[s] = header.index(s)
-        print(indices)
+        # print(indices)
 
         depth_reader = csv.reader(depth_fh, delimiter='\t')
         i = 0
@@ -316,7 +316,7 @@ def process_snps_depth_file(args, Groups, Sites):
             # equivalent to check if this a gene)
             site_id = row[0]
             # print(site_id)
-            if site_id not in Sites:
+            if not (site_id in Sites):
                 continue
 
             # Get all counts and convert to integer
@@ -360,7 +360,8 @@ def process_snps_depth_file(args, Groups, Sites):
 def process_snp_freq_file(args, Counts, Groups, Samples, Sites):
     """Process snp_freq.txt from MIDAS. Produces MK table"""
 
-    print(Groups)
+    print("Processing snp_freq.txt")
+    # print(Groups)
     MK = {}
     with open(args.indir + '/snps_freq.txt') as freqs_fh:
         header = freqs_fh.readline()
@@ -372,8 +373,8 @@ def process_snp_freq_file(args, Counts, Groups, Samples, Sites):
         indices = {}
         for s in samples:
             indices[s] = header.index(s)
-        print(indices)
-        print(header)
+        # print(indices)
+        # print(header)
 
         freqs_reader = csv.reader(freqs_fh, delimiter='\t')
         i = 0
@@ -384,8 +385,9 @@ def process_snp_freq_file(args, Counts, Groups, Samples, Sites):
 
             # Check if site was selected based on sites
             site_id = row[0]
-            if site_id not in Sites:
-                # print("==Skipping")
+            print(site_id)
+            if not (site_id in Sites):
+                print("==Skipping")
                 continue
 
             gene = Sites[site_id].gene_id
@@ -393,18 +395,19 @@ def process_snp_freq_file(args, Counts, Groups, Samples, Sites):
             present_index = np.array(Counts[site_id])
             group_index = np.array([Samples[s][0] for s in samples])
     #         if site_id == '77719':
-    #             print("==========================")
-    #             print(row)
-    #             print(site_id)
-    #             print("Major Allele: {}".format(Sites[site_id].major_allele))
-    #             print("Minor Allele: {}".format(Sites[site_id].minor_allele))
-    #             print("Substitution type: {}".format(s_type))
-    #             print("Gene: {}".format(gene))
-    #             print(present_index)
-    #             print(group_index)
+            print("==========================")
+            print(row)
+            print(site_id)
+            print("Major Allele: {}".format(Sites[site_id].major_allele))
+            print("Minor Allele: {}".format(Sites[site_id].minor_allele))
+            print("Substitution type: {}".format(s_type))
+            print("Gene: {}".format(gene))
+            print(present_index)
+            print(group_index)
+            print("==========================")
 
             # Create MKtest if needed
-            if gene not in MK:
+            if not (gene in MK):
                 MK[gene] = MKtest(name=gene)
 
             # find allele per sample
@@ -421,8 +424,8 @@ def process_snp_freq_file(args, Counts, Groups, Samples, Sites):
             # Count alleles per group
             group1_count = allele_freqs[np.where(group_index == args.group1)].sum()
             group2_count = allele_freqs[np.where(group_index == args.group2)].sum()
-            # print(group1_count)
-            # print(group2_count)
+            print("group1_count", group1_count)
+            print("group2_count", group2_count)
 
             if group1_count > 0 and group2_count > 0:
                 fixed = False
