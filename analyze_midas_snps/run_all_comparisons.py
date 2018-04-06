@@ -95,13 +95,13 @@ if __name__ == '__main__':
     print("========ITERATIONG OVER COMPARISONS========")
     # For every comparison
     for i, r in comparisons.iterrows():
-        print("\tSpecies:{} in {} vs {}".format(r['Species'], r['A'], r['B']))
+        print("Species:{} in {} vs {}".format(r['Species'], r['A'], r['B']))
         species_indir = ''.join([args.indir, '/',
                                  r['Species'],
                                  '/'])
 
         # Create output directory
-        print("\tCreating species output directory")
+        print("Creating species output directory")
         species_outdir = ''.join([args.outdir,
                                   '/', r['Species'],
                                   '/'])
@@ -110,7 +110,7 @@ if __name__ == '__main__':
         except FileExistsError:
             print("Directory already exists")
 
-        print("\tCreating MKtest.py command")
+        print("Creating MKtest.py command")
         suffix = r['A'] + '_' + r['B']
         suffix = suffix.replace(' ', '.')
 
@@ -150,7 +150,7 @@ if __name__ == '__main__':
             sutilspy.io.run_command(cmd)
         elif args.mode == 'fyrd':
             job_name = 'mktest' + r['species']
-            print("\tCreating fyrd job {}".format(job_name))
+            print("Creating fyrd job {}".format(job_name))
             job = fyrd.Job(cmd,
                            clean_files=False,
                            clean_outputs=False,
@@ -164,6 +164,7 @@ if __name__ == '__main__':
                            scriptpath='scripts')
             print("\tSubmitting job")
             job.submit(max_jobs=args.maxjobs)
-
         else:
             raise ValueError("Unreconized mode")
+
+    print("========ITERATIONG OVER COMPARISONS========")
