@@ -17,7 +17,7 @@
 import pandas as pd
 import argparse
 import os
-import sutilspy
+# import sutilspy
 import fyrd
 
 
@@ -172,7 +172,9 @@ if __name__ == '__main__':
         # print(cmd)
 
         if args.mode == 'bash':
-            sutilspy.io.run_command(cmd)
+            # sutilspy.io.run_command(cmd)
+            print("Running command:\n>{}".format(cmd))
+            os.system(cmd)
         elif args.mode == 'fyrd':
             job_name = 'mktest' + r['Species']
             print("Creating fyrd job {}".format(job_name))
