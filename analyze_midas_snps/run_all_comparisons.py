@@ -62,7 +62,7 @@ def process_arguments():
                         type=str, default='fyrd', choices=['fyrd', 'bash'])
     parser.add_argument("--nrows", help=('Number of rows to read. '
                                          'Useful to limit time when testing'),
-                        type=float,default=float('inf'))
+                        type=float, default=float('inf'))
 
     # Read arguments
     print("Reading arguments")
@@ -133,7 +133,7 @@ if __name__ == '__main__':
 
         # If not equal to default, pass it
         if args.nrows != float('inf'):
-            cmd.extend(['--nrows', args.nrows])
+            cmd.extend(['--nrows', str(args.nrows)])
 
         # Append output logging
         cmd.extend(['1>', species_log,
