@@ -322,7 +322,7 @@ def process_snps_depth_file(args,Groups,Sites):
             # Get all counts and convert to integer
             counts = row[1:]
             counts = list(map(int,counts))
-            #print(counts)
+            # print(counts)
 
             # Convert count to presence/absence vector based on
             # threshold of number of counts to use position in sample
@@ -330,29 +330,27 @@ def process_snps_depth_file(args,Groups,Sites):
 
             # Get counts per group
             # GLITCH: Here it fails if map has extra samples not present in files
-            #print(set(Groups[args.group1]) & set(indices.keys()))
-            #print(args.group1)
-            #print(Groups[args.group1])
-            #print(indices.keys())
-            #print(set(indices.keys()))
+            # print(set(Groups[args.group1]) & set(indices.keys()))
+            # print(args.group1)
+            # print(Groups[args.group1])
+            # print(indices.keys())
+            # print(set(indices.keys()))
 
             samples1 = [int(counts[ indices[l] - 1 ]) for l in set(Groups[args.group1]) & set(indices.keys())]
             samples2 = [int(counts[ indices[l] - 1 ]) for l in set(Groups[args.group2]) & set(indices.keys())]
             samples1 = sum(samples1)
             samples2 = sum(samples2)
-            #print(samples1)
-            #print(samples2)
+            # print(samples1)
+            # print(samples2)
             if not (samples1 > 1 and samples2 > 1):
-                #print("\t====Group1:{},Group2:{},SiteID:{}====".format(samples1,samples2,site_id))
+                # print("\t====Group1:{},Group2:{},SiteID:{}====".format(samples1,samples2,site_id))
                 # delete
-                #print(site_id)
+                # print(site_id)
                 if site_id in Sites:
                     del Sites[site_id]
             else:
                 # NOTE: ASSUMING SAME ORDER IN SAMPLES BETWEEN SITES
                 Counts[site_id] = counts
-
-
 
     depth_fh.close()
     print("Number of sites: {}".format(str(len(Sites))))
@@ -361,7 +359,8 @@ def process_snps_depth_file(args,Groups,Sites):
 
     return Counts
 
-def process_snp_freq_file(args,Counts,Groups,Samples):
+
+def process_snp_freq_file(args, Counts, Groups, Samples):
     """Process snp_freq.txt from MIDAS. Produces MK table"""
 
     print(Groups)
@@ -379,7 +378,7 @@ def process_snp_freq_file(args,Counts,Groups,Samples):
         print(indices)
         print(header)
 
-        freqs_reader = csv.reader(freqs_fh, delimiter = '\t')
+        freqs_reader = csv.reader(freqs_fh, delimiter='\t')
         i = 0
         for row in freqs_reader:
             i += 1
@@ -388,8 +387,8 @@ def process_snp_freq_file(args,Counts,Groups,Samples):
 
             # Check if site was selected based on sites
             site_id = row[0]
-            if not site_id in Sites:
-                #print("==Skipping")
+            if site_id not in Sites:
+                # print("==Skipping")
                 continue
 
             gene = Sites[site_id].gene_id
@@ -409,24 +408,24 @@ def process_snp_freq_file(args,Counts,Groups,Samples):
 
             # Create MKtest if needed
             if gene not in MK:
-                MK[gene]= MKtest(name=gene)
+                MK[gene] = MKtest(name=gene)
 
             # find allele per sample
             allele_freqs = np.array([int(float(f) < 0.5) for f in row[1:]])
-            #print(allele_freqs)
+            # print(allele_freqs)
 
             # Remove non covered positions
             ii = np.where(present_index)
             group_index = group_index[ii]
             allele_freqs = allele_freqs[ii]
-            #print(group_index)
-            #print(allele_freqs)
+            # print(group_index)
+            # print(allele_freqs)
 
             # Count alleles per group
             group1_count = allele_freqs[np.where(group_index == args.group1)].sum()
             group2_count = allele_freqs[np.where(group_index == args.group2)].sum()
-            #print(group1_count)
-            #print(group2_count)
+            # print(group1_count)
+            # print(group2_count)
 
             if group1_count > 0 and group2_count > 0:
                 fixed = False
@@ -435,18 +434,18 @@ def process_snp_freq_file(args,Counts,Groups,Samples):
 
             if s_type == 'synonymous':
                 if fixed:
-                    MK[gene].update(Ds = 1)
+                    MK[gene].update(Ds=1)
                 else:
-                    MK[gene].update(Ps = 1)
+                    MK[gene].update(Ps=1)
             elif s_type == 'non-synonymous':
                 if fixed:
-                    MK[gene].update(Dn = 1)
+                    MK[gene].update(Dn=1)
                 else:
-                    MK[gene].update(Pn = 1)
+                    MK[gene].update(Pn=1)
             else:
                 raise ValueError("Invalid substitution type")
 
-            #print("==========================")
+            # print("==========================")
 
     freqs_fh.close()
     print("Number of sites: {}".format(str(len(Sites))))
@@ -455,6 +454,7 @@ def process_snp_freq_file(args,Counts,Groups,Samples):
     print("Genes with MK: {}".format(str(len(MK))))
 
     return MK
+
 
 def confirm_midas_merge_files(args):
     """Confirm files are present. No integrity check"""
@@ -470,37 +470,65 @@ def confirm_midas_merge_files(args):
     if not os.path.isfile(args.metadata_file):
         raise FileNotFoundError("Could not find metadata file {}".format(args.metadata_file))
 
-if __name__ == "__main__":
 
-    # Argparse
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+def process_arguments():
+    # Read arguments
+    parser_format = argparse.ArgumentDefaultsHelpFormatter
+    parser = argparse.ArgumentParser(formatter_class=parser_format)
     required = parser.add_argument_group("Required arguments")
-    required.add_argument("--indir", help = "Input directory", type = str,
-                          required = True)
-    required.add_argument("--metadata_file", help = "Mapping file for samples", type = str,
-                          required = True)
-    required.add_argument("--group1", help = "Group1 of comparison", type = str,
-                          required = True)
-    required.add_argument("--group2", help = "Group2 of comparison",
-                          required = True)
 
-    parser.add_argument("--test", help = "Eventually specify test to perform",
-                        default = "G", type = str)
-    parser.add_argument("--outfile", help = "Output file with results",
-                   default = "mk_results.txt", type = str)
-    parser.add_argument("--min_count", help = "min depth at a position in a sample to consider that sample in that position",
-                        default = 1, type = int)
-    parser.add_argument("--nrows", help = "Number of gene positions to read",
-                        default = float('inf'), type = float)
-    parser.add_argument("--tables", help = "Output file for contingency tables",
-                        default = "mk_tables.txt", type = str)
-    parser.add_argument("--pseudocount", help = "Pseudocount value to use in contingency tables",
-                        default = 1, type = int)
+    # Define description
+    parser.description = ("Script to perform McDonald-Kreitman test "
+                          "from a midas output file of snps.")
 
+    # Define required arguments
+    required.add_argument("--indir", help="Input directory",
+                          type=str,
+                          required=True)
+    required.add_argument("--metadata_file", help="Mapping file for samples",
+                          type=str,
+                          required=True)
+    required.add_argument("--group1", help="Group1 of comparison",
+                          type=str,
+                          required=True)
+    required.add_argument("--group2", help="Group2 of comparison",
+                          type=str,
+                          required=True)
+
+    # Define other arguments
+    parser.add_argument("--test", help="Eventually specify test to perform",
+                        default="G", type=str,
+                        choices=['all', 'G', 'hg', 'NI', 'alpha'])
+    parser.add_argument("--outfile", help="Output file with results",
+                        default="mk_results.txt", type=str)
+    parser.add_argument("--min_count", help=("min depth at a position in "
+                                             "a sample to consider that "
+                                             "sample in that position"),
+                        default=1, type=int)
+    parser.add_argument("--nrows", help="Number of gene positions to read",
+                        default=float('inf'), type=float)
+    parser.add_argument("--tables", help="Output file for contingency tables",
+                        default="mk_tables.txt", type=str)
+    parser.add_argument("--pseudocount", help=("Pseudocount value to use "
+                                               "in contingency tables"),
+                        default=1, type=int)
+
+    # Read arguments
+    print("Reading arguments")
     args = parser.parse_args()
 
-    ######## Check files #################
+    # Processing goes here if needed
+
+    return args
+
+
+if __name__ == "__main__":
+    args = process_arguments()
+
+    # Check midas files
+    print("################ Checking MIDAS files ################")
     confirm_midas_merge_files(args)
+    print("################ Done checking MIDAS files ################")
 
     #### Read metadata ####
     Groups = sutilspy.io.process_run_list(args.metadata_file,
