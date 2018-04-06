@@ -357,7 +357,7 @@ def process_snps_depth_file(args, Groups, Sites):
     return Counts
 
 
-def process_snp_freq_file(args, Counts, Groups, Samples):
+def process_snp_freq_file(args, Counts, Groups, Samples, Sites):
     """Process snp_freq.txt from MIDAS. Produces MK table"""
 
     print(Groups)
@@ -564,7 +564,7 @@ def calculate_contingency_tables(Samples, Groups, args):
     print("Sites with counts: {}".format(str(len(Counts))))
 
     print("\tRead frequencies and calculate")
-    MK = process_snp_freq_file(args, Counts, Groups, Samples)
+    MK = process_snp_freq_file(args, Counts, Groups, Samples, Sites)
     print("Number of sites: {}".format(str(len(Sites))))
     print("Number of genes: {}".format(str(len(Genes))))
     print("Sites with counts: {}".format(str(len(Counts))))
