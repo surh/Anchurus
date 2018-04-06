@@ -150,7 +150,7 @@ if __name__ == '__main__':
         if args.mode == 'bash':
             sutilspy.io.run_command(cmd)
         elif args.mode == 'fyrd':
-            job_name = 'mktest' + r['species']
+            job_name = 'mktest' + r['Species']
             print("Creating fyrd job {}".format(job_name))
             job = fyrd.Job(cmd,
                            clean_files=False,
@@ -177,4 +177,3 @@ if __name__ == '__main__':
             j.wait()
 
         print("========DONE WAITING FOR MKTEST JOBS TO COMPLETE========")
-            
