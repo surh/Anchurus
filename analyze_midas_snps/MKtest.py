@@ -281,16 +281,15 @@ def process_snp_info_file(args):
                 # Genes[gene].info()
                 # print(Genes[gene])
 
-
     info_fh.close()
-    #print(Groups)
-    print("Number of sites: {}".format(str(len(Sites))))
-    print("Number of genes: {}".format(str(len(Genes))))
+    # print(Groups)
 
     return Genes, Sites
 
-def process_snps_depth_file(args,Groups,Sites):
-    """Use depth to decide which samples to keep. It modifies Sites and returns Counts"""
+
+def process_snps_depth_file(args, Groups, Sites):
+    """Use depth to decide which samples to keep.
+    It modifies Sites and returns Counts"""
 
     Counts = {}
     with open(args.indir + '/snps_depth.txt') as depth_fh:
@@ -305,24 +304,24 @@ def process_snps_depth_file(args,Groups,Sites):
             indices[s] = header.index(s)
         print(indices)
 
-        depth_reader = csv.reader(depth_fh, delimiter = '\t')
+        depth_reader = csv.reader(depth_fh, delimiter='\t')
         i = 0
         for row in depth_reader:
             i += 1
             if i > args.nrows:
                 break
-            #print(row)
+            # print(row)
 
             # Get site ID and check if it is in Sites (for MK this is
             # equivalent to check if this a gene)
             site_id = row[0]
-            #print(site_id)
-            if not site_id in Sites:
+            # print(site_id)
+            if site_id not in Sites:
                 continue
 
             # Get all counts and convert to integer
             counts = row[1:]
-            counts = list(map(int,counts))
+            counts = list(map(int, counts))
             # print(counts)
 
             # Convert count to presence/absence vector based on
@@ -354,9 +353,6 @@ def process_snps_depth_file(args,Groups,Sites):
                 Counts[site_id] = counts
 
     depth_fh.close()
-    print("Number of sites: {}".format(str(len(Sites))))
-    print("Number of genes: {}".format(str(len(Genes))))
-    print("Sites with counts: {}".format(str(len(Counts))))
 
     return Counts
 
@@ -449,10 +445,6 @@ def process_snp_freq_file(args, Counts, Groups, Samples):
             # print("==========================")
 
     freqs_fh.close()
-    print("Number of sites: {}".format(str(len(Sites))))
-    print("Number of genes: {}".format(str(len(Genes))))
-    print("Sites with counts: {}".format(str(len(Counts))))
-    print("Genes with MK: {}".format(str(len(MK))))
 
     return MK
 
@@ -539,7 +531,7 @@ def process_arguments():
 
 
 def process_metadata_file(mapfile, permute=False):
-    """Process metadata file"""
+    """Process metadata file and permute if needed"""
 
     map = pd.read_csv(mapfile, sep='\t')
 
@@ -562,12 +554,21 @@ def calculate_contingency_tables(Samples, Groups, args):
 
     print("\tRead snps_info.txt")
     Genes, Sites = process_snp_info_file(args)
+    print("Number of sites: {}".format(str(len(Sites))))
+    print("Number of genes: {}".format(str(len(Genes))))
 
     print("\tChose sites based on depth in groups to compare")
     Counts = process_snps_depth_file(args, Groups, Sites)
+    print("Number of sites: {}".format(str(len(Sites))))
+    print("Number of genes: {}".format(str(len(Genes))))
+    print("Sites with counts: {}".format(str(len(Counts))))
 
     print("\tRead frequencies and calculate")
     MK = process_snp_freq_file(args, Counts, Groups, Samples)
+    print("Number of sites: {}".format(str(len(Sites))))
+    print("Number of genes: {}".format(str(len(Genes))))
+    print("Sites with counts: {}".format(str(len(Counts))))
+    print("Genes with MK: {}".format(str(len(MK))))
 
     return MK
 
