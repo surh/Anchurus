@@ -133,10 +133,10 @@ if __name__ == '__main__':
 
         # If not equal to default, pass it
         if args.nrows != float('inf'):
-            cmd.append('--nrows', args.nrows)
+            cmd.extend(['--nrows', args.nrows])
 
         # Append output logging
-        cmd.append(['1>', species_log,
+        cmd.extend(['1>', species_log,
                     '2>', species_err])
 
         cmd = ' '.join(cmd)
