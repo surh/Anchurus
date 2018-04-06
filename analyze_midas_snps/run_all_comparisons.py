@@ -77,6 +77,13 @@ if __name__ == '__main__':
     comparisons = pd.read_csv(args.comparisons_file, sep="\t")
     # comparisons.head()
 
+    # Create overall outptu directory
+    print("Creating output directory")
+    try:
+        os.mkdir(args.outdir)
+    except FileExistsError:
+        raise("Directory already exists")
+
     print("========ITERATIONG OVER COMPARISONS========")
     # For every comparison
     for i, r in comparisons.iterrows():
