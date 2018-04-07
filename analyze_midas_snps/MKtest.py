@@ -387,7 +387,7 @@ def process_snp_freq_file(args, Counts, Groups, Samples, Sites):
             site_id = row[0]
             # print(site_id)
             if not (site_id in Sites):
-                print("==Skipping")
+                # print("==Skipping")
                 continue
 
             gene = Sites[site_id].gene_id
@@ -425,8 +425,8 @@ def process_snp_freq_file(args, Counts, Groups, Samples, Sites):
             # Count alleles per group
             group1_count = allele_freqs[np.where(group_index == args.group1)].sum()
             group2_count = allele_freqs[np.where(group_index == args.group2)].sum()
-            print("group1_count", group1_count)
-            print("group2_count", group2_count)
+            # print("group1_count", group1_count)
+            # print("group2_count", group2_count)
 
             if group1_count > 0 and group2_count > 0:
                 fixed = False
