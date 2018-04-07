@@ -591,7 +591,8 @@ def calculate_contingency_tables(Samples, Groups, args):
 
 
 def test_and_write_results(MK, Genes, outfile, tables,
-                           test='hg', permutations=0):
+                           test='hg', pseudocount=0,
+                           permutations=0):
     """Take MK results, perform test and write outfile with
     results."""
 
@@ -632,89 +633,60 @@ def test_and_write_results(MK, Genes, outfile, tables,
             th.write("\t\tFixed\tPolymorphic\n\tSynonymous\t{}\t{}\n\tnon-synonymous\t{}\t{}\n".format(mk.Ds,mk.Ps,mk.Dn,mk.Pn))
 
             # Calculate neutrality index
-            try:
-                ni = mk.neutrality_index(log=True, pseudocount = args.pseudocount)
-            except ZeroDivisionError:
-                ni = float('nan')
+            if 'NI' in test:
+                try:
+                    ni = mk.neutrality_index(log=True, pseudocount = args.pseudocount)
+                except ZeroDivisionError:
+                    ni = float('nan')
 
-            # Calculate ratio with and without pseudocount
-            try:
-                ratio = mk.mk_ratio(pseudocount=0)
-            except ZeroDivisionError:
-                ratio = float('nan')
-            try:
-                ratio_pseudo = mk.mk_ratio(pseudocount=args.pseudocount)
-            except ZeroDivisionError:
-                ratio = float('nan')
+            # Calculate ratio
+            if 'ratio' in test:
+                try:
+                    ratio = mk.mk_ratio(pseudocount=pseudocount)
+                except ZeroDivisionError:
+                    ratio = float('nan')
 
             # Hypergeometric test
-            hg_odds, hg_p = mk.hg_test(pseudocount = 0)
-            hg_odds_pseudo, hg_p_pseudo = mk.hg_test(pseudocount = args.pseudocount)
+            if 'hg' in test:
+                hg_odds, hg_p = mk.hg_test(pseudocount = pseudocount)
 
             # G test of indenpendece try multiple corrections
-            try:
-                g_none, g_none_p, g_none_df, g_none_E = mk.g_test(correction='none',
-                                                                  pseudocount=0)
-            except ValueError:
-                g_none = float('nan')
-                g_none_p = float('nan')
-                g_none_df = float('nan')
-                g_none_E = float('nan')
+            if 'G' in test:
+                try:
+                    g_none, g_none_p, g_none_df, g_none_E = mk.g_test(correction='none',
+                                                                      pseudocount=pseudocount)
+                except ValueError:
+                    g_none = float('nan')
+                    g_none_p = float('nan')
+                    g_none_df = float('nan')
+                    g_none_E = float('nan')
 
-            try:
-                g_yates, g_yates_p, g_yates_df, g_yates_E = mk.g_test(correction='yates',
-                                                                      pseudocount=0)
-            except ValueError:
-                g_yates = float('nan')
-                g_yates_p = float('nan')
-                g_yates_df = float('nan')
-                g_yates_E = float('nan')
+            if 'G_Yates' in test:
+                try:
+                    g_yates, g_yates_p, g_yates_df, g_yates_E = mk.g_test(correction='yates',
+                                                                          pseudocount=pseudocount)
+                except ValueError:
+                    g_yates = float('nan')
+                    g_yates_p = float('nan')
+                    g_yates_df = float('nan')
+                    g_yates_E = float('nan')
 
-            try:
-                g_williams, g_williams_p, g_williams_df, g_williams_E = mk.g_test(correction='williams',
-                                                                                  pseudocount=0)
-            except ValueError:
-                g_williams = float('nan')
-                g_williams_p = float('nan')
-                g_williams_df = float('nan')
-                g_williams_E = float('nan')
-
-            # G test for independence with pseududocounts
-            try:
-                g_none_pseudo, g_none_p_pseudo, g_none_df_pseudo, g_none_E_pseudo = mk.g_test(correction='none',
-                                                                                              pseudocount=args.pseudocount)
-            except ValueError:
-                g_none_pseudo = float('nan')
-                g_none_p_pseudo = float('nan')
-                g_none_df_pseudo = float('nan')
-                g_none_E_pseudo = float('nan')
-
-            try:
-                g_yates_pseudo, g_yates_p_pseudo, g_yates_df_pseudo, g_yates_E_pseudo = mk.g_test(correction='yates',
-                                                                                                  pseudocount=args.pseudocount)
-            except ValueError:
-                g_yates_pseudo = float('nan')
-                g_yates_p_pseudo = float('nan')
-                g_yates_df_pseudo = float('nan')
-                g_yates_E_pseudo = float('nan')
-
-            try:
-                g_williams_pseudo, g_williams_p_pseudo, g_williams_df_pseudo, g_williams_E_pseudo = mk.g_test(correction='williams',
-                                                                                                              pseudocount=args.pseudocount)
-            except ValueError:
-                g_williams_pseudo = float('nan')
-                g_williams_p_pseudo = float('nan')
-                g_williams_df_pseudo = float('nan')
-                g_williams_E_pseudo = float('nan')
-
+            if 'G_Williams' in test
+                try:
+                    g_williams, g_williams_p, g_williams_df, g_williams_E = mk.g_test(correction='williams',
+                                                                                      pseudocount=pseudocounts)
+                except ValueError:
+                    g_williams = float('nan')
+                    g_williams_p = float('nan')
+                    g_williams_df = float('nan')
+                    g_williams_E = float('nan')
 
             # Eyre-Walker alpha
-            try:
-                alpha = mk.alpha(pseudocount=0)
-            except ZeroDivisionError:
-                alpha = float('nan')
-
-            alpha_pseudo = mk.alpha(pseudocount=args.pseudocount)
+            if 'alpha' in test:
+                try:
+                    alpha = mk.alpha(pseudocount=pseudocount)
+                except ZeroDivisionError:
+                    alpha = float('nan')
 
             # prepare res
             res = [gene, Genes[gene].contig, str(Genes[gene].start), str(Genes[gene].end),
@@ -732,9 +704,6 @@ def test_and_write_results(MK, Genes, outfile, tables,
             #print("MK alpha is: {}".format(str(alpha)))
     fh.close()
     th.close()
-
-
-
 
 
 if __name__ == "__main__":
