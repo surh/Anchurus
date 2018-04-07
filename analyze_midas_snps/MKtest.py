@@ -595,6 +595,14 @@ def test_and_write_results(MK, Genes, outfile, tables,
     """Take MK results, perform test and write outfile with
     results."""
 
+    # Get list of tests to perform
+    supported_tests = np.array(['ni', 'ratio', 'hg',
+                                'G', 'G_Yates', 'G_Williams_p',
+                                'alpha'], dtype=np.character)
+    if tests == 'all':
+        tests = supported_tests
+    else:
+        tests = np.array(tests, dtype=np.character)
 
     # Open files for output
     with open(outfile, mode='w') as fh, open(tables, mode='w') as th:
