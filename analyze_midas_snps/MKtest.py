@@ -606,15 +606,15 @@ def calculate_statistic(mk, test, pseudocount=0):
 
     # Calculate ratio
     if 'ratio' in test:
-        tests['NI.pval'] = float('nan')
+        tests['ratio.pval'] = float('nan')
         try:
-            tests['NI'] = mk.mk_ratio(pseudocount=pseudocount)
+            tests['ratio'] = mk.mk_ratio(pseudocount=pseudocount)
         except ZeroDivisionError:
-            tests['NI'] = float('nan')
+            tests['ratio'] = float('nan')
 
     # Hypergeometric test
     if 'hg' in test:
-        tests['hg'], tests['hg.pval'] = mk.hg_test(pseudocount = pseudocount)
+        tests['hg'], tests['hg.pval'] = mk.hg_test(pseudocount=pseudocount)
 
     # G test of indenpendece try multiple corrections
     if 'G' in test:
@@ -666,7 +666,7 @@ def test_and_write_results(MK, Genes, outfile, tables,
 
     # Get list of tests to perform
     supported_tests = ['NI', 'ratio', 'hg',
-                       'G', 'G_Yates', 'G_Williams_p',
+                       'G', 'G_Yates', 'G_Williams',
                        'alpha']
     if test == 'all':
         test = supported_tests
@@ -746,9 +746,11 @@ if __name__ == "__main__":
         MK = [MK]
         print("Permuting")
         print("Seed is {}".format(str(args.seed)))
+        np.random.seed(args.seed)
         for i in range(args.permutations):
             Sp, Gp = process_metadata_file(args.metadata_file, permute=True)
-            MK.append(calculate_contingency_tables(Sp, Gp, args))
+            mk, genes = calculate_contingency_tables(Sp, Gp, args)
+            MK.append(mk)
 
     test_and_write_results(MK, Genes, args.outfile, args.tables,
                            test=args.test, pseudocount=args.pseudocount,
