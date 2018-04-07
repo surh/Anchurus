@@ -610,7 +610,8 @@ def test_and_write_results(MK, Genes, outfile, tables,
     # Create header
     header_base = ['gene', 'contig', 'start', 'end',
                    'Dn', 'Ds', 'Pn', 'Ps']
-    header = header_base + test + [''.join([t, '.pval']) for t in test]
+    pval_list = [''.join([t, '.pval']) for t in test]
+    header = header_base + test + pval_list
 
     # Open files for output
     with open(outfile, mode='w') as fh, open(tables, mode='w') as th:
@@ -688,14 +689,14 @@ def test_and_write_results(MK, Genes, outfile, tables,
 
             # Eyre-Walker alpha
             if 'alpha' in test:
-                tests['alpha.pval`] = float('nan')
+                tests['alpha.pval'] = float('nan')
                 try:
                     tests['alpha'] = mk.alpha(pseudocount=pseudocount)
                 except ZeroDivisionError:
                     tests['alpha'] = float('nan')
 
             # prepare res
-            res = [str(tests[t]) for t in test]
+            res = [str(tests[t]) for t in test + pval_list]
             res = [gene, Genes[gene].contig, str(Genes[gene].start), str(Genes[gene].end),
                    str(mk.Dn), str(mk.Ds), str(mk.Pn), str(mk.Ps)] + res
 
