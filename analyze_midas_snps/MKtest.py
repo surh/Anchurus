@@ -591,18 +591,25 @@ def calculate_contingency_tables(Samples, Groups, args):
 
 
 def test_and_write_results(MK, Genes, outfile, tables,
-                           tests='hg', permutations=0):
+                           test='hg', permutations=0):
     """Take MK results, perform test and write outfile with
     results."""
 
     # Get list of tests to perform
-    supported_tests = np.array(['ni', 'ratio', 'hg',
-                                'G', 'G_Yates', 'G_Williams_p',
-                                'alpha'], dtype=np.character)
-    if tests == 'all':
-        tests = supported_tests
+    supported_tests = ['ni', 'ratio', 'hg',
+                       'G', 'G_Yates', 'G_Williams_p',
+                       'alpha']
+    if test == 'all':
+        test = supported_tests
+    elif test not in supported_tests:
+        raise ValueError("Test not supported")
     else:
-        tests = np.array(tests, dtype=np.character)
+        test = [test]
+
+    # Create header
+    header_base = ['gene', 'contig', 'start', 'end',
+                   'Dn', 'Ds', 'Pn', 'Ps',]
+    header = header_base + tests + [''.join([t,'.pval']) for t in test]
 
     # Open files for output
     with open(outfile, mode='w') as fh, open(tables, mode='w') as th:
