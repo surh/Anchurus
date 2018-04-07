@@ -575,7 +575,7 @@ def calculate_contingency_tables(Samples, Groups, args):
     print("Sites with counts: {}".format(str(len(Counts))))
     print("Genes with MK: {}".format(str(len(MK))))
 
-    return MK
+    return MK, Genes
 
 
 if __name__ == "__main__":
@@ -593,7 +593,7 @@ if __name__ == "__main__":
     Samples, Groups = process_metadata_file(args.metadata_file)
 
     print("Calculate MK contingency tables")
-    MK = calculate_contingency_tables(Samples, Groups, args)
+    MK, Genes = calculate_contingency_tables(Samples, Groups, args)
     if args.permutations > 0:
         MK = [MK]
         print("Permuting")
