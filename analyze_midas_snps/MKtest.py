@@ -730,7 +730,6 @@ if __name__ == "__main__":
             Sp, Gp = process_metadata_file(args.metadata_file, permute=True)
             MK.append(calculate_contingency_tables(Sp, Gp, args))
 
-
-
-
-    ################ Test and results ########
+    test_and_write_results(MK, Genes, args.outfile, args.tables,
+                           test=args.test, pseudocount=args.pseudocount,
+                           permutations=args.permutations)
