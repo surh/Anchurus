@@ -671,7 +671,7 @@ def test_and_write_results(MK, Genes, outfile, tables,
                     g_yates_df = float('nan')
                     g_yates_E = float('nan')
 
-            if 'G_Williams' in test
+            if 'G_Williams' in test:
                 try:
                     g_williams, g_williams_p, g_williams_df, g_williams_E = mk.g_test(correction='williams',
                                                                                       pseudocount=pseudocounts)
@@ -697,7 +697,7 @@ def test_and_write_results(MK, Genes, outfile, tables,
                    str(g_none_p_pseudo), str(g_yates_p_pseudo),str(g_williams_p_pseudo),
                    str(alpha), str(alpha_pseudo)]
 
-            th.write(str(res) + "\n")
+            # th.write(str(res) + "\n")
             fh.write("\t".join(res) + "\n")
             #alpha = mk.alpha()
             #print("MK ratio is: {}".format(str(ratio)))
