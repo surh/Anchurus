@@ -500,9 +500,21 @@ def process_arguments():
                           required=True)
 
     # Define other arguments
-    parser.add_argument("--test", help="Eventually specify test to perform",
-                        default="G", type=str,
-                        choices=['all', 'G', 'hg', 'NI', 'alpha'])
+    parser.add_argument("--test", help=("Eventually specify test to perform."
+                                        "all performs all tests. G performs "
+                                        "a G test without correction."
+                                        "G_Yates performs a G test with the "
+                                        "Yates correction. G_Williams "
+                                        "performs a G test with the Williams "
+                                        "correction. hg performs the "
+                                        "hypergeometric (Fisher's Exact) "
+                                        "test. NI rerturns the neutrality "
+                                        "index. alpha returs the Eyre-"
+                                        "Walker alpha. Ratio returns the MK "
+                                        "ratio,"),
+                        default="hg", type=str,
+                        choices=['all', 'G', 'G_Yates', 'G_Williamps',
+                                 'hg', 'NI', 'alpha', 'ratio'])
     parser.add_argument("--outfile", help="Output file with results",
                         default="mk_results.txt", type=str)
     parser.add_argument("--min_count", help=("min depth at a position in "
@@ -578,39 +590,23 @@ def calculate_contingency_tables(Samples, Groups, args):
     return MK, Genes
 
 
-if __name__ == "__main__":
-    args = process_arguments()
-
-    # Check midas files
-    print("Checking MIDAS files exist")
-    confirm_midas_merge_files(args)
-
-    # Read mapping files
-    # Create dictionaries that have all the samples per group (Groups),
-    # and the group to which each sample belongs (Samples)
-    # Probably should change this to pandas
-    print("Read metadata")
-    Samples, Groups = process_metadata_file(args.metadata_file)
-
-    print("Calculate MK contingency tables")
-    MK, Genes = calculate_contingency_tables(Samples, Groups, args)
-    if args.permutations > 0:
-        MK = [MK]
-        print("Permuting")
-        print("Seed is {}".format(str(args.seed)))
-        for i in range(args.permutations):
-            Sp, Gp = process_metadata_file(args.metadata_file, permute=True)
-            MK.append(calculate_contingency_tables(Sp, Gp, args))
+def test_and_write_results(MK, Genes, outfile, tables,
+                           tests='hg', permutations=0):
+    """Take MK results, perform test and write outfile with
+    results."""
 
 
-    ################ Test and results ########
-    with open(args.outfile,mode='w') as fh, open(args.tables,mode='w') as th:
-        header = ['gene','contig','start','end',
-                  'Dn','Ds','Pn','Ps',
-                  'ni', 'ratio','ratio_pseudo','hg_odds','hg_p','hg_odds_pseudo','hg_p_pseudo',
-                  'g_none_p','g_yates_p','g_williams_p',
-                  'g_none_p_pseudo','g_yates_p_pseudo','g_williams_p_pseudo',
-                  'alpha','alpha_pseudo']
+    # Open files for output
+    with open(outfile, mode='w') as fh, open(tables, mode='w') as th:
+        header = ['gene', 'contig', 'start', 'end',
+                  'Dn', 'Ds', 'Pn', 'Ps',
+                  'ni', 'ratio', 'ratio_pseudo', 'hg_odds',
+                  'hg_p', 'hg_odds_pseudo', 'hg_p_pseudo',
+                  'g_none_p', 'g_yates_p', 'g_williams_p',
+                  'g_none_p_pseudo', 'g_yates_p_pseudo'
+                  'g_williams_p_pseudo',
+                  'alpha', 'alpha_pseudo']
+
         fh.write("\t".join(header) + "\n")
         for gene,mk in MK.items():
             th.write("=============================================\n")
@@ -718,3 +714,36 @@ if __name__ == "__main__":
             #print("MK alpha is: {}".format(str(alpha)))
     fh.close()
     th.close()
+
+
+
+
+
+if __name__ == "__main__":
+    args = process_arguments()
+
+    # Check midas files
+    print("Checking MIDAS files exist")
+    confirm_midas_merge_files(args)
+
+    # Read mapping files
+    # Create dictionaries that have all the samples per group (Groups),
+    # and the group to which each sample belongs (Samples)
+    # Probably should change this to pandas
+    print("Read metadata")
+    Samples, Groups = process_metadata_file(args.metadata_file)
+
+    print("Calculate MK contingency tables")
+    MK, Genes = calculate_contingency_tables(Samples, Groups, args)
+    if args.permutations > 0:
+        MK = [MK]
+        print("Permuting")
+        print("Seed is {}".format(str(args.seed)))
+        for i in range(args.permutations):
+            Sp, Gp = process_metadata_file(args.metadata_file, permute=True)
+            MK.append(calculate_contingency_tables(Sp, Gp, args))
+
+
+
+
+    ################ Test and results ########
