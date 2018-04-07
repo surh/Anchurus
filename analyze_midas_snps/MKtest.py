@@ -590,6 +590,74 @@ def calculate_contingency_tables(Samples, Groups, args):
     return MK, Genes
 
 
+def calculate_statistic(mk, test, pseudocount=0):
+    """Takes an MK object and returns a dictionary
+    with the statistics asked"""
+
+    tests = dict()
+    # Calculate neutrality index
+    if 'NI' in test:
+        tests['NI.pval'] = float('nan')
+        try:
+            tests['NI'] = mk.neutrality_index(log=True,
+                                              pseudocount=pseudocount)
+        except ZeroDivisionError:
+            tests['NI'] = float('nan')
+
+    # Calculate ratio
+    if 'ratio' in test:
+        tests['NI.pval'] = float('nan')
+        try:
+            tests['NI'] = mk.mk_ratio(pseudocount=pseudocount)
+        except ZeroDivisionError:
+            tests['NI'] = float('nan')
+
+    # Hypergeometric test
+    if 'hg' in test:
+        tests['hg'], tests['hg.pval'] = mk.hg_test(pseudocount = pseudocount)
+
+    # G test of indenpendece try multiple corrections
+    if 'G' in test:
+        try:
+            tests['G'], tests['G.pval'], tests['G.df'], tests['G.E'] = mk.g_test(correction='none',
+                                                                                 pseudocount=pseudocount)
+        except ValueError:
+            tests['G'] = float('nan')
+            tests['G.pval'] = float('nan')
+            tests['G.df'] = float('nan')
+            tests['G.E'] = float('nan')
+
+    if 'G_Yates' in test:
+        try:
+            tests['G_Yates'], tests['G_Yates.pval'], tests['G_Yates.df'], tests['G_Yates.E'] = mk.g_test(correction='yates',
+                                                                                                         pseudocount=pseudocount)
+        except ValueError:
+            tests['G_Yates'] = float('nan')
+            tests['G_Yates.pval'] = float('nan')
+            tests['G_Yates.df'] = float('nan')
+            tests['G_Yates.E'] = float('nan')
+
+    if 'G_Williams' in test:
+        try:
+            tests['G_Williams'], tests['G_Williams.pval'], tests['G_Williams.df'], tests['G_Williams.E'] = mk.g_test(correction='williams',
+                                                                                                                     pseudocount=pseudocount)
+        except ValueError:
+            tests['G_Williams'] = float('nan')
+            tests['G_Williams.pval'] = float('nan')
+            tests['G_Williams.df'] = float('nan')
+            tests['G_Williams.E'] = float('nan')
+
+    # Eyre-Walker alpha
+    if 'alpha' in test:
+        tests['alpha.pval'] = float('nan')
+        try:
+            tests['alpha'] = mk.alpha(pseudocount=pseudocount)
+        except ZeroDivisionError:
+            tests['alpha'] = float('nan')
+
+    return tests
+
+
 def test_and_write_results(MK, Genes, outfile, tables,
                            test='hg', pseudocount=0,
                            permutations=0):
@@ -634,66 +702,7 @@ def test_and_write_results(MK, Genes, outfile, tables,
             th.write("\t\tFixed\tPolymorphic\n\tSynonymous\t{}\t{}\n\tnon-synonymous\t{}\t{}\n".format(mk.Ds,mk.Ps,mk.Dn,mk.Pn))
 
             # Calculate statistics
-            tests = dict()
-            # Calculate neutrality index
-            if 'NI' in test:
-                tests['NI.pval'] = float('nan')
-                try:
-                    tests['NI'] = mk.neutrality_index(log=True,
-                                                      pseudocount = args.pseudocount)
-                except ZeroDivisionError:
-                    tests['NI'] = float('nan')
-
-            # Calculate ratio
-            if 'ratio' in test:
-                tests['NI.pval'] = float('nan')
-                try:
-                    tests['NI'] = mk.mk_ratio(pseudocount=pseudocount)
-                except ZeroDivisionError:
-                    tests['NI'] = float('nan')
-
-            # Hypergeometric test
-            if 'hg' in test:
-                tests['hg'], tests['hg.pval'] = mk.hg_test(pseudocount = pseudocount)
-
-            # G test of indenpendece try multiple corrections
-            if 'G' in test:
-                try:
-                    tests['G'], tests['G.pval'], tests['G.df'], tests['G.E'] = mk.g_test(correction='none',
-                                                                                         pseudocount=pseudocount)
-                except ValueError:
-                    tests['G'] = float('nan')
-                    tests['G.pval'] = float('nan')
-                    tests['G.df'] = float('nan')
-                    tests['G.E'] = float('nan')
-
-            if 'G_Yates' in test:
-                try:
-                    tests['G_Yates'], tests['G_Yates.pval'], tests['G_Yates.df'], tests['G_Yates.E'] = mk.g_test(correction='yates',
-                                                                                                                 pseudocount=pseudocount)
-                except ValueError:
-                    tests['G_Yates'] = float('nan')
-                    tests['G_Yates.pval'] = float('nan')
-                    tests['G_Yates.df'] = float('nan')
-                    tests['G_Yates.E'] = float('nan')
-
-            if 'G_Williams' in test:
-                try:
-                    tests['G_Williams'], tests['G_Williams.pval'], tests['G_Williams.df'], tests['G_Williams.E'] = mk.g_test(correction='williams',
-                                                                                                                             pseudocount=pseudocounts)
-                except ValueError:
-                    tests['G_Williams'] = float('nan')
-                    tests['G_Williams.pval'] = float('nan')
-                    tests['G_Williams.df'] = float('nan')
-                    tests['G_Williams.E'] = float('nan')
-
-            # Eyre-Walker alpha
-            if 'alpha' in test:
-                tests['alpha.pval'] = float('nan')
-                try:
-                    tests['alpha'] = mk.alpha(pseudocount=pseudocount)
-                except ZeroDivisionError:
-                    tests['alpha'] = float('nan')
+            tests = calculate_statistic(mk, test, pseudocount)
 
             # prepare res
             res = [str(tests[t]) for t in test + pval_list]
