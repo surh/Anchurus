@@ -636,6 +636,7 @@ def test_and_write_results(MK, Genes, outfile, tables,
             tests = dict()
             # Calculate neutrality index
             if 'NI' in test:
+                tests['NI.pval'] = float('nan')
                 try:
                     tests['NI'] = mk.neutrality_index(log=True,
                                                       pseudocount = args.pseudocount)
@@ -644,6 +645,7 @@ def test_and_write_results(MK, Genes, outfile, tables,
 
             # Calculate ratio
             if 'ratio' in test:
+                tests['NI.pval'] = float('nan')
                 try:
                     tests['NI'] = mk.mk_ratio(pseudocount=pseudocount)
                 except ZeroDivisionError:
@@ -686,19 +688,24 @@ def test_and_write_results(MK, Genes, outfile, tables,
 
             # Eyre-Walker alpha
             if 'alpha' in test:
+                tests['alpha.pval`] = float('nan')
                 try:
                     tests['alpha'] = mk.alpha(pseudocount=pseudocount)
                 except ZeroDivisionError:
                     tests['alpha'] = float('nan')
 
             # prepare res
+            res = [str(tests[t]) for t in test]
             res = [gene, Genes[gene].contig, str(Genes[gene].start), str(Genes[gene].end),
-                   str(mk.Dn), str(mk.Ds), str(mk.Pn), str(mk.Ps),
-                   str(ni), str(ratio), str(ratio_pseudo),
-                   str(hg_odds), str(hg_p), str(hg_odds_pseudo),str(hg_p_pseudo),
-                   str(g_none_p), str(g_yates_p),str(g_williams_p),
-                   str(g_none_p_pseudo), str(g_yates_p_pseudo),str(g_williams_p_pseudo),
-                   str(alpha), str(alpha_pseudo)]
+                   str(mk.Dn), str(mk.Ds), str(mk.Pn), str(mk.Ps)] + res
+
+            # res = [gene, Genes[gene].contig, str(Genes[gene].start), str(Genes[gene].end),
+            #        str(mk.Dn), str(mk.Ds), str(mk.Pn), str(mk.Ps),
+            #        str(ni), str(ratio), str(ratio_pseudo),
+            #        str(hg_odds), str(hg_p), str(hg_odds_pseudo),str(hg_p_pseudo),
+            #        str(g_none_p), str(g_yates_p),str(g_williams_p),
+            #        str(g_none_p_pseudo), str(g_yates_p_pseudo),str(g_williams_p_pseudo),
+            #        str(alpha), str(alpha_pseudo)]
 
             # th.write(str(res) + "\n")
             fh.write("\t".join(res) + "\n")
