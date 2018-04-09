@@ -683,15 +683,6 @@ def test_and_write_results(MK, Genes, outfile, tables,
 
     # Open files for output
     with open(outfile, mode='w') as fh, open(tables, mode='w') as th:
-        # header = ['gene', 'contig', 'start', 'end',
-        #           'Dn', 'Ds', 'Pn', 'Ps',
-        #           'ni', 'ratio', 'ratio_pseudo', 'hg_odds',
-        #           'hg_p', 'hg_odds_pseudo', 'hg_p_pseudo',
-        #           'g_none_p', 'g_yates_p', 'g_williams_p',
-        #           'g_none_p_pseudo', 'g_yates_p_pseudo'
-        #           'g_williams_p_pseudo',
-        #           'alpha', 'alpha_pseudo']
-
         # Write header as first line of results
         fh.write("\t".join(header) + "\n")
 
