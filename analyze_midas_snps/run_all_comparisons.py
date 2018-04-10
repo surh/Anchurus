@@ -70,12 +70,24 @@ def process_arguments():
                         type=str, default='logs/')
     parser.add_argument("--scripts", help='Directory for fyrd scripts',
                         type=str, default='scripts')
+    parser.add_argument("--pseudocount", help=("Pseudocount value to use "
+                                               "in contingency tables"),
+                        default=0, type=int)
+    parser.add_argument("--permutations", help=("Number of permutations to "
+                                                "perform to establish "
+                                                "significance"),
+                        type=int, default=0)
+    parser.add_argument("--seed", help="Permutation seed",
+                        type=int, default=None)
 
     # Read arguments
     print("Reading arguments")
     args = parser.parse_args()
 
     # Processing goes here if needed
+    if args.seed is None and args.permutations > 0:
+        args.seed = np.random.randint(1000)*2 + 1
+        print("Seed is ", args.seed)
 
     return args
 
