@@ -79,6 +79,22 @@ def process_arguments():
                         type=int, default=0)
     parser.add_argument("--seed", help="Permutation seed",
                         type=int, default=None)
+    parser.add_argument("--test", help=("Eventually specify test to perform."
+                                        "all performs all tests. G performs "
+                                        "a G test without correction."
+                                        "G_Yates performs a G test with the "
+                                        "Yates correction. G_Williams "
+                                        "performs a G test with the Williams "
+                                        "correction. hg performs the "
+                                        "hypergeometric (Fisher's Exact) "
+                                        "test. NI rerturns the neutrality "
+                                        "index. alpha returs the Eyre-"
+                                        "Walker alpha. Ratio returns the MK "
+                                        "rati. DoS is the direction of "
+                                        "selection statistic."),
+                        default="hg", type=str,
+                        choices=['all', 'G', 'G_Yates', 'G_Williamps',
+                                 'hg', 'NI', 'alpha', 'ratio', 'DoS'])
 
     # Read arguments
     print("Reading arguments")
@@ -170,7 +186,11 @@ if __name__ == '__main__':
                '--group1', group1,
                '--group2', group2,
                '--outfile', species_outfile,
-               '--tables', species_tables]
+               '--tables', species_tables,
+               '--permutations', args.permutations,
+               '--test', args.test,
+               '--seed', args.seed,
+               '--pseudocount', args.pseudocount]
 
         # If not equal to default, pass it
         if args.nrows != float('inf'):
