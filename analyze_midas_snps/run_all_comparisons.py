@@ -183,10 +183,10 @@ if __name__ == '__main__':
                '--group2', group2,
                '--outfile', species_outfile,
                '--tables', species_tables,
-               '--permutations', args.permutations,
+               '--permutations', str(args.permutations),
                '--test', args.test,
-               '--seed', args.seed,
-               '--pseudocount', args.pseudocount]
+               '--seed', str(args.seed),
+               '--pseudocount', str(args.pseudocount)]
 
         # If not equal to default, pass it
         if args.nrows != float('inf'):
