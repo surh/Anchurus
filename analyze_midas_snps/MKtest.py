@@ -184,7 +184,9 @@ class MKtest:
     def DoS(self, pseudocount):
         """Estimate Direction of Selection (DoS) from Stoletzki & Eyre-Walker
         2010"""
-        DoS = (self.Dn / (self.Dn + self.Ds)) - (self.Pn / (self.Pn + self.Ps))
+        num = self.Dn + pseudocount / (self.Dn + self.Ds + 2 * pseudocount)
+        denom = self.Pn + pseudocount / (self.Pn + self.Ps + 2 * pseudocount)
+        DoS = num / denom
 
         return DoS
 
