@@ -122,7 +122,10 @@ class MKtest:
 
     def mk_ratio(self, pseudocount=0):
         """Calculate the McDonald Kreitman ratio (Dn/Ds)/(Pn/Ps)"""
-        ratio = ((self.Dn + pseudocount) / (self.Ds + pseudocount)) / ((self.Pn + pseudocount) / (self.Ps + pseudocount))
+        num = (self.Dn + pseudocount) * (self.Ps + pseudocount)
+        denom = (self.Ds + pseudocount) * (self.Pn + pseudocount)
+        ratio = num / denom
+        # ratio = ((self.Dn + pseudocount) / (self.Ds + pseudocount)) / ((self.Pn + pseudocount) / (self.Ps + pseudocount))
         return(ratio)
 
     def alpha(self, pseudocount=0):
@@ -184,18 +187,23 @@ class MKtest:
     def DoS(self, pseudocount):
         """Estimate Direction of Selection (DoS) from Stoletzki & Eyre-Walker
         2010"""
-        num = self.Dn + pseudocount / (self.Dn + self.Ds + 2 * pseudocount)
-        denom = self.Pn + pseudocount / (self.Pn + self.Ps + 2 * pseudocount)
-        DoS = num / denom
+        first = self.Dn / (self.Dn + self.Ds)
+        second = self.Pn / (self.Pn + self.Ps)
+        DoS = first - second
 
         return DoS
 
     def neutrality_index(self, pseudocount=1, log=True):
         """Calculate neutrality index (Pn/Dn)/(Ps/Ds).
         Following Li et al. (2008), we add a psedocount and
-        return the -log10(NI)"""
+        return the -log10(NI). Also referred to as haldane
+        estimation."""
 
-        ni = ((self.Pn + pseudocount) / (self.Dn + pseudocount)) / ((self.Ps + pseudocount) / (self.Ds + pseudocount))
+        num = (self.Pn + pseudocount) * (self.Ds + pseudocount)
+        denom = (self.Ps + pseudocount) * (self.Dn + pseudocount)
+        ni = num / denom
+
+        # ni = ((self.Pn + pseudocount) / (self.Dn + pseudocount)) / ((self.Ps + pseudocount) / (self.Ds + pseudocount))
 
         if log:
             ni = -np.log10(ni)
