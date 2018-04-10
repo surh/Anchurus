@@ -724,15 +724,16 @@ def test_and_write_results(MK, Genes, outfile, tables,
     header = header_base + test + pval_list
 
     # Open files for output
-    with open(outfile, mode='w') as fh, open(tables, mode='w') as th:
+    # with open(outfile, mode='w') as fh, open(tables, mode='w') as th:
+    with open(outfile, mode='w') as fh:
         # Write header as first line of results
         fh.write("\t".join(header) + "\n")
 
         # Iterate over every MK element
         for gene, mk in MK[0].items():
-            th.write("=============================================\n")
-            th.write(gene)
-            th.write("\t\tFixed\tPolymorphic\n\tSynonymous\t{}\t{}\n\tnon-synonymous\t{}\t{}\n".format(mk.Ds,mk.Ps,mk.Dn,mk.Pn))
+            # th.write("=============================================\n")
+            # th.write(gene)
+            # th.write("\t\tFixed\tPolymorphic\n\tSynonymous\t{}\t{}\n\tnon-synonymous\t{}\t{}\n".format(mk.Ds,mk.Ps,mk.Dn,mk.Pn))
 
             if permutations == 0:
                 # Calculate statistics
@@ -762,7 +763,7 @@ def test_and_write_results(MK, Genes, outfile, tables,
             elif permutations > 0:
                 res = test_by_permutation(gene, MK, permutations,
                                           test, pval_list, pseudocount)
-                print(res)
+                # print(res)
                 res = [str(res[k]) for k in res]
                 res = [gene, Genes[gene].contig,
                        str(Genes[gene].start),
@@ -774,7 +775,7 @@ def test_and_write_results(MK, Genes, outfile, tables,
                 raise ValueError("Invalid permutations")
 
     fh.close()
-    th.close()
+    # th.close()
 
 
 if __name__ == "__main__":
