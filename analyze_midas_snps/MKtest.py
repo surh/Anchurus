@@ -217,18 +217,17 @@ def process_snp_info_file(args):
         gene_id_col = 12
         aminoacids_col = 15
 
-        print("============HEADERs============")
-        print(">Site id: {}".format(header[site_id_col]))
-        print(">Contig: {}".format(header[contig_col]))
-        print(">Position: {}".format(header[pos_col]))
-        print(">Ref allele: {}".format(header[ref_allele_col]))
-        print(">Major allele: {}".format(header[major_allele_col]))
-        print(">Minor allele: {}".format(header[minor_allele_col]))
-        print(">Locus type: {}".format(header[locus_type_col]))
-        print(">Gene id: {}".format(header[gene_id_col]))
-        print(">Aminoacids: {}".format(header[aminoacids_col]))
+        # print("============HEADERs============")
+        # print(">Site id: {}".format(header[site_id_col]))
+        # print(">Contig: {}".format(header[contig_col]))
+        # print(">Position: {}".format(header[pos_col]))
+        # print(">Ref allele: {}".format(header[ref_allele_col]))
+        # print(">Major allele: {}".format(header[major_allele_col]))
+        # print(">Minor allele: {}".format(header[minor_allele_col]))
+        # print(">Locus type: {}".format(header[locus_type_col]))
+        # print(">Gene id: {}".format(header[gene_id_col]))
+        # print(">Aminoacids: {}".format(header[aminoacids_col]))
 
-        #
         for row in info_reader:
             i += 1
             if i > args.nrows:
@@ -527,7 +526,7 @@ def process_arguments():
                         default="mk_tables.txt", type=str)
     parser.add_argument("--pseudocount", help=("Pseudocount value to use "
                                                "in contingency tables"),
-                        default=1, type=int)
+                        default=0, type=int)
     parser.add_argument("--permutations", help=("Number of permutations to "
                                                 "perform to establish "
                                                 "significance"),
@@ -571,21 +570,21 @@ def calculate_contingency_tables(Samples, Groups, args):
 
     print("\tRead snps_info.txt")
     Genes, Sites = process_snp_info_file(args)
-    print("Number of sites: {}".format(str(len(Sites))))
-    print("Number of genes: {}".format(str(len(Genes))))
+    # print("Number of sites: {}".format(str(len(Sites))))
+    # print("Number of genes: {}".format(str(len(Genes))))
 
     print("\tChose sites based on depth in groups to compare")
     Counts = process_snps_depth_file(args, Groups, Sites)
-    print("Number of sites: {}".format(str(len(Sites))))
-    print("Number of genes: {}".format(str(len(Genes))))
-    print("Sites with counts: {}".format(str(len(Counts))))
+    # print("Number of sites: {}".format(str(len(Sites))))
+    # print("Number of genes: {}".format(str(len(Genes))))
+    # print("Sites with counts: {}".format(str(len(Counts))))
 
     print("\tRead frequencies and calculate")
     MK = process_snp_freq_file(args, Counts, Groups, Samples, Sites)
-    print("Number of sites: {}".format(str(len(Sites))))
-    print("Number of genes: {}".format(str(len(Genes))))
-    print("Sites with counts: {}".format(str(len(Counts))))
-    print("Genes with MK: {}".format(str(len(MK))))
+    # print("Number of sites: {}".format(str(len(Sites))))
+    # print("Number of genes: {}".format(str(len(Genes))))
+    # print("Sites with counts: {}".format(str(len(Counts))))
+    # print("Genes with MK: {}".format(str(len(MK))))
 
     return MK, Genes
 
@@ -677,7 +676,7 @@ def test_by_permutation(gene, MK, permutations, test, pval_list, pseudocount):
 
     keys = np.concatenate((test, pval_list, nperm_names))
     vals = np.concatenate((perm_table[0], perm_pvals, nperms))
-    vals = np.array(vals, dtype=np.character)
+    # vals = np.array(vals, dtype=np.character)
     res = dict(zip(keys, vals))
 
     return res
@@ -712,7 +711,7 @@ def test_and_write_results(MK, Genes, outfile, tables,
         fh.write("\t".join(header) + "\n")
 
         # Iterate over every MK element
-        for gene, mk in MK.items():
+        for gene, mk in MK[0].items():
             th.write("=============================================\n")
             th.write(gene)
             th.write("\t\tFixed\tPolymorphic\n\tSynonymous\t{}\t{}\n\tnon-synonymous\t{}\t{}\n".format(mk.Ds,mk.Ps,mk.Dn,mk.Pn))
@@ -723,8 +722,11 @@ def test_and_write_results(MK, Genes, outfile, tables,
 
                 # prepare res
                 res = [str(tests[t]) for t in test + pval_list]
-                res = [gene, Genes[gene].contig, str(Genes[gene].start), str(Genes[gene].end),
-                       str(mk.Dn), str(mk.Ds), str(mk.Pn), str(mk.Ps)] + res
+                res = [gene, Genes[gene].contig,
+                       str(Genes[gene].start),
+                       str(Genes[gene].end),
+                       str(mk.Dn), str(mk.Ds),
+                       str(mk.Pn), str(mk.Ps)] + res
 
                 # res = [gene, Genes[gene].contig, str(Genes[gene].start), str(Genes[gene].end),
                 #        str(mk.Dn), str(mk.Ds), str(mk.Pn), str(mk.Ps),
@@ -742,6 +744,13 @@ def test_and_write_results(MK, Genes, outfile, tables,
             elif permutations > 0:
                 res = test_by_permutation(gene, MK, permutations,
                                           test, pval_list, pseudocount)
+                print(res)
+                res = [str(res[k]) for k in res]
+                res = [gene, Genes[gene].contig,
+                       str(Genes[gene].start),
+                       str(Genes[gene].end),
+                       str(mk.Dn), str(mk.Ds),
+                       str(mk.Pn), str(mk.Ps)] + res
                 fh.write("\t".join(res) + "\n")
             else:
                 raise ValueError("Invalid permutations")
@@ -766,8 +775,8 @@ if __name__ == "__main__":
 
     print("Calculate MK contingency tables")
     MK, Genes = calculate_contingency_tables(Samples, Groups, args)
+    MK = [MK]
     if args.permutations > 0:
-        MK = [MK]
         print("Permuting")
         print("Seed is {}".format(str(args.seed)))
         np.random.seed(args.seed)
