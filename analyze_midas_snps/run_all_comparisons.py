@@ -51,10 +51,6 @@ def process_arguments():
                           type=str, required=True)
 
     # Define other arguments
-    parser.add_argument("--permute", help=('Number of permutations to use '
-                                           'to calculate p-value. If 0 '
-                                           'no permutations will be done.'),
-                        type=int, default=0)
     parser.add_argument("--mode", help=('Whether to use fyrd to '
                                         'parallelize per comparison or '
                                         'submit serially'),
