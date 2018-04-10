@@ -181,6 +181,13 @@ class MKtest:
 
         return(res)
 
+    def DoS(self, pseudocount):
+        """Estimate Direction of Selection (DoS) from Stoletzki & Eyre-Walker
+        2010"""
+        DoS = (self.Dn / (self.Dn + self.Ds)) - (self.Pn / (self.Pn + self.Ps))
+
+        return DoS
+
     def neutrality_index(self, pseudocount=1, log=True):
         """Calculate neutrality index (Pn/Dn)/(Ps/Ds).
         Following Li et al. (2008), we add a psedocount and
@@ -510,10 +517,11 @@ def process_arguments():
                                         "test. NI rerturns the neutrality "
                                         "index. alpha returs the Eyre-"
                                         "Walker alpha. Ratio returns the MK "
-                                        "ratio,"),
+                                        "rati. DoS is the direction of "
+                                        "selection statistic."),
                         default="hg", type=str,
                         choices=['all', 'G', 'G_Yates', 'G_Williamps',
-                                 'hg', 'NI', 'alpha', 'ratio'])
+                                 'hg', 'NI', 'alpha', 'ratio', 'DoS'])
     parser.add_argument("--outfile", help="Output file with results",
                         default="mk_results.txt", type=str)
     parser.add_argument("--min_count", help=("min depth at a position in "
@@ -654,6 +662,14 @@ def calculate_statistic(mk, test, pseudocount=0):
         except ZeroDivisionError:
             tests['alpha'] = float('nan')
 
+    if 'DoS' in test:
+        tests['DoS.pval'] = float('nan')
+        try:
+            tests['DoS'] = mk.DoS(pseudocount=pseudocount)
+        except ZeroDivisionError:
+            tests['DoS'] = float('nan')
+
+
     return tests
 
 
@@ -691,7 +707,7 @@ def test_and_write_results(MK, Genes, outfile, tables,
     # Get list of tests to perform
     supported_tests = ['NI', 'ratio', 'hg',
                        'G', 'G_Yates', 'G_Williams',
-                       'alpha']
+                       'alpha', 'DoS']
     if test == 'all':
         test = supported_tests
     elif test not in supported_tests:
