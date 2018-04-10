@@ -658,6 +658,31 @@ def calculate_statistic(mk, test, pseudocount=0):
     return tests
 
 
+def test_by_permutation(gene, MK, permutations, test, pval_list, pseudocount):
+    nperm = int(permutations + 1)
+    perm_table = np.full(shape=(nperm, len(test)), fill_value=np.nan)
+    row = 0
+    for p in MK:
+        if gene in p:
+            p_stat = calculate_statistic(p[gene], test, pseudocount=pseudocount)
+            p_res = [p_stat[t] for t in test]
+            perm_table[row] = p_res
+
+        row = row + 1
+
+    # Pvalues
+    nperms = nperm - np.isnan(perm_table).sum(axis=0)
+    perm_pvals = (perm_table >= perm_table[0]).sum(axis=0) / nperms
+    nperm_names = [''.join([t, '.nperm']) for t in test]
+
+    keys = np.concatenate((test, pval_list, nperm_names))
+    vals = np.concatenate((perm_table[0], perm_pvals, nperms))
+    vals = np.array(vals, dtype=np.character)
+    res = dict(zip(keys, vals))
+
+    return res
+
+
 def test_and_write_results(MK, Genes, outfile, tables,
                            test='hg', pseudocount=0,
                            permutations=0):
@@ -692,27 +717,35 @@ def test_and_write_results(MK, Genes, outfile, tables,
             th.write(gene)
             th.write("\t\tFixed\tPolymorphic\n\tSynonymous\t{}\t{}\n\tnon-synonymous\t{}\t{}\n".format(mk.Ds,mk.Ps,mk.Dn,mk.Pn))
 
-            # Calculate statistics
-            tests = calculate_statistic(mk, test, pseudocount)
+            if permutations == 0:
+                # Calculate statistics
+                tests = calculate_statistic(mk, test, pseudocount)
 
-            # prepare res
-            res = [str(tests[t]) for t in test + pval_list]
-            res = [gene, Genes[gene].contig, str(Genes[gene].start), str(Genes[gene].end),
-                   str(mk.Dn), str(mk.Ds), str(mk.Pn), str(mk.Ps)] + res
+                # prepare res
+                res = [str(tests[t]) for t in test + pval_list]
+                res = [gene, Genes[gene].contig, str(Genes[gene].start), str(Genes[gene].end),
+                       str(mk.Dn), str(mk.Ds), str(mk.Pn), str(mk.Ps)] + res
 
-            # res = [gene, Genes[gene].contig, str(Genes[gene].start), str(Genes[gene].end),
-            #        str(mk.Dn), str(mk.Ds), str(mk.Pn), str(mk.Ps),
-            #        str(ni), str(ratio), str(ratio_pseudo),
-            #        str(hg_odds), str(hg_p), str(hg_odds_pseudo),str(hg_p_pseudo),
-            #        str(g_none_p), str(g_yates_p),str(g_williams_p),
-            #        str(g_none_p_pseudo), str(g_yates_p_pseudo),str(g_williams_p_pseudo),
-            #        str(alpha), str(alpha_pseudo)]
+                # res = [gene, Genes[gene].contig, str(Genes[gene].start), str(Genes[gene].end),
+                #        str(mk.Dn), str(mk.Ds), str(mk.Pn), str(mk.Ps),
+                #        str(ni), str(ratio), str(ratio_pseudo),
+                #        str(hg_odds), str(hg_p), str(hg_odds_pseudo),str(hg_p_pseudo),
+                #        str(g_none_p), str(g_yates_p),str(g_williams_p),
+                #        str(g_none_p_pseudo), str(g_yates_p_pseudo),str(g_williams_p_pseudo),
+                #        str(alpha), str(alpha_pseudo)]
 
-            # th.write(str(res) + "\n")
-            fh.write("\t".join(res) + "\n")
-            #alpha = mk.alpha()
-            #print("MK ratio is: {}".format(str(ratio)))
-            #print("MK alpha is: {}".format(str(alpha)))
+                # th.write(str(res) + "\n")
+                fh.write("\t".join(res) + "\n")
+                #alpha = mk.alpha()
+                #print("MK ratio is: {}".format(str(ratio)))
+                #print("MK alpha is: {}".format(str(alpha)))
+            elif permutations > 0:
+                res = test_by_permutation(gene, MK, permutations,
+                                          test, pval_list, pseudocount)
+                fh.write("\t".join(res) + "\n")
+            else:
+                raise ValueError("Invalid permutations")
+
     fh.close()
     th.close()
 
