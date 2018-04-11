@@ -95,7 +95,7 @@ def process_arguments():
     parser.add_argument("--mem", help=("Memory per fyrd job"),
                         type=str, default='10000mb')
     parser.add_argument("--time", help=("Time per fyrd job."),
-                        type='str', default='04:00:00')
+                        type=str, default='04:00:00')
     parser.add_argument("--queue", help=("Queue for fyrd jobs"),
                         type=str, default='')
 
