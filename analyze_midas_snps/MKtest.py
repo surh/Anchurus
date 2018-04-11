@@ -588,21 +588,21 @@ def calculate_contingency_tables(Samples, Groups, args):
 
     print("\tRead snps_info.txt")
     Genes, Sites = process_snp_info_file(args)
-    print("Number of sites: {}".format(str(len(Sites))))
-    print("Number of genes: {}".format(str(len(Genes))))
+    # print("Number of sites: {}".format(str(len(Sites))))
+    # print("Number of genes: {}".format(str(len(Genes))))
 
     print("\tChose sites based on depth in groups to compare")
     Counts = process_snps_depth_file(args, Groups, Sites)
-    print("Number of sites: {}".format(str(len(Sites))))
-    print("Number of genes: {}".format(str(len(Genes))))
-    print("Sites with counts: {}".format(str(len(Counts))))
+    # print("Number of sites: {}".format(str(len(Sites))))
+    # print("Number of genes: {}".format(str(len(Genes))))
+    # print("Sites with counts: {}".format(str(len(Counts))))
 
     print("\tRead frequencies and calculate")
     MK = process_snp_freq_file(args, Counts, Groups, Samples, Sites)
-    print("Number of sites: {}".format(str(len(Sites))))
-    print("Number of genes: {}".format(str(len(Genes))))
-    print("Sites with counts: {}".format(str(len(Counts))))
-    print("Genes with MK: {}".format(str(len(MK))))
+    # print("Number of sites: {}".format(str(len(Sites))))
+    # print("Number of genes: {}".format(str(len(Genes))))
+    # print("Sites with counts: {}".format(str(len(Counts))))
+    # print("Genes with MK: {}".format(str(len(MK))))
 
     return MK, Genes
 
@@ -807,7 +807,7 @@ if __name__ == "__main__":
     # Probably should change this to pandas
     print("Read metadata")
     Samples, Groups = process_metadata_file(args.metadata_file)
-    print(Groups)
+    # print(Groups)
 
     print("Calculate MK contingency tables")
     MK, Genes = calculate_contingency_tables(Samples, Groups, args)
