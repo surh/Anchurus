@@ -743,6 +743,7 @@ def test_and_write_results(MK, Genes, outfile, tables,
         fh.write("\t".join(header) + "\n")
 
         # Iterate over every MK element
+        print(MK[0])
         for gene, mk in MK[0].items():
             print(gene)
             print(mk.Dn, mk.Ds, mk.Pn, mk.Ps)
