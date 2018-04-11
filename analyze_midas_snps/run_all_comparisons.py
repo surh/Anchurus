@@ -19,6 +19,7 @@ import argparse
 import os
 # import sutilspy
 import fyrd
+import numpy as np
 
 
 def process_arguments():
@@ -91,6 +92,12 @@ def process_arguments():
                         default="hg", type=str,
                         choices=['all', 'G', 'G_Yates', 'G_Williamps',
                                  'hg', 'NI', 'alpha', 'ratio', 'DoS'])
+    parser.add_argument("--mem", help=("Memory per fyrd job"),
+                        type=str, default='10000mb')
+    parser.add_argument("--time", help=("Time per fyrd job."),
+                        type='str', default='04:00:00')
+    parser.add_argument("--queue", help=("Queue for fyrd jobs"),
+                        type=str, default='')
 
     # Read arguments
     print("Reading arguments")
@@ -98,7 +105,7 @@ def process_arguments():
 
     # Processing goes here if needed
     if args.seed is None and args.permutations > 0:
-        args.seed = np.random.randint(1000)*2 + 1
+        args.seed = np.random.randint(1000) * 2 + 1
         print("Seed is ", args.seed)
 
     return args
@@ -210,9 +217,9 @@ if __name__ == '__main__':
                            clean_files=False,
                            clean_outputs=False,
                            nodes=1, cores=1,
-                           time='04:00:00',
-                           mem='10000mb',
-                           partition='',
+                           time=args.time,
+                           mem=args.mem,
+                           partition=args.queue,
                            name=job_name,
                            runpath=os.getcwd(),
                            outpath=args.logs,
