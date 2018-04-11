@@ -743,7 +743,10 @@ def test_and_write_results(MK, Genes, outfile, tables,
         fh.write("\t".join(header) + "\n")
 
         # Iterate over every MK element
+        # print(MK[0])
         for gene, mk in MK[0].items():
+            print(gene)
+            print(mk.Dn, mk.Ds, mk.Pn, mk.Ps)
             # th.write("=============================================\n")
             # th.write(gene)
             # th.write("\t\tFixed\tPolymorphic\n\tSynonymous\t{}\t{}\n\tnon-synonymous\t{}\t{}\n".format(mk.Ds,mk.Ps,mk.Dn,mk.Pn))
@@ -804,6 +807,7 @@ if __name__ == "__main__":
     # Probably should change this to pandas
     print("Read metadata")
     Samples, Groups = process_metadata_file(args.metadata_file)
+    # print(Groups)
 
     print("Calculate MK contingency tables")
     MK, Genes = calculate_contingency_tables(Samples, Groups, args)
@@ -817,6 +821,7 @@ if __name__ == "__main__":
             mk, genes = calculate_contingency_tables(Sp, Gp, args)
             MK.append(mk)
 
+    print("Testing and writing")
     test_and_write_results(MK, Genes, args.outfile, args.tables,
                            test=args.test, pseudocount=args.pseudocount,
                            permutations=args.permutations)
