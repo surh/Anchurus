@@ -729,7 +729,12 @@ def test_and_write_results(MK, Genes, outfile, tables,
     header_base = ['gene', 'contig', 'start', 'end',
                    'Dn', 'Ds', 'Pn', 'Ps']
     pval_list = [''.join([t, '.pval']) for t in test]
-    header = header_base + test + pval_list
+    if permutations > 0:
+        perm_list = [''.join([t, '.perm']) for t in test]
+    else:
+        perm_list = []
+
+    header = header_base + test + pval_list + perm_list
 
     # Open files for output
     # with open(outfile, mode='w') as fh, open(tables, mode='w') as th:
