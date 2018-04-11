@@ -229,13 +229,23 @@ if __name__ == '__main__':
             job.submit(max_jobs=args.maxjobs)
             jobs.append(job)
         else:
-            raise ValueError("Unreconized mode")
+            raise ValueError("Unrecognized mode")
 
     print("========DONE ITERATING OVER COMPARISONS========")
 
+    failed = []
     if args.mode == 'fyrd' and args.wait:
         print("========WAITING FOR MKTEST JOBS TO COMPLETE========")
         for j in jobs:
             j.wait()
-
+            if j.state == 'failed':
+                failed.append(j.name)
         print("========DONE WAITING FOR MKTEST JOBS TO COMPLETE========")
+
+        if len(failed) > 0:
+            print("Writing failed comparisons")
+            failed_file = args.outdir + '/failed.txt'
+            with(failed_file) as ff:
+                for f in failed:
+                    ff.write("{}\n".format(f))
+            ff.close()
