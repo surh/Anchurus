@@ -807,6 +807,7 @@ if __name__ == "__main__":
     # Probably should change this to pandas
     print("Read metadata")
     Samples, Groups = process_metadata_file(args.metadata_file)
+    print(Groups)
 
     print("Calculate MK contingency tables")
     MK, Genes = calculate_contingency_tables(Samples, Groups, args)
