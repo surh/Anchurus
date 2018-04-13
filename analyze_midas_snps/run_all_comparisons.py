@@ -245,7 +245,7 @@ if __name__ == '__main__':
         if len(failed) > 0:
             print("Writing failed comparisons")
             failed_file = args.outdir + '/failed.txt'
-            with(failed_file) as ff:
+            with(failed_file, 'w') as ff:
                 for f in failed:
                     ff.write("{}\n".format(f))
             ff.close()
