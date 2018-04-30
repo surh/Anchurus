@@ -472,6 +472,10 @@ def process_arguments():
                                              "a sample to consider that "
                                              "sample in that position"),
                         default=1, type=int)
+    parser.add_argument("--min_cov", help=("min metagenomic coverage across "
+                                           "genome in a sample to keep that "
+                                           "sample for that genome"),
+                        default=1.0, type=float)
     parser.add_argument("--nrows", help="Number of gene positions to read",
                         default=float('inf'), type=float)
     parser.add_argument("--outfile", help="Output file with results",
@@ -792,7 +796,7 @@ def process_snp_info_file(args):
 
 
 def read_and_process_data(map_file, info_file, depth_file, freqs_file,
-                         groups, cov_thres=1):
+                         groups, cov_thres=1, nrows=float('inf')):
     """Reads MIDAS output files, selects gene sites and samples above threshold,
     determines mutation effect (s or n) and makes sure files are consistent
     with each other"""
@@ -813,9 +817,10 @@ def read_and_process_data(map_file, info_file, depth_file, freqs_file,
     freq = freq.drop(axis=1, labels='site_id')
 
     # subset for tests
-    # info = info.head(1000)
-    # depth = depth.head(1000)
-    # freq = freq.head(1000)
+    if nrows < float('inf'):
+        info = info.head(nrows)
+        depth = depth.head(nrows)
+        freq = freq.head(nrows)
 
     # Determine effect of sites (this is constant and indepentent of samples)
     info['Effect'] = info.apply(determine_mutation_effect, axis=1)
@@ -993,12 +998,21 @@ if __name__ == "__main__":
                                test=args.test, pseudocount=args.pseudocount,
                                permutations=args.permutations)
     elif args.functions == 'pandas':
+        # Create file names
+        info_file = ''.join([args.indir, '/snps_info.txt'])
+        depth_file = ''.join([args.indir, '/snps_depth.txt'])
+        freqs_file = ''.join([args.indir, '/snps_freq.txt'])
+
+        # Prepare list of groups
+        groups = [args.group1, args.group2]
+
         map, freq, info, depth = read_and_process_data(map_file=args.metadata_file,
                                                        info_file=info_file,
                                                        depth_file=depth_file,
                                                        freqs_file=freqs_file,
                                                        groups=groups,
-                                                       cov_thres=cov_thres)
+                                                       cov_thres=args.min_cov,
+                                                       nrows=args.nrows)
         Genes, info = calculate_mk_oddsratio(map=map, info=info,
                                              depth=depth, freq=freq,
-                                             depth_thres=depth_thres)
+                                             depth_thres=args.min_count)
