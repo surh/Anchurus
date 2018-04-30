@@ -373,6 +373,23 @@ def process_arguments():
                           required=True)
 
     # Define other arguments
+    parser.add_argument("--min_count", help=("min depth at a position in "
+                                             "a sample to consider that "
+                                             "sample in that position"),
+                        default=1, type=int)
+    parser.add_argument("--nrows", help="Number of gene positions to read",
+                        default=float('inf'), type=float)
+    parser.add_argument("--outfile", help="Output file with results",
+                        default="mk_results.txt", type=str)
+    parser.add_argument("--permutations", help=("Number of permutations to "
+                                                "perform to establish "
+                                                "significance"),
+                        type=int, default=0)
+    parser.add_argument("--pseudocount", help=("Pseudocount value to use "
+                                               "in contingency tables"),
+                        default=0, type=int)
+    parser.add_argument("--seed", help="Permutation seed",
+                        type=int, default=None)
     parser.add_argument("--test", help=("Eventually specify test to perform."
                                         "all performs all tests. G performs "
                                         "a G test without correction."
@@ -389,25 +406,6 @@ def process_arguments():
                         default="hg", type=str,
                         choices=['all', 'G', 'G_Yates', 'G_Williamps',
                                  'hg', 'NI', 'alpha', 'ratio', 'DoS'])
-    parser.add_argument("--outfile", help="Output file with results",
-                        default="mk_results.txt", type=str)
-    parser.add_argument("--min_count", help=("min depth at a position in "
-                                             "a sample to consider that "
-                                             "sample in that position"),
-                        default=1, type=int)
-    parser.add_argument("--nrows", help="Number of gene positions to read",
-                        default=float('inf'), type=float)
-    parser.add_argument("--tables", help="Output file for contingency tables",
-                        default="mk_tables.txt", type=str)
-    parser.add_argument("--pseudocount", help=("Pseudocount value to use "
-                                               "in contingency tables"),
-                        default=0, type=int)
-    parser.add_argument("--permutations", help=("Number of permutations to "
-                                                "perform to establish "
-                                                "significance"),
-                        type=int, default=0)
-    parser.add_argument("--seed", help="Permutation seed",
-                        type=int, default=None)
 
     # Read arguments
     print("Reading arguments")
