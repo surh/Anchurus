@@ -1016,3 +1016,29 @@ if __name__ == "__main__":
         Genes, info = calculate_mk_oddsratio(map=map, info=info,
                                              depth=depth, freq=freq,
                                              depth_thres=args.min_count)
+
+        # Perform permutations if needed
+        if args.permutations > 0:
+            Perms = np.empty((Genes.shape[0], args.permutations + 1))
+            Perms[:] = np.nan
+            Perms[:, 0] = Genes.ratio
+            np.random.seed(args.seed)
+            print("Seed for permutations is {}".format(args.seed))
+            for i in range(1, args.permutations + 1):
+                # print(i)
+                map_i = map.copy()
+                map_i['Group'] = np.random.permutation(map_i.Group)
+                Genes_i, info_i = calculate_mk_oddsratio(map=map_i,
+                                                         info=info,
+                                                         depth=depth,
+                                                         freq=freq,
+                                                         depth_thres=args.min_count)
+                Perms[:, i] = Genes_i.ratio
+            # Perms
+
+            # Calculate permutation p-values
+            Genes['nperm'] = args.permutations + 1 - pd.isnull(Perms).sum(axis=1)
+            np.seterr(invalid='ignore', divide='ignore')
+            Genes['P'] = np.greater_equal(Perms[:, np.repeat(0 ,nperm + 1)],Perms).sum(axis=1) / Genes['nperm']
+            np.seterr(invalid='raise', divide='raise')
+        Genes.to_csv(args.outfile)
