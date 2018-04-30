@@ -239,6 +239,40 @@ def calculate_contingency_tables(Samples, Groups, args):
     return MK, Genes
 
 
+def calculate_mk_oddsratio(map, info, depth, freq, depth_thres=1):
+    """Determine if sites are fixed of polymorphic, calculate MK
+    contingency table per gene, and calculate odds ratio"""
+
+    if not all(map.index == depth.columns):
+        raise ValueError("Samples in map and depth don't match")
+    if not all(map.index == freq.columns):
+        raise ValueError("Samples in map and freq don't match")
+    if not all(freq.columns == depth.columns):
+        raise ValueError("Samples in freq and depth don't match")
+
+    # Determine type of mutation
+    info['Type'] = determine_site_dist(map=map, depth=depth, freq=freq, info=info, depth_thres=depth_thres)
+
+    # Calculate MK contingency table per gene
+    Genes = pd.DataFrame(columns=['Gene', 'Dn', 'Ds', 'Pn', 'Ps'])
+    for g in info.gene_id.unique():
+        dat = info.loc[info.gene_id == g,:].copy()
+        tab = pd.crosstab(dat.Effect, dat.Type, rownames=['Effect'], colnames=['Type'])
+        tab = tab.reindex(index=pd.Index(['n','s']), columns=pd.Index(['fixed', 'polymorphic']), fill_value=0)
+        s = pd.Series(g, index=['Gene']).append(tab.fixed).append(tab.polymorphic)
+        Genes = Genes.append(pd.DataFrame([list(s)], columns=Genes.columns), ignore_index=True)
+
+    # Calculate ratio
+    np.seterr(divide='ignore', invalid='ignore')
+    Genes['ratio'] = pd.to_numeric(Genes.Dn * Genes.Ps) / pd.to_numeric(Genes.Ds * Genes.Pn)
+    np.seterr(divide='raise', invalid='raise')
+    Genes.replace(np.inf, np.nan, inplace=True)
+    # Genes['hg.pval'] = Genes.apply(mktest_fisher_exact, axis=1)
+    # Genes.head()
+
+    return Genes, info
+
+
 def calculate_statistic(mk, test, pseudocount=0):
     """Takes an MK object and returns a dictionary
     with the statistics asked"""
@@ -346,6 +380,63 @@ def confirm_midas_merge_files(args):
 
     print("\tAll files found")
     return
+
+
+def determine_mutation_effect(r):
+    """Mini function for apply, takes a series and checks if the mutation
+    is synonymous (s) or non-synonymopus (n)"""
+
+    ii = r.loc[['count_a', 'count_c', 'count_g', 'count_t']] > 0
+    aa = np.array(r.amino_acids.split(sep=','))
+
+    if all(aa[ii][0] == aa[ii]):
+        effect = 's'
+    else:
+        effect = 'n'
+
+    return effect
+
+
+def determine_site_dist(map, depth, freq, info, depth_thres=1):
+    """For all sites, determine if they are fixed or polymorphic"""
+
+    Dist = []
+    for i in range(info.shape[0]):
+        # Add samples IDs as map header and match samples
+        # in map with samples in depth
+
+        # Create site data frame
+        site = map.copy()
+        site['depth'] = depth.loc[depth.index[i], map.index]
+        site['freq'] = freq.loc[freq.index[i], map.index]
+
+        # Remove samples without information for site
+        site = site[site.depth >= depth_thres]
+
+        # Determine if it is polymorphic or fixed
+        site_crosstab = pd.crosstab(site.freq >= 0.5, site.Group)
+        if site_crosstab.shape == (2,2):
+            if (np.matrix(site_crosstab).diagonal() == [0,0]).all() or (np.fliplr(np.matrix(site_crosstab)).diagonal() == [0, 0]).all():
+                mutation_type = 'fixed'
+            else:
+                mutation_type = 'polymorphic'
+        else:
+            mutation_type = np.nan
+
+        Dist.append(mutation_type)
+
+    return(Dist)
+
+
+def mktest_fisher_exact(g):
+    """Per perform the fisher's exact test on a gene MK
+    contingency table."""
+
+    tab = np.array([[g.Dn, g.Pn], [g.Ds, g.Ps]])
+    oddsratio, pval = stats.fisher_exact(tab, alternative='two-sided')
+    # oddsratio, pval = stats.fisher_exact(tab, alternative='greater')
+
+    return pval
 
 
 def process_arguments():
@@ -700,6 +791,64 @@ def process_snp_info_file(args):
     return Genes, Sites
 
 
+def read_and_process_data(map_file, info_file, depth_file, freqs_file,
+                         groups, cov_thres=1):
+    """Reads MIDAS output files, selects gene sites and samples above threshold,
+    determines mutation effect (s or n) and makes sure files are consistent
+    with each other"""
+
+    # Read data
+    info = pd.read_csv(info_file, sep="\t")
+    depth = pd.read_csv(depth_file, sep="\t")
+    freq = pd.read_csv(freqs_file, sep="\t")
+
+    # Remove non gene sites
+    ii = ~info.gene_id.isnull()
+    info = info.loc[ii, :]
+    depth = depth.loc[ii, :]
+    freq = freq.loc[ii, :]
+
+    # Remove site_id columns
+    depth = depth.drop(axis=1, labels='site_id')
+    freq = freq.drop(axis=1, labels='site_id')
+
+    # subset for tests
+    # info = info.head(1000)
+    # depth = depth.head(1000)
+    # freq = freq.head(1000)
+
+    # Determine effect of sites (this is constant and indepentent of samples)
+    info['Effect'] = info.apply(determine_mutation_effect, axis=1)
+
+    # Check that sample names match between freq and depth
+    if not all(freq.columns == depth.columns):
+        raise ValueError("Columns don't match between freq and depth files")
+
+    # Read map file and select groups
+    map = pd.read_csv(map_file, sep="\t")
+    map.index = map.ID
+    map = map.loc[map.Group.isin(groups), :].copy()
+
+    # Remove samples from other groups
+    ci = depth.columns.isin(map.ID)
+    depth = depth.loc[:, ci]
+    freq = freq.loc[:, ci]
+
+    # Reorder map
+    map = map.loc[depth.columns, :]
+
+    # Calculate coverage in sites
+    map['coverage'] = depth.mean(axis=0)
+
+    # Remove samples below coverage
+    ci = map.coverage >= cov_thres
+    map = map.loc[ci, :]
+    depth = depth.loc[:, map.index]
+    freq = freq.loc[:, map.index]
+
+    return map, freq, info, depth
+
+
 def test_and_write_results(MK, Genes, outfile, tables,
                            test='hg', pseudocount=0,
                            permutations=0):
@@ -818,27 +967,38 @@ if __name__ == "__main__":
     print("Checking MIDAS files exist")
     confirm_midas_merge_files(args)
 
-    # Read mapping files
-    # Create dictionaries that have all the samples per group (Groups),
-    # and the group to which each sample belongs (Samples)
-    # Probably should change this to pandas
-    print("Read metadata")
-    Samples, Groups = process_metadata_file(args.metadata_file)
-    # print(Groups)
+    if args.functions == 'classes':
+        # Read mapping files
+        # Create dictionaries that have all the samples per group (Groups),
+        # and the group to which each sample belongs (Samples)
+        # Probably should change this to pandas
+        print("Read metadata")
+        Samples, Groups = process_metadata_file(args.metadata_file)
+        # print(Groups)
 
-    print("Calculate MK contingency tables")
-    MK, Genes = calculate_contingency_tables(Samples, Groups, args)
-    MK = [MK]
-    if args.permutations > 0:
-        print("Permuting")
-        print("Seed is {}".format(str(args.seed)))
-        np.random.seed(args.seed)
-        for i in range(args.permutations):
-            Sp, Gp = process_metadata_file(args.metadata_file, permute=True)
-            mk, genes = calculate_contingency_tables(Sp, Gp, args)
-            MK.append(mk)
+        print("Calculate MK contingency tables")
+        MK, Genes = calculate_contingency_tables(Samples, Groups, args)
+        MK = [MK]
+        if args.permutations > 0:
+            print("Permuting")
+            print("Seed is {}".format(str(args.seed)))
+            np.random.seed(args.seed)
+            for i in range(args.permutations):
+                Sp, Gp = process_metadata_file(args.metadata_file, permute=True)
+                mk, genes = calculate_contingency_tables(Sp, Gp, args)
+                MK.append(mk)
 
-    print("Testing and writing")
-    test_and_write_results(MK, Genes, args.outfile, args.tables,
-                           test=args.test, pseudocount=args.pseudocount,
-                           permutations=args.permutations)
+        print("Testing and writing")
+        test_and_write_results(MK, Genes, args.outfile, args.tables,
+                               test=args.test, pseudocount=args.pseudocount,
+                               permutations=args.permutations)
+    elif args.functions == 'pandas':
+        map, freq, info, depth = read_and_process_data(map_file=args.metadata_file,
+                                                       info_file=info_file,
+                                                       depth_file=depth_file,
+                                                       freqs_file=freqs_file,
+                                                       groups=groups,
+                                                       cov_thres=cov_thres)
+        Genes, info = calculate_mk_oddsratio(map=map, info=info,
+                                             depth=depth, freq=freq,
+                                             depth_thres=depth_thres)
