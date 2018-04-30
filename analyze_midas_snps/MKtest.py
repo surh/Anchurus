@@ -373,6 +373,10 @@ def process_arguments():
                           required=True)
 
     # Define other arguments
+    parser.add_argument("--functions", help=("Which set of functions to use, "
+                                             "pandas or classes"),
+                        default='pandas', type=str,
+                        choices=['pandas', 'classes'])
     parser.add_argument("--min_count", help=("min depth at a position in "
                                              "a sample to consider that "
                                              "sample in that position"),
