@@ -818,6 +818,7 @@ def read_and_process_data(map_file, info_file, depth_file, freqs_file,
 
     # subset for tests
     if nrows < float('inf'):
+        nrows = int(nrows)
         info = info.head(nrows)
         depth = depth.head(nrows)
         freq = freq.head(nrows)
@@ -890,8 +891,8 @@ def test_and_write_results(MK, Genes, outfile,
         # Iterate over every MK element
         # print(MK[0])
         for gene, mk in MK[0].items():
-            print(gene)
-            print(mk.Dn, mk.Ds, mk.Pn, mk.Ps)
+            # print(gene)
+            # print(mk.Dn, mk.Ds, mk.Pn, mk.Ps)
 
             if permutations == 0:
                 # Calculate statistics
@@ -954,7 +955,9 @@ def test_by_permutation(gene, MK, permutations, test, pval_list, pseudocount):
 
     # Pvalues
     nperms = nperm - np.isnan(perm_table).sum(axis=0)
+    np.seterr(invalid='ignore', divide='ignore')
     perm_pvals = (perm_table >= perm_table[0]).sum(axis=0) / nperms
+    np.seterr(invalid='raise', divide='raise')
     nperm_names = [''.join([t, '.nperm']) for t in test]
 
     keys = np.concatenate((test, pval_list, nperm_names))
