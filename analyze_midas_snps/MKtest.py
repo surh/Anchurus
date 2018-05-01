@@ -250,9 +250,11 @@ def calculate_mk_oddsratio(map, info, depth, freq, depth_thres=1):
     if not all(freq.columns == depth.columns):
         raise ValueError("Samples in freq and depth don't match")
 
+    print("\tDetermining if sites are fixed or polymorphic")
     # Determine type of mutation
     info['Type'] = determine_site_dist(map=map, depth=depth, freq=freq, info=info, depth_thres=depth_thres)
 
+    print("\tCalculate MK contingency table per gene")
     # Calculate MK contingency table per gene
     Genes = pd.DataFrame(columns=['Gene', 'Dn', 'Ds', 'Pn', 'Ps'])
     for g in info.gene_id.unique():
@@ -262,6 +264,7 @@ def calculate_mk_oddsratio(map, info, depth, freq, depth_thres=1):
         s = pd.Series(g, index=['Gene']).append(tab.fixed).append(tab.polymorphic)
         Genes = Genes.append(pd.DataFrame([list(s)], columns=Genes.columns), ignore_index=True)
 
+    print("\tCalculate statistic")
     # Calculate ratio
     np.seterr(divide='ignore', invalid='ignore')
     Genes['ratio'] = pd.to_numeric(Genes.Dn * Genes.Ps) / pd.to_numeric(Genes.Ds * Genes.Pn)
@@ -801,6 +804,7 @@ def read_and_process_data(map_file, info_file, depth_file, freqs_file,
     determines mutation effect (s or n) and makes sure files are consistent
     with each other"""
 
+    print("\tReading data...")
     # Read data
     info = pd.read_csv(info_file, sep="\t")
     depth = pd.read_csv(depth_file, sep="\t")
@@ -823,6 +827,7 @@ def read_and_process_data(map_file, info_file, depth_file, freqs_file,
         depth = depth.head(nrows)
         freq = freq.head(nrows)
 
+    print("\tClassifying sites into synonymous and non-synonymous")
     # Determine effect of sites (this is constant and indepentent of samples)
     info['Effect'] = info.apply(determine_mutation_effect, axis=1)
 
@@ -830,6 +835,7 @@ def read_and_process_data(map_file, info_file, depth_file, freqs_file,
     if not all(freq.columns == depth.columns):
         raise ValueError("Columns don't match between freq and depth files")
 
+    print("\tFiltering samples by group and coverage")
     # Read map file and select groups
     map = pd.read_csv(map_file, sep="\t")
     map.index = map.ID
