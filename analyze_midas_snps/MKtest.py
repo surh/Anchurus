@@ -854,7 +854,7 @@ def read_and_process_data(map_file, info_file, depth_file, freqs_file,
     return map, freq, info, depth
 
 
-def test_and_write_results(MK, Genes, outfile, tables,
+def test_and_write_results(MK, Genes, outfile,
                            test='hg', pseudocount=0,
                            permutations=0):
     """Take MK results, perform test and write outfile with
@@ -994,8 +994,9 @@ if __name__ == "__main__":
                 MK.append(mk)
 
         print("Testing and writing")
-        test_and_write_results(MK, Genes, args.outfile, args.tables,
-                               test=args.test, pseudocount=args.pseudocount,
+        test_and_write_results(MK, Genes, args.outfile,
+                               test=args.test,
+                               pseudocount=args.pseudocount,
                                permutations=args.permutations)
     elif args.functions == 'pandas':
         # Create file names
@@ -1039,6 +1040,8 @@ if __name__ == "__main__":
             # Calculate permutation p-values
             Genes['nperm'] = args.permutations + 1 - pd.isnull(Perms).sum(axis=1)
             np.seterr(invalid='ignore', divide='ignore')
-            Genes['P'] = np.greater_equal(Perms[:, np.repeat(0 ,nperm + 1)],Perms).sum(axis=1) / Genes['nperm']
+            Genes['P'] = np.greater_equal(Perms[:, np.repeat(0, args.permutations + 1)], Perms).sum(axis=1) / Genes['nperm']
             np.seterr(invalid='raise', divide='raise')
+
+        # Write results
         Genes.to_csv(args.outfile)
