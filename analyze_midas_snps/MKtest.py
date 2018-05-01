@@ -1053,4 +1053,4 @@ if __name__ == "__main__":
             np.seterr(invalid='raise', divide='raise')
 
         # Write results
-        Genes.to_csv(args.outfile)
+        Genes.to_csv(args.outfile, sep="\t", na_rep='NA', index=False)
