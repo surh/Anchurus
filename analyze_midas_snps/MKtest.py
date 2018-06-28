@@ -16,7 +16,6 @@
 
 # Imports
 import os
-# import sutilspy
 import csv
 import numpy as np
 import pandas as pd
@@ -115,6 +114,7 @@ class MKtest:
 
     def update(self, Ds=0, Dn=0, Ps=0, Pn=0):
         """Update the contigency matrix"""
+
         self.Dn += Dn
         self.Ds += Ds
         self.Ps += Ps
@@ -122,24 +122,26 @@ class MKtest:
 
     def mk_ratio(self, pseudocount=0):
         """Calculate the McDonald Kreitman ratio (Dn/Ds)/(Pn/Ps)"""
+
         num = (self.Dn + pseudocount) * (self.Ps + pseudocount)
         denom = (self.Ds + pseudocount) * (self.Pn + pseudocount)
         ratio = num / denom
-        # ratio = ((self.Dn + pseudocount) / (self.Ds + pseudocount)) / ((self.Pn + pseudocount) / (self.Ps + pseudocount))
-        return(ratio)
+        return ratio
 
     def alpha(self, pseudocount=0):
         """Calculate the Smith & Eyre-Walker alpha 1 - """
         ni = self.neutrality_index(pseudocount=pseudocount, log=False)
         alpha = 1 - ni
-        return(alpha)
+        return alpha
 
     def hg_test(self, pseudocount=0):
         """Hypergeometric (Fisher's exact) test"""
 
-        res = stats.fisher_exact([[self.Ds + pseudocount, self.Ps + pseudocount],
-                                  [self.Dn + pseudocount, self.Pn + pseudocount]])
-        return(res)
+        res = stats.fisher_exact([[self.Ds + pseudocount,
+                                   self.Ps + pseudocount],
+                                  [self.Dn + pseudocount,
+                                   self.Pn + pseudocount]])
+        return res
 
     def g_test(self, correction, pseudocount=0):
         """G-test for independence. Original McDonald & Kreitman 1991
@@ -162,14 +164,17 @@ class MKtest:
         elif correction == "williams":
             # Original correction used by McDonald & Kreitman (1991).
             # According to McDonald (same as above) biostat handbook,
-            # it doesn't make much difference (http://www.biostathandbook.com/small.html)
+            # it doesn't make much difference
+            # (http://www.biostathandbook.com/small.html)
             g, p, df, e = stats.chi2_contingency(observed=mat,
                                                  lambda_="log-likelihood",
                                                  correction=False)
 
             # Calculate q correction. Only for 2 x 2 table
             n = mat.sum()
-            q = 1 + (n * (1 / mat.sum(axis=1)).sum() - 1) * (n * (1 / mat.sum(axis=0)).sum() - 1) / (6 * n)
+            q1 = (n * (1 / mat.sum(axis=1)).sum() - 1)
+            q2 = (n * (1 / mat.sum(axis=0)).sum() - 1)
+            q = 1 + q1 * q2 / (6 * n)
 
             # correct g and recalculate p-value
             g = g / q
@@ -203,104 +208,335 @@ class MKtest:
         denom = (self.Ps + pseudocount) * (self.Dn + pseudocount)
         ni = num / denom
 
-        # ni = ((self.Pn + pseudocount) / (self.Dn + pseudocount)) / ((self.Ps + pseudocount) / (self.Ds + pseudocount))
-
         if log:
             ni = -np.log10(ni)
 
         return(ni)
 
 
-def process_snp_info_file(args):
-    """Process the snps_info.txt file from MIDAS"""
+def calculate_contingency_tables(Samples, Groups, args):
+    """Take metadata and locations of MIDAS files and
+    calculate MK contingency tables"""
 
-    Genes = {}
-    Sites = {}
-    with open(args.indir + '/snps_info.txt') as info_fh:
-        header = info_fh.readline()
-        header = header.split('\t')
-        # print(header)
-        info_reader = csv.reader(info_fh, delimiter='\t')
-        i = 0
+    print("\tRead snps_info.txt")
+    Genes, Sites = process_snp_info_file(args)
+    # print("Number of sites: {}".format(str(len(Sites))))
+    # print("Number of genes: {}".format(str(len(Genes))))
 
-        # Set columns
-        site_id_col = 0
-        contig_col = 1
-        pos_col = 2
-        ref_allele_col = 3
-        major_allele_col = 4
-        minor_allele_col = 5
-        locus_type_col = 11
-        gene_id_col = 12
-        aminoacids_col = 15
+    print("\tChose sites based on depth in groups to compare")
+    Counts = process_snps_depth_file(args, Groups, Sites)
+    # print("Number of sites: {}".format(str(len(Sites))))
+    # print("Number of genes: {}".format(str(len(Genes))))
+    # print("Sites with counts: {}".format(str(len(Counts))))
 
-        # print("============HEADERs============")
-        # print(">Site id: {}".format(header[site_id_col]))
-        # print(">Contig: {}".format(header[contig_col]))
-        # print(">Position: {}".format(header[pos_col]))
-        # print(">Ref allele: {}".format(header[ref_allele_col]))
-        # print(">Major allele: {}".format(header[major_allele_col]))
-        # print(">Minor allele: {}".format(header[minor_allele_col]))
-        # print(">Locus type: {}".format(header[locus_type_col]))
-        # print(">Gene id: {}".format(header[gene_id_col]))
-        # print(">Aminoacids: {}".format(header[aminoacids_col]))
+    print("\tRead frequencies and calculate")
+    MK = process_snp_freq_file(args, Counts, Groups, Samples, Sites)
+    # print("Number of sites: {}".format(str(len(Sites))))
+    # print("Number of genes: {}".format(str(len(Genes))))
+    # print("Sites with counts: {}".format(str(len(Counts))))
+    # print("Genes with MK: {}".format(str(len(MK))))
 
-        for row in info_reader:
-            i += 1
-            if i > args.nrows:
-                break
-            # print(row)
-            # print(row[gene_id_col], row[site_id_col])
-            # print(row[aminoacids_col])
-            gene = row[gene_id_col]
-            site_id = row[site_id_col]
-            aminoacids = row[aminoacids_col]
-            # print(aminoacids)
-            # print(site_id)
+    return MK, Genes
 
-            if gene == 'NA':
-                # skip intergenig regions
-                continue
 
-            # print("\tgene")
-            # Get aminoacid per position
-            aa = aminoacids.split(',')
-            # print(aa)
+def calculate_mk_oddsratio(map, info, depth, freq, depth_thres=1):
+    """Determine if sites are fixed of polymorphic, calculate MK
+    contingency table per gene, and calculate odds ratio"""
 
-            # Define site
-            # print(site_id)
-            Sites[site_id] = GenomeSite(site_id=site_id,
-                                        contig=row[contig_col],
-                                        position=row[pos_col],
-                                        ref_allele=row[ref_allele_col],
-                                        major_allele=row[major_allele_col],
-                                        minor_allele=row[minor_allele_col],
-                                        locus_type=row[locus_type_col],
-                                        gene_id=gene,
-                                        aminoacid_A=aa[0],
-                                        aminoacid_C=aa[1],
-                                        aminoacid_G=aa[2],
-                                        aminoacid_T=aa[3])
+    if not all(map.index == depth.columns):
+        raise ValueError("Samples in map and depth don't match")
+    if not all(map.index == freq.columns):
+        raise ValueError("Samples in map and freq don't match")
+    if not all(freq.columns == depth.columns):
+        raise ValueError("Samples in freq and depth don't match")
 
-            # For genes
-            if gene in Genes:
-                # update genes
-                Genes[gene].extend(row[pos_col])
-                # print(gene)
-                # print(Genes[gene])
-                # Genes[gene].info()
+    print("\tDetermining if sites are fixed or polymorphic")
+    # Determine type of mutation
+    info['Type'] = determine_site_dist(map=map, depth=depth, freq=freq, info=info, depth_thres=depth_thres)
 
+    print("\tCalculate MK contingency table per gene")
+    # Calculate MK contingency table per gene
+    Genes = pd.DataFrame(columns=['Gene', 'Dn', 'Ds', 'Pn', 'Ps'])
+    for g in info.gene_id.unique():
+        dat = info.loc[info.gene_id == g,:].copy()
+        tab = pd.crosstab(dat.Effect, dat.Type, rownames=['Effect'], colnames=['Type'])
+        tab = tab.reindex(index=pd.Index(['n','s']), columns=pd.Index(['fixed', 'polymorphic']), fill_value=0)
+        s = pd.Series(g, index=['Gene']).append(tab.fixed).append(tab.polymorphic)
+        Genes = Genes.append(pd.DataFrame([list(s)], columns=Genes.columns), ignore_index=True)
+
+    print("\tCalculate statistic")
+    # Calculate ratio
+    np.seterr(divide='ignore', invalid='ignore')
+    Genes['ratio'] = pd.to_numeric(Genes.Dn * Genes.Ps) / pd.to_numeric(Genes.Ds * Genes.Pn)
+    np.seterr(divide='raise', invalid='raise')
+    Genes.replace(np.inf, np.nan, inplace=True)
+    # Genes['hg.pval'] = Genes.apply(mktest_fisher_exact, axis=1)
+    # Genes.head()
+
+    return Genes, info
+
+
+def calculate_statistic(mk, test, pseudocount=0):
+    """Takes an MK object and returns a dictionary
+    with the statistics asked"""
+
+    tests = dict()
+    # Calculate neutrality index
+    if 'NI' in test:
+        tests['NI.pval'] = float('nan')
+        try:
+            tests['NI'] = mk.neutrality_index(log=True,
+                                              pseudocount=pseudocount)
+        except ZeroDivisionError:
+            tests['NI'] = float('nan')
+
+    # Calculate ratio
+    if 'ratio' in test:
+        tests['ratio.pval'] = float('nan')
+        try:
+            tests['ratio'] = mk.mk_ratio(pseudocount=pseudocount)
+        except ZeroDivisionError:
+            tests['ratio'] = float('nan')
+
+    # Hypergeometric test
+    if 'hg' in test:
+        tests['hg'], tests['hg.pval'] = mk.hg_test(pseudocount=pseudocount)
+
+    # G test of indenpendece try multiple corrections
+    if 'G' in test:
+        try:
+            g, pval, df, E = mk.g_test(correction='none',
+                                       pseudocount=pseudocount)
+            tests['G'] = g
+            tests['G.pval'] = pval
+            tests['G.df'] = df
+            tests['G.E'] = E
+        except ValueError:
+            tests['G'] = float('nan')
+            tests['G.pval'] = float('nan')
+            tests['G.df'] = float('nan')
+            tests['G.E'] = float('nan')
+
+    if 'G_Yates' in test:
+        try:
+            g, pval, df, E = mk.g_test(correction='yates',
+                                       pseudocount=pseudocount)
+            tests['G_Yates'] = g
+            tests['G_Yates.pval'] = pval
+            tests['G_Yates.df'] = df
+            tests['G_Yates.E'] = E
+        except ValueError:
+            tests['G_Yates'] = float('nan')
+            tests['G_Yates.pval'] = float('nan')
+            tests['G_Yates.df'] = float('nan')
+            tests['G_Yates.E'] = float('nan')
+
+    if 'G_Williams' in test:
+        try:
+            g, pval, df, E = mk.g_test(correction='williams',
+                                       pseudocount=pseudocount)
+            tests['G_Williams'] = g
+            tests['G_Williams.pval'] = pval
+            tests['G_Williams.df'] = df
+            tests['G_Williams.E'] = E
+        except ValueError:
+            tests['G_Williams'] = float('nan')
+            tests['G_Williams.pval'] = float('nan')
+            tests['G_Williams.df'] = float('nan')
+            tests['G_Williams.E'] = float('nan')
+
+    # Eyre-Walker alpha
+    if 'alpha' in test:
+        tests['alpha.pval'] = float('nan')
+        try:
+            tests['alpha'] = mk.alpha(pseudocount=pseudocount)
+        except ZeroDivisionError:
+            tests['alpha'] = float('nan')
+
+    if 'DoS' in test:
+        tests['DoS.pval'] = float('nan')
+        try:
+            tests['DoS'] = mk.DoS(pseudocount=pseudocount)
+        except ZeroDivisionError:
+            tests['DoS'] = float('nan')
+
+    return tests
+
+
+def confirm_midas_merge_files(args):
+    """Confirm files are present. No integrity check"""
+
+    # Check files exist in input directory
+    file_list = os.listdir(args.indir)
+    if 'snps_freq.txt' not in file_list:
+        msg = "Could not find snps_freq.txt at {}".format(args.indir)
+        raise FileNotFoundError(msg)
+    if 'snps_info.txt' not in file_list:
+        msg = "Could not find snps_info.txt at {}".format(args.indir)
+        raise FileNotFoundError(msg)
+    if 'snps_depth.txt' not in file_list:
+        msg = "Could not find snps_depth.txt at {}".format(args.indir)
+        raise FileNotFoundError(msg)
+    if not os.path.isfile(args.metadata_file):
+        msg = "Could not find metadata file {}".format(args.metadata_file)
+        raise FileNotFoundError(msg)
+
+    print("\tAll files found")
+    return
+
+
+def determine_mutation_effect(r):
+    """Mini function for apply, takes a series and checks if the mutation
+    is synonymous (s) or non-synonymopus (n)"""
+
+    ii = r.loc[['count_a', 'count_c', 'count_g', 'count_t']] > 0
+    aa = np.array(r.amino_acids.split(sep=','))
+
+    if all(aa[ii][0] == aa[ii]):
+        effect = 's'
+    else:
+        effect = 'n'
+
+    return effect
+
+
+def determine_site_dist(map, depth, freq, info, depth_thres=1):
+    """For all sites, determine if they are fixed or polymorphic"""
+
+    Dist = []
+    for i in range(info.shape[0]):
+        # Add samples IDs as map header and match samples
+        # in map with samples in depth
+
+        # Create site data frame
+        site = map.copy()
+        site['depth'] = depth.loc[depth.index[i], map.index]
+        site['freq'] = freq.loc[freq.index[i], map.index]
+
+        # Remove samples without information for site
+        site = site[site.depth >= depth_thres]
+
+        # Determine if it is polymorphic or fixed
+        site_crosstab = pd.crosstab(site.freq >= 0.5, site.Group)
+        if site_crosstab.shape == (2,2):
+            if (np.matrix(site_crosstab).diagonal() == [0,0]).all() or (np.fliplr(np.matrix(site_crosstab)).diagonal() == [0, 0]).all():
+                mutation_type = 'fixed'
             else:
-                # Define gene
-                Genes[gene] = Gene(gene_id=gene, contig = row[contig_col],
-                                   start = row[pos_col], end = row[pos_col])
-                # Genes[gene].info()
-                # print(Genes[gene])
+                mutation_type = 'polymorphic'
+        else:
+            mutation_type = np.nan
 
-    info_fh.close()
-    # print(Groups)
+        Dist.append(mutation_type)
 
-    return Genes, Sites
+    return(Dist)
+
+
+def mktest_fisher_exact(g):
+    """Per perform the fisher's exact test on a gene MK
+    contingency table."""
+
+    tab = np.array([[g.Dn, g.Pn], [g.Ds, g.Ps]])
+    oddsratio, pval = stats.fisher_exact(tab, alternative='two-sided')
+    # oddsratio, pval = stats.fisher_exact(tab, alternative='greater')
+
+    return pval
+
+
+def process_arguments():
+    # Read arguments
+    parser_format = argparse.ArgumentDefaultsHelpFormatter
+    parser = argparse.ArgumentParser(formatter_class=parser_format)
+    required = parser.add_argument_group("Required arguments")
+
+    # Define description
+    parser.description = ("Script to perform McDonald-Kreitman test "
+                          "from a midas output file of snps.")
+
+    # Define required arguments
+    required.add_argument("--indir", help="Input directory",
+                          type=str,
+                          required=True)
+    required.add_argument("--metadata_file", help="Mapping file for samples",
+                          type=str,
+                          required=True)
+    required.add_argument("--group1", help="Group1 of comparison",
+                          type=str,
+                          required=True)
+    required.add_argument("--group2", help="Group2 of comparison",
+                          type=str,
+                          required=True)
+
+    # Define other arguments
+    parser.add_argument("--functions", help=("Which set of functions to use, "
+                                             "pandas or classes"),
+                        default='pandas', type=str,
+                        choices=['pandas', 'classes'])
+    parser.add_argument("--min_count", help=("min depth at a position in "
+                                             "a sample to consider that "
+                                             "sample in that position"),
+                        default=1, type=int)
+    parser.add_argument("--min_cov", help=("min metagenomic coverage across "
+                                           "genome in a sample to keep that "
+                                           "sample for that genome"),
+                        default=1.0, type=float)
+    parser.add_argument("--nrows", help="Number of gene positions to read",
+                        default=float('inf'), type=float)
+    parser.add_argument("--outfile", help="Output file with results",
+                        default="mk_results.txt", type=str)
+    parser.add_argument("--permutations", help=("Number of permutations to "
+                                                "perform to establish "
+                                                "significance"),
+                        type=int, default=0)
+    parser.add_argument("--pseudocount", help=("Pseudocount value to use "
+                                               "in contingency tables"),
+                        default=0, type=int)
+    parser.add_argument("--seed", help="Permutation seed",
+                        type=int, default=None)
+    parser.add_argument("--test", help=("Eventually specify test to perform."
+                                        "all performs all tests. G performs "
+                                        "a G test without correction."
+                                        "G_Yates performs a G test with the "
+                                        "Yates correction. G_Williams "
+                                        "performs a G test with the Williams "
+                                        "correction. hg performs the "
+                                        "hypergeometric (Fisher's Exact) "
+                                        "test. NI rerturns the neutrality "
+                                        "index. alpha returs the Eyre-"
+                                        "Walker alpha. Ratio returns the MK "
+                                        "rati. DoS is the direction of "
+                                        "selection statistic."),
+                        default="hg", type=str,
+                        choices=['all', 'G', 'G_Yates', 'G_Williamps',
+                                 'hg', 'NI', 'alpha', 'ratio', 'DoS'])
+
+    # Read arguments
+    print("Reading arguments")
+    args = parser.parse_args()
+
+    # Processing goes here if needed
+    if args.seed is None and args.permutations > 0:
+        args.seed = np.random.randint(1000)*2 + 1
+
+    return args
+
+
+def process_metadata_file(mapfile, permute=False):
+    """Process metadata file and permute if needed"""
+
+    map = pd.read_csv(mapfile, sep='\t')
+
+    if permute:
+        map['Group'] = np.random.permutation(map.Group)
+
+    # Samples = dict(zip(map.ID, map.Group))
+    Samples = {map.ID[i]: [map.Group[i]] for i in range(len(map))}
+
+    Groups = dict()
+    for g in set(map.Group):
+        samples = list(map.ID[map.Group == g])
+        Groups[g] = samples
+
+    return Samples, Groups
 
 
 def process_snps_depth_file(args, Groups, Sites):
@@ -345,7 +581,8 @@ def process_snps_depth_file(args, Groups, Sites):
             counts = [int(c >= args.min_count) for c in counts]
 
             # Get counts per group
-            # GLITCH: Here it fails if map has extra samples not present in files
+            # GLITCH: Here it fails if map has extra samples not present in
+            # files
             # print(set(Groups[args.group1]) & set(indices.keys()))
             # print(args.group1)
             # print(Groups[args.group1])
@@ -469,246 +706,162 @@ def process_snp_freq_file(args, Counts, Groups, Samples, Sites):
     return MK
 
 
-def confirm_midas_merge_files(args):
-    """Confirm files are present. No integrity check"""
+def process_snp_info_file(args):
+    """Process the snps_info.txt file from MIDAS"""
 
-    # Check files exist in input directory
-    file_list = os.listdir(args.indir)
-    if 'snps_freq.txt' not in file_list:
-        msg = "Could not find snps_freq.txt at {}".format(args.indir)
-        raise FileNotFoundError(msg)
-    if 'snps_info.txt' not in file_list:
-        msg = "Could not find snps_info.txt at {}".format(args.indir)
-        raise FileNotFoundError(msg)
-    if 'snps_depth.txt' not in file_list:
-        msg = "Could not find snps_depth.txt at {}".format(args.indir)
-        raise FileNotFoundError(msg)
-    if not os.path.isfile(args.metadata_file):
-        msg = "Could not find metadata file {}".format(args.metadata_file)
-        raise FileNotFoundError(msg)
+    Genes = {}
+    Sites = {}
+    with open(args.indir + '/snps_info.txt') as info_fh:
+        header = info_fh.readline()
+        header = header.split('\t')
+        # print(header)
+        info_reader = csv.reader(info_fh, delimiter='\t')
+        i = 0
 
-    print("\tAll files found")
-    return
+        # Set columns
+        site_id_col = 0
+        contig_col = 1
+        pos_col = 2
+        ref_allele_col = 3
+        major_allele_col = 4
+        minor_allele_col = 5
+        locus_type_col = 11
+        gene_id_col = 12
+        aminoacids_col = 15
 
+        # print("============HEADERs============")
+        # print(">Site id: {}".format(header[site_id_col]))
+        # print(">Contig: {}".format(header[contig_col]))
+        # print(">Position: {}".format(header[pos_col]))
+        # print(">Ref allele: {}".format(header[ref_allele_col]))
+        # print(">Major allele: {}".format(header[major_allele_col]))
+        # print(">Minor allele: {}".format(header[minor_allele_col]))
+        # print(">Locus type: {}".format(header[locus_type_col]))
+        # print(">Gene id: {}".format(header[gene_id_col]))
+        # print(">Aminoacids: {}".format(header[aminoacids_col]))
 
-def process_arguments():
-    # Read arguments
-    parser_format = argparse.ArgumentDefaultsHelpFormatter
-    parser = argparse.ArgumentParser(formatter_class=parser_format)
-    required = parser.add_argument_group("Required arguments")
+        for row in info_reader:
+            i += 1
+            if i > args.nrows:
+                break
+            # print(row)
+            # print(row[gene_id_col], row[site_id_col])
+            # print(row[aminoacids_col])
+            gene = row[gene_id_col]
+            site_id = row[site_id_col]
+            aminoacids = row[aminoacids_col]
+            # print(aminoacids)
+            # print(site_id)
 
-    # Define description
-    parser.description = ("Script to perform McDonald-Kreitman test "
-                          "from a midas output file of snps.")
+            if gene == 'NA':
+                # skip intergenig regions
+                continue
 
-    # Define required arguments
-    required.add_argument("--indir", help="Input directory",
-                          type=str,
-                          required=True)
-    required.add_argument("--metadata_file", help="Mapping file for samples",
-                          type=str,
-                          required=True)
-    required.add_argument("--group1", help="Group1 of comparison",
-                          type=str,
-                          required=True)
-    required.add_argument("--group2", help="Group2 of comparison",
-                          type=str,
-                          required=True)
+            # print("\tgene")
+            # Get aminoacid per position
+            aa = aminoacids.split(',')
+            # print(aa)
 
-    # Define other arguments
-    parser.add_argument("--test", help=("Eventually specify test to perform."
-                                        "all performs all tests. G performs "
-                                        "a G test without correction."
-                                        "G_Yates performs a G test with the "
-                                        "Yates correction. G_Williams "
-                                        "performs a G test with the Williams "
-                                        "correction. hg performs the "
-                                        "hypergeometric (Fisher's Exact) "
-                                        "test. NI rerturns the neutrality "
-                                        "index. alpha returs the Eyre-"
-                                        "Walker alpha. Ratio returns the MK "
-                                        "rati. DoS is the direction of "
-                                        "selection statistic."),
-                        default="hg", type=str,
-                        choices=['all', 'G', 'G_Yates', 'G_Williamps',
-                                 'hg', 'NI', 'alpha', 'ratio', 'DoS'])
-    parser.add_argument("--outfile", help="Output file with results",
-                        default="mk_results.txt", type=str)
-    parser.add_argument("--min_count", help=("min depth at a position in "
-                                             "a sample to consider that "
-                                             "sample in that position"),
-                        default=1, type=int)
-    parser.add_argument("--nrows", help="Number of gene positions to read",
-                        default=float('inf'), type=float)
-    parser.add_argument("--tables", help="Output file for contingency tables",
-                        default="mk_tables.txt", type=str)
-    parser.add_argument("--pseudocount", help=("Pseudocount value to use "
-                                               "in contingency tables"),
-                        default=0, type=int)
-    parser.add_argument("--permutations", help=("Number of permutations to "
-                                                "perform to establish "
-                                                "significance"),
-                        type=int, default=0)
-    parser.add_argument("--seed", help="Permutation seed",
-                        type=int, default=None)
+            # Define site
+            # print(site_id)
+            Sites[site_id] = GenomeSite(site_id=site_id,
+                                        contig=row[contig_col],
+                                        position=row[pos_col],
+                                        ref_allele=row[ref_allele_col],
+                                        major_allele=row[major_allele_col],
+                                        minor_allele=row[minor_allele_col],
+                                        locus_type=row[locus_type_col],
+                                        gene_id=gene,
+                                        aminoacid_A=aa[0],
+                                        aminoacid_C=aa[1],
+                                        aminoacid_G=aa[2],
+                                        aminoacid_T=aa[3])
 
-    # Read arguments
-    print("Reading arguments")
-    args = parser.parse_args()
+            # For genes
+            if gene in Genes:
+                # update genes
+                Genes[gene].extend(row[pos_col])
+                # print(gene)
+                # print(Genes[gene])
+                # Genes[gene].info()
 
-    # Processing goes here if needed
-    if args.seed is None and args.permutations > 0:
-        args.seed = np.random.randint(1000)*2 + 1
+            else:
+                # Define gene
+                Genes[gene] = Gene(gene_id=gene, contig=row[contig_col],
+                                   start=row[pos_col], end=row[pos_col])
+                # Genes[gene].info()
+                # print(Genes[gene])
 
-    return args
+    info_fh.close()
+    # print(Groups)
+
+    return Genes, Sites
 
 
-def process_metadata_file(mapfile, permute=False):
-    """Process metadata file and permute if needed"""
+def read_and_process_data(map_file, info_file, depth_file, freqs_file,
+                         groups, cov_thres=1, nrows=float('inf')):
+    """Reads MIDAS output files, selects gene sites and samples above threshold,
+    determines mutation effect (s or n) and makes sure files are consistent
+    with each other"""
 
-    map = pd.read_csv(mapfile, sep='\t')
+    print("\tReading data...")
+    # Read data
+    info = pd.read_csv(info_file, sep="\t")
+    depth = pd.read_csv(depth_file, sep="\t")
+    freq = pd.read_csv(freqs_file, sep="\t")
 
-    if permute:
-        map['Group'] = np.random.permutation(map.Group)
+    # Remove non gene sites
+    ii = ~info.gene_id.isnull()
+    info = info.loc[ii, :]
+    depth = depth.loc[ii, :]
+    freq = freq.loc[ii, :]
 
-    # Samples = dict(zip(map.ID, map.Group))
-    Samples = {map.ID[i]: [map.Group[i]] for i in range(len(map))}
+    # Remove site_id columns
+    depth = depth.drop(axis=1, labels='site_id')
+    freq = freq.drop(axis=1, labels='site_id')
 
-    Groups = dict()
-    for g in set(map.Group):
-        samples = list(map.ID[map.Group == g])
-        Groups[g] = samples
+    # subset for tests
+    if nrows < float('inf'):
+        nrows = int(nrows)
+        info = info.head(nrows)
+        depth = depth.head(nrows)
+        freq = freq.head(nrows)
 
-    return Samples, Groups
+    print("\tClassifying sites into synonymous and non-synonymous")
+    # Determine effect of sites (this is constant and indepentent of samples)
+    info['Effect'] = info.apply(determine_mutation_effect, axis=1)
 
+    # Check that sample names match between freq and depth
+    if not all(freq.columns == depth.columns):
+        raise ValueError("Columns don't match between freq and depth files")
 
-def calculate_contingency_tables(Samples, Groups, args):
-    """Take metadata and locations of MIDAS files and
-    calculate MK contingency tables"""
+    print("\tFiltering samples by group and coverage")
+    # Read map file and select groups
+    map = pd.read_csv(map_file, sep="\t")
+    map.index = map.ID
+    map = map.loc[map.Group.isin(groups), :].copy()
 
-    print("\tRead snps_info.txt")
-    Genes, Sites = process_snp_info_file(args)
-    # print("Number of sites: {}".format(str(len(Sites))))
-    # print("Number of genes: {}".format(str(len(Genes))))
+    # Remove samples from other groups
+    ci = depth.columns.isin(map.ID)
+    depth = depth.loc[:, ci]
+    freq = freq.loc[:, ci]
 
-    print("\tChose sites based on depth in groups to compare")
-    Counts = process_snps_depth_file(args, Groups, Sites)
-    # print("Number of sites: {}".format(str(len(Sites))))
-    # print("Number of genes: {}".format(str(len(Genes))))
-    # print("Sites with counts: {}".format(str(len(Counts))))
+    # Reorder map
+    map = map.loc[depth.columns, :]
 
-    print("\tRead frequencies and calculate")
-    MK = process_snp_freq_file(args, Counts, Groups, Samples, Sites)
-    # print("Number of sites: {}".format(str(len(Sites))))
-    # print("Number of genes: {}".format(str(len(Genes))))
-    # print("Sites with counts: {}".format(str(len(Counts))))
-    # print("Genes with MK: {}".format(str(len(MK))))
+    # Calculate coverage in sites
+    map['coverage'] = depth.mean(axis=0)
 
-    return MK, Genes
+    # Remove samples below coverage
+    ci = map.coverage >= cov_thres
+    map = map.loc[ci, :]
+    depth = depth.loc[:, map.index]
+    freq = freq.loc[:, map.index]
 
-
-def calculate_statistic(mk, test, pseudocount=0):
-    """Takes an MK object and returns a dictionary
-    with the statistics asked"""
-
-    tests = dict()
-    # Calculate neutrality index
-    if 'NI' in test:
-        tests['NI.pval'] = float('nan')
-        try:
-            tests['NI'] = mk.neutrality_index(log=True,
-                                              pseudocount=pseudocount)
-        except ZeroDivisionError:
-            tests['NI'] = float('nan')
-
-    # Calculate ratio
-    if 'ratio' in test:
-        tests['ratio.pval'] = float('nan')
-        try:
-            tests['ratio'] = mk.mk_ratio(pseudocount=pseudocount)
-        except ZeroDivisionError:
-            tests['ratio'] = float('nan')
-
-    # Hypergeometric test
-    if 'hg' in test:
-        tests['hg'], tests['hg.pval'] = mk.hg_test(pseudocount=pseudocount)
-
-    # G test of indenpendece try multiple corrections
-    if 'G' in test:
-        try:
-            tests['G'], tests['G.pval'], tests['G.df'], tests['G.E'] = mk.g_test(correction='none',
-                                                                                 pseudocount=pseudocount)
-        except ValueError:
-            tests['G'] = float('nan')
-            tests['G.pval'] = float('nan')
-            tests['G.df'] = float('nan')
-            tests['G.E'] = float('nan')
-
-    if 'G_Yates' in test:
-        try:
-            tests['G_Yates'], tests['G_Yates.pval'], tests['G_Yates.df'], tests['G_Yates.E'] = mk.g_test(correction='yates',
-                                                                                                         pseudocount=pseudocount)
-        except ValueError:
-            tests['G_Yates'] = float('nan')
-            tests['G_Yates.pval'] = float('nan')
-            tests['G_Yates.df'] = float('nan')
-            tests['G_Yates.E'] = float('nan')
-
-    if 'G_Williams' in test:
-        try:
-            tests['G_Williams'], tests['G_Williams.pval'], tests['G_Williams.df'], tests['G_Williams.E'] = mk.g_test(correction='williams',
-                                                                                                                     pseudocount=pseudocount)
-        except ValueError:
-            tests['G_Williams'] = float('nan')
-            tests['G_Williams.pval'] = float('nan')
-            tests['G_Williams.df'] = float('nan')
-            tests['G_Williams.E'] = float('nan')
-
-    # Eyre-Walker alpha
-    if 'alpha' in test:
-        tests['alpha.pval'] = float('nan')
-        try:
-            tests['alpha'] = mk.alpha(pseudocount=pseudocount)
-        except ZeroDivisionError:
-            tests['alpha'] = float('nan')
-
-    if 'DoS' in test:
-        tests['DoS.pval'] = float('nan')
-        try:
-            tests['DoS'] = mk.DoS(pseudocount=pseudocount)
-        except ZeroDivisionError:
-            tests['DoS'] = float('nan')
+    return map, freq, info, depth
 
 
-    return tests
-
-
-def test_by_permutation(gene, MK, permutations, test, pval_list, pseudocount):
-    nperm = int(permutations + 1)
-    perm_table = np.full(shape=(nperm, len(test)), fill_value=np.nan)
-    row = 0
-    for p in MK:
-        if gene in p:
-            p_stat = calculate_statistic(p[gene], test, pseudocount=pseudocount)
-            p_res = [p_stat[t] for t in test]
-            perm_table[row] = p_res
-
-        row = row + 1
-
-    # Pvalues
-    nperms = nperm - np.isnan(perm_table).sum(axis=0)
-    perm_pvals = (perm_table >= perm_table[0]).sum(axis=0) / nperms
-    nperm_names = [''.join([t, '.nperm']) for t in test]
-
-    keys = np.concatenate((test, pval_list, nperm_names))
-    vals = np.concatenate((perm_table[0], perm_pvals, nperms))
-    # vals = np.array(vals, dtype=np.character)
-    res = dict(zip(keys, vals))
-
-    return res
-
-
-def test_and_write_results(MK, Genes, outfile, tables,
+def test_and_write_results(MK, Genes, outfile,
                            test='hg', pseudocount=0,
                            permutations=0):
     """Take MK results, perform test and write outfile with
@@ -737,7 +890,6 @@ def test_and_write_results(MK, Genes, outfile, tables,
     header = header_base + test + pval_list + perm_list
 
     # Open files for output
-    # with open(outfile, mode='w') as fh, open(tables, mode='w') as th:
     with open(outfile, mode='w') as fh:
         # Write header as first line of results
         fh.write("\t".join(header) + "\n")
@@ -745,11 +897,8 @@ def test_and_write_results(MK, Genes, outfile, tables,
         # Iterate over every MK element
         # print(MK[0])
         for gene, mk in MK[0].items():
-            print(gene)
-            print(mk.Dn, mk.Ds, mk.Pn, mk.Ps)
-            # th.write("=============================================\n")
-            # th.write(gene)
-            # th.write("\t\tFixed\tPolymorphic\n\tSynonymous\t{}\t{}\n\tnon-synonymous\t{}\t{}\n".format(mk.Ds,mk.Ps,mk.Dn,mk.Pn))
+            # print(gene)
+            # print(mk.Dn, mk.Ds, mk.Pn, mk.Ps)
 
             if permutations == 0:
                 # Calculate statistics
@@ -763,19 +912,22 @@ def test_and_write_results(MK, Genes, outfile, tables,
                        str(mk.Dn), str(mk.Ds),
                        str(mk.Pn), str(mk.Ps)] + res
 
-                # res = [gene, Genes[gene].contig, str(Genes[gene].start), str(Genes[gene].end),
+                # res = [gene, Genes[gene].contig, str(Genes[gene].start),
+                #        str(Genes[gene].end),
                 #        str(mk.Dn), str(mk.Ds), str(mk.Pn), str(mk.Ps),
                 #        str(ni), str(ratio), str(ratio_pseudo),
-                #        str(hg_odds), str(hg_p), str(hg_odds_pseudo),str(hg_p_pseudo),
+                #        str(hg_odds), str(hg_p), str(hg_odds_pseudo),
+                #        str(hg_p_pseudo),
                 #        str(g_none_p), str(g_yates_p),str(g_williams_p),
-                #        str(g_none_p_pseudo), str(g_yates_p_pseudo),str(g_williams_p_pseudo),
+                #        str(g_none_p_pseudo), str(g_yates_p_pseudo),
+                #        str(g_williams_p_pseudo),
                 #        str(alpha), str(alpha_pseudo)]
 
                 # th.write(str(res) + "\n")
                 fh.write("\t".join(res) + "\n")
-                #alpha = mk.alpha()
-                #print("MK ratio is: {}".format(str(ratio)))
-                #print("MK alpha is: {}".format(str(alpha)))
+                # alpha = mk.alpha()
+                # print("MK ratio is: {}".format(str(ratio)))
+                # print("MK alpha is: {}".format(str(alpha)))
             elif permutations > 0:
                 res = test_by_permutation(gene, MK, permutations,
                                           test, pval_list, pseudocount)
@@ -794,6 +946,34 @@ def test_and_write_results(MK, Genes, outfile, tables,
     # th.close()
 
 
+def test_by_permutation(gene, MK, permutations, test, pval_list, pseudocount):
+    nperm = int(permutations + 1)
+    perm_table = np.full(shape=(nperm, len(test)), fill_value=np.nan)
+    row = 0
+    for p in MK:
+        if gene in p:
+            p_stat = calculate_statistic(p[gene], test,
+                                         pseudocount=pseudocount)
+            p_res = [p_stat[t] for t in test]
+            perm_table[row] = p_res
+
+        row = row + 1
+
+    # Pvalues
+    nperms = nperm - np.isnan(perm_table).sum(axis=0)
+    np.seterr(invalid='ignore', divide='ignore')
+    perm_pvals = (perm_table >= perm_table[0]).sum(axis=0) / nperms
+    np.seterr(invalid='raise', divide='raise')
+    nperm_names = [''.join([t, '.nperm']) for t in test]
+
+    keys = np.concatenate((test, pval_list, nperm_names))
+    vals = np.concatenate((perm_table[0], perm_pvals, nperms))
+    # vals = np.array(vals, dtype=np.character)
+    res = dict(zip(keys, vals))
+
+    return res
+
+
 if __name__ == "__main__":
     args = process_arguments()
 
@@ -801,27 +981,76 @@ if __name__ == "__main__":
     print("Checking MIDAS files exist")
     confirm_midas_merge_files(args)
 
-    # Read mapping files
-    # Create dictionaries that have all the samples per group (Groups),
-    # and the group to which each sample belongs (Samples)
-    # Probably should change this to pandas
-    print("Read metadata")
-    Samples, Groups = process_metadata_file(args.metadata_file)
-    # print(Groups)
+    if args.functions == 'classes':
+        # Read mapping files
+        # Create dictionaries that have all the samples per group (Groups),
+        # and the group to which each sample belongs (Samples)
+        # Probably should change this to pandas
+        print("Read metadata")
+        Samples, Groups = process_metadata_file(args.metadata_file)
+        # print(Groups)
 
-    print("Calculate MK contingency tables")
-    MK, Genes = calculate_contingency_tables(Samples, Groups, args)
-    MK = [MK]
-    if args.permutations > 0:
-        print("Permuting")
-        print("Seed is {}".format(str(args.seed)))
-        np.random.seed(args.seed)
-        for i in range(args.permutations):
-            Sp, Gp = process_metadata_file(args.metadata_file, permute=True)
-            mk, genes = calculate_contingency_tables(Sp, Gp, args)
-            MK.append(mk)
+        print("Calculate MK contingency tables")
+        MK, Genes = calculate_contingency_tables(Samples, Groups, args)
+        MK = [MK]
+        if args.permutations > 0:
+            print("Permuting")
+            print("Seed is {}".format(str(args.seed)))
+            np.random.seed(args.seed)
+            for i in range(args.permutations):
+                Sp, Gp = process_metadata_file(args.metadata_file, permute=True)
+                mk, genes = calculate_contingency_tables(Sp, Gp, args)
+                MK.append(mk)
 
-    print("Testing and writing")
-    test_and_write_results(MK, Genes, args.outfile, args.tables,
-                           test=args.test, pseudocount=args.pseudocount,
-                           permutations=args.permutations)
+        print("Testing and writing")
+        test_and_write_results(MK, Genes, args.outfile,
+                               test=args.test,
+                               pseudocount=args.pseudocount,
+                               permutations=args.permutations)
+    elif args.functions == 'pandas':
+        # Create file names
+        info_file = ''.join([args.indir, '/snps_info.txt'])
+        depth_file = ''.join([args.indir, '/snps_depth.txt'])
+        freqs_file = ''.join([args.indir, '/snps_freq.txt'])
+
+        # Prepare list of groups
+        groups = [args.group1, args.group2]
+
+        map, freq, info, depth = read_and_process_data(map_file=args.metadata_file,
+                                                       info_file=info_file,
+                                                       depth_file=depth_file,
+                                                       freqs_file=freqs_file,
+                                                       groups=groups,
+                                                       cov_thres=args.min_cov,
+                                                       nrows=args.nrows)
+        Genes, info = calculate_mk_oddsratio(map=map, info=info,
+                                             depth=depth, freq=freq,
+                                             depth_thres=args.min_count)
+
+        # Perform permutations if needed
+        if args.permutations > 0:
+            Perms = np.empty((Genes.shape[0], args.permutations + 1))
+            Perms[:] = np.nan
+            Perms[:, 0] = Genes.ratio
+            np.random.seed(args.seed)
+            print("Seed for permutations is {}".format(args.seed))
+            for i in range(1, args.permutations + 1):
+                # print(i)
+                map_i = map.copy()
+                map_i['Group'] = np.random.permutation(map_i.Group)
+                Genes_i, info_i = calculate_mk_oddsratio(map=map_i,
+                                                         info=info,
+                                                         depth=depth,
+                                                         freq=freq,
+                                                         depth_thres=args.min_count)
+                Perms[:, i] = Genes_i.ratio
+            # Perms
+
+            # Calculate permutation p-values
+            Genes['nperm'] = args.permutations + 1 - pd.isnull(Perms).sum(axis=1)
+            np.seterr(invalid='ignore', divide='ignore')
+            Genes['P'] = np.greater_equal(Perms[:, np.repeat(0, args.permutations + 1)], Perms).sum(axis=1) / Genes['nperm']
+            np.seterr(invalid='raise', divide='raise')
+
+        # Write results
+        Genes.to_csv(args.outfile, sep="\t", na_rep='NA', index=False)
