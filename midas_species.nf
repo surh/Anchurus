@@ -30,8 +30,6 @@ params.time = '4:00:00'
 params.cpus = 8
 params.njobs = 200
 
-
-
 // Process params
 samples = file(params.samples)
 sample_col = params.sample_col - 1
@@ -47,6 +45,8 @@ while(str = reader.readLine()){
     file("${params.indir}/${sample}_read2.fastq.bz2"))]
 }
 
+
+// Call run_midas.py species on every sample
 process midas_species{
   cpus params.cpus
   time params.time
