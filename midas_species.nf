@@ -53,6 +53,7 @@ process midas_species{
   memory params.memory
   maxForks params.njobs
   module 'MIDAS/1.3.1'
+  queuq params.queue
 
   input:
   set sample, file(f_file), file(r_file) from SAMPLES
