@@ -42,9 +42,9 @@ SAMPLES = []
 while(str = reader.readLine()){
   // Extract sample and run IDs
   sample = str.split("\t")[sample_col]
-  SAMPLES = SAMPLES + [sample,
+  SAMPLES = SAMPLES + tuple(sample,
     "${params.indir}/${sample}_read1.fastq.bz2",
-    "${params.indir}/${sample}_read2.fastq.bz2"]
+    "${params.indir}/${sample}_read2.fastq.bz2")
 }
 
 process midas_species{
@@ -52,6 +52,7 @@ process midas_species{
   time params.time
   memory params.memory
   maxForks params.njobs
+  module 'MIDAS/1.3.1'
 
   input:
   set sample, file(f_file), file(r_file) from SAMPLES
