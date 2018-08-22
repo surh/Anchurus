@@ -27,3 +27,36 @@ params.logdir = 'logs'
 params.queue = 'hbfraser,owners,bigmem,hns,normal'
 params.memory = '10G'
 params.time = '4:00:00'
+params.cpus = 8
+params.njobs = 200
+
+
+
+// Process params
+samples = file(params.samples)
+sample_col = params.sample_col - 1
+
+// Read samples file
+reader = map.newReader()
+SAMPLES = []
+while(str = reader.readLine()){
+  // Extract sample and run IDs
+  sample = str.split("\t")[sample_col]
+  SAMPLES = SAMPLES + [sample,
+    "${params.indir}/${sample}_read1.fastq.bz2",
+    "${params.indir}/${sample}_read2.fastq.bz2"]
+}
+
+process midas_species{
+  cpus params.cpus
+  time params.time
+  memory params.memory
+  maxForks params.njobs
+
+  input:
+  set sample, file(f_file), file(r_file) from SAMPLES
+
+  """
+  echo "${sample}=>${f_file}, ${r_file}"
+  """
+}
