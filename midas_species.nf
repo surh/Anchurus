@@ -19,7 +19,7 @@
 
 
 // Main parameters
-params.samples = 'samples.tst'
+params.samples = 'samples.txt'
 params.indir = 'samples/'
 params.outdir = 'midas/'
 params.sample_col = 1
@@ -37,7 +37,7 @@ samples = file(params.samples)
 sample_col = params.sample_col - 1
 
 // Read samples file
-reader = map.newReader()
+reader = samples.newReader()
 SAMPLES = []
 while(str = reader.readLine()){
   // Extract sample and run IDs
