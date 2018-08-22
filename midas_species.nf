@@ -58,6 +58,10 @@ process midas_species{
   set sample, file(f_file), file(r_file) from SAMPLES
 
   """
-  echo "${sample}=>${f_file}, ${r_file}"
+  run_midas.py species params.outdir/${sample} \
+    -1 ${f_file} \
+    -2 ${r_file} \
+    -t ${params.cpus} \
+    --remove_temp
   """
 }
