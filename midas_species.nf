@@ -54,12 +54,19 @@ process midas_species{
   maxForks params.njobs
   module 'MIDAS/1.3.1'
   queue params.queue
+  publishDir params.outdir, mode: 'copy'
 
   input:
   set sample, f_file, r_file from SAMPLES
 
+  output:
+  set sample,
+    file("${sample}/species/log.txt"),
+    file("${sample}/species/readme.txt"),
+    file("${sample}/species/species_profile.txt") into OUTPUTS
+
   """
-  run_midas.py species params.outdir/${sample} \
+  run_midas.py species ${sample} \
     -1 ${f_file} \
     -2 ${r_file} \
     -t ${params.cpus} \
