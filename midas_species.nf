@@ -43,8 +43,8 @@ while(str = reader.readLine()){
   // Extract sample and run IDs
   sample = str.split("\t")[sample_col]
   SAMPLES = SAMPLES + [tuple(sample,
-    "${params.indir}/${sample}_read1.fastq.bz2",
-    "${params.indir}/${sample}_read2.fastq.bz2")]
+    file("${params.indir}/${sample}_read1.fastq.bz2"),
+    file("${params.indir}/${sample}_read2.fastq.bz2"))]
 }
 
 process midas_species{
@@ -56,7 +56,7 @@ process midas_species{
   queue params.queue
 
   input:
-  set sample, file(f_file), file(r_file) from SAMPLES
+  set sample, f_file, r_file from SAMPLES
 
   """
   run_midas.py species params.outdir/${sample} \
