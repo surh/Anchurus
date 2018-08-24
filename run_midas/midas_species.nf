@@ -1,5 +1,5 @@
 #!/usr/bin/env nextflow
-// Copyright (C) 2017 Sur Herrera Paredes
+// Copyright (C) 2018 Sur Herrera Paredes
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -54,6 +54,8 @@ process midas_species{
   module 'MIDAS/1.3.1'
   queue params.queue
   publishDir params.outdir, mode: 'copy'
+  errorStrategy 'retry'
+  maxRetries 2
 
   input:
   set sample, f_file, r_file from SAMPLES
