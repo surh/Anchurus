@@ -32,15 +32,41 @@ params.mapid = 94.0
 params.mapq = 20
 params.baseq = 30
 params.readq = 30
+params.aln_cov = 0.75
 params.trim = 0
 params.discard = false
 params.baq = false
 params.adjust_mq = false
-params.steps = 'all'
+// Steps argument needs to be implemented
 
 // Process params
 samples = file(params.samples)
 sample_col = params.sample_col - 1
+if( params.trim > 0 ) {
+  trim = "--trim ${params.trim}"
+}
+else {
+  trim = ''
+}
+if( params.discard == true ) {
+    discard = '--discard'
+}
+else {
+    discard = ''
+}
+if( params.baq == true ) {
+  baq = '--baq'
+}
+else {
+  baq = ''
+}
+if( params.adjust_mq == true ) {
+  adjust_mq = 'adjust_mq'
+}
+else {
+  adjust_mq = ''
+}
+
 
 // Read samples file
 reader = samples.newReader()
@@ -51,4 +77,41 @@ while(str = reader.readLine()){
   SAMPLES = SAMPLES + [tuple(sample,
     file("${params.indir}/${sample}_read1.fastq.bz2"),
     file("${params.indir}/${sample}_read2.fastq.bz2"))]
+}
+
+
+
+// Call run_midas.py species on every sample
+process midas_species{
+  cpus params.cpus
+  time params.time
+  memory params.memory
+  maxForks params.njobs
+  module 'MIDAS/1.3.1'
+  queue params.queue
+  publishDir params.outdir, mode: 'copy'
+  errorStrategy 'retry'
+  maxRetries 2
+
+  input:
+  set sample, f_file, r_file from SAMPLES
+
+  """
+  run_midas.py snps ${sample} \
+    -1 ${f_file} \
+    -2 ${r_file} \
+    -t ${params.cpus} \
+    --remove_temp \
+    --species_cov ${params.species_cov} \
+    --mapid ${params.mapid} \
+    --mapq ${params.mapq} \
+    --baseq ${params.baseq} \
+    --readq ${params.readq} \
+    --aln_cov ${params.aln_cov} \
+    -m local \
+    ${trim} \
+    ${discard} \
+    ${baq} \
+    ${adjust_mq}
+  """
 }
