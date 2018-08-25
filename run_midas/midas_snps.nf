@@ -97,7 +97,7 @@ process midas_species{
   set sample, f_file, r_file from SAMPLES
 
   """
-  run_midas.py snps ${sample} \
+  run_midas.py snps ${params.outdir}/${sample} \
     -1 ${f_file} \
     -2 ${r_file} \
     -t ${params.cpus} \
