@@ -97,6 +97,14 @@ process midas_species{
   input:
   set sample, f_file, r_file, spec_profile from SAMPLES
 
+  output:
+  set sample,
+    file("${sample}/snps/log.txt"),
+    file("${sample}/snps/readme.txt"),
+    file("${sample}/snps/species.txt"),
+    file("${sample}/snps/summary.txt"),
+    file("${sample}/snps/output/") into OUTPUTS
+
   """
   mkdir ${sample}
   mkdir ${sample}/species
