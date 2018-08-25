@@ -103,7 +103,7 @@ process midas_species{
     file("${sample}/snps/readme.txt"),
     file("${sample}/snps/species.txt"),
     file("${sample}/snps/summary.txt"),
-    file("${sample}/snps/output/") into OUTPUTS
+    file("${sample}/snps/output/*.snps.gz") into OUTPUTS
 
   """
   mkdir ${sample}
