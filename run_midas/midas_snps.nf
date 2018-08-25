@@ -98,6 +98,8 @@ process midas_species{
   set sample, f_file, r_file, spec_profile from SAMPLES
 
   """
+  mkdir ${sample}
+  mkdir ${sample}/species
   cp ${spec_profile} ${sample}/species/
   run_midas.py snps ${sample} \
     -1 ${f_file} \
