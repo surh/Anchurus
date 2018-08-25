@@ -76,7 +76,8 @@ while(str = reader.readLine()){
   sample = str.split("\t")[sample_col]
   SAMPLES = SAMPLES + [tuple(sample,
     file("${params.indir}/${sample}_read1.fastq.bz2"),
-    file("${params.indir}/${sample}_read2.fastq.bz2"))]
+    file("${params.indir}/${sample}_read2.fastq.bz2"),
+    file("${params.outdir}/${sample}/species/species_profile.txt"))]
 }
 
 
@@ -94,10 +95,11 @@ process midas_species{
   maxRetries 2
 
   input:
-  set sample, f_file, r_file from SAMPLES
+  set sample, f_file, r_file, spec_profile from SAMPLES
 
   """
-  run_midas.py snps ${params.outdir}/${sample} \
+  cp spec_profile ${sample}/species/
+  run_midas.py snps ${sample} \
     -1 ${f_file} \
     -2 ${r_file} \
     -t ${params.cpus} \
