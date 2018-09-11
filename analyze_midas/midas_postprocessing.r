@@ -96,3 +96,9 @@ missing_value <- NA
 new_freq_file <- "processed_snps/G1.snp_freqs.txt"
 new_info_file <- "processed_snps/G1.snp_info.txt"
 new_depth_file <- "processed_snps/G1.snp_depth.txt"
+
+
+## Now need function that goes through midas output directory tree and
+## postprocess every genome
+
+indir <- "~/micropopgen/exp/2018/2018-09-04.test_merged_snps/merged.snps/"
