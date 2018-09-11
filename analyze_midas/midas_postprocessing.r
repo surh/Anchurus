@@ -206,5 +206,5 @@ res <- plyr::mdply(run_table[1:5, ], homogenize_genome_snps,
 
 # Write results
 if(!is.null(args$results))
-  write.table(results, args$results, sep = "\t", quote = FALSE,
+  write.table(res, args$results, sep = "\t", quote = FALSE,
               row.names = FALSE, col.names = TRUE)
