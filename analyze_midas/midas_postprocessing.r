@@ -35,6 +35,14 @@ homogenize_genome_snps <- function(genome_id, freq_file, depth_file,
                                    new_depth_file, new_info_file,
                                    samples,
                                    missing_value = NA){
+  # i <- 1
+  # genome_id <- run_table[i,1]
+  # freq_file <- run_table[i,2]
+  # depth_file <- run_table[i,3]
+  # info_file <- run_table[i,4]
+  # new_freq_file <- run_table[i,5]
+  # new_depth_file <- run_table[i,6]
+  # new_info_file <- run_table[i,7]
   
   # Read table of allele frequencies
   freqs <- read.table(freq_file, header = TRUE,
@@ -44,6 +52,11 @@ homogenize_genome_snps <- function(genome_id, freq_file, depth_file,
   # Select samples that are present
   freqs <- freqs[, intersect(colnames(freqs), samples), drop = FALSE ]
   freqs <- freqs[ rowSums(freqs) > 0, , drop = FALSE ]
+  
+  # Check if there are samples and SNPs to process
+  if(any(dim(freqs) == 0)){
+    return(c(0,0))
+  }
   
   # Obtain sequencing depths and filter according to allele freqs
   depth <- read.table(depth_file, header = TRUE,
@@ -87,22 +100,6 @@ homogenize_genome_snps <- function(genome_id, freq_file, depth_file,
   return(dim(freqs))
 }
 
-
-library(dplyr)
-library(plyr)
-meta <- read.table("metadata_qin2012.txt", header = TRUE, sep = "\t", stringsAsFactors = FALSE)
-head(meta)
-
-samples <- meta$ID[ !is.na(meta$Diabetic) ]
-freq_file <- "snps_freq.txt"
-depth_file <- "snps_depth.txt"
-info_file <- "snps_info.txt"
-genome_id <- "G1"
-outdir <- "processed_snps"
-missing_value <- NA
-new_freq_file <- "processed_snps/G1.snp_freqs.txt"
-new_info_file <- "processed_snps/G1.snp_info.txt"
-new_depth_file <- "processed_snps/G1.snp_depth.txt"
 
 
 ## Now need function that goes through midas output directory tree and
@@ -162,3 +159,5 @@ if(dir.exists(outdir) && !overwrite){
 res <- plyr::maply(run_table[1,], homogenize_genome_snps,
                    samples = samples, missing_value = missing_value )
 res
+
+
