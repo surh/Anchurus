@@ -35,7 +35,7 @@ homogenize_genome_snps <- function(genome_id, freq_file, depth_file,
                                    new_depth_file, new_info_file,
                                    samples,
                                    missing_value = NA){
-  # i <- 1
+  # i <- 3
   # genome_id <- run_table[i,1]
   # freq_file <- run_table[i,2]
   # depth_file <- run_table[i,3]
@@ -45,6 +45,7 @@ homogenize_genome_snps <- function(genome_id, freq_file, depth_file,
   # new_info_file <- run_table[i,7]
   
   # Read table of allele frequencies
+  cat("==== Processing genome ", genome_id, " ====")
   freqs <- read.table(freq_file, header = TRUE,
                       sep = "\t", row.names = 1)
   cat("\tProcessing frequencies...\n")
@@ -55,7 +56,8 @@ homogenize_genome_snps <- function(genome_id, freq_file, depth_file,
   
   # Check if there are samples and SNPs to process
   if(any(dim(freqs) == 0)){
-    cat("\tNo samples or SNPs found for this genome")
+    cat("\tNo samples or SNPs found for this genome.\n")
+    cat("==== DONE ====\n")
     return(c(0,0))
   }
   
@@ -97,10 +99,14 @@ homogenize_genome_snps <- function(genome_id, freq_file, depth_file,
   write.table(info, new_info_file, sep = "\t",
               quote = FALSE, col.names = TRUE, row.names = FALSE)
   
-  
+  cat("==== DONE ====\n")
   return(dim(freqs))
 }
 
+#############################
+
+library(plyr)
+library(argparser)
 
 
 ## Now need function that goes through midas output directory tree and
@@ -157,7 +163,7 @@ if(dir.exists(outdir) && !overwrite){
   dir.create(outdir)
 }
 # Call homogenize table
-res <- plyr::maply(run_table[1:3,], homogenize_genome_snps,
+res <- plyr::maply(run_table, homogenize_genome_snps,
                    samples = samples, missing_value = missing_value )
 res
 
