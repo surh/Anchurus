@@ -21,6 +21,10 @@
 #' about SNPs.
 #' @param missing_value Value for allele frequencies and snp depths
 #' when sample didn't have enough coverage of species.
+#' @param new_depth_file 
+#' @param new_info_file 
+#' 
+#' @return The dimensions of the final allele frequency table
 #' 
 #' @author Sur Herrera Paredes from Fraser Lab
 #' 
@@ -102,3 +106,4 @@ new_depth_file <- "processed_snps/G1.snp_depth.txt"
 ## postprocess every genome
 
 indir <- "~/micropopgen/exp/2018/2018-09-04.test_merged_snps/merged.snps/"
+
