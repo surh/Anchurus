@@ -1,3 +1,5 @@
+#!/usr/bin/env Rscript
+
 #' Homogenize genome snps
 #' 
 #' Function that homogenizes output from MIDAS so that all
@@ -45,7 +47,7 @@ homogenize_genome_snps <- function(genome_id, freq_file, depth_file,
   # new_info_file <- run_table[i,7]
   
   # Read table of allele frequencies
-  cat("==== Processing genome", genome_id, "====")
+  cat("==== Processing genome", genome_id, "====\n")
   freqs <- read.table(freq_file, header = TRUE,
                       sep = "\t", row.names = 1)
   cat("\tProcessing frequencies...\n")
@@ -105,30 +107,63 @@ homogenize_genome_snps <- function(genome_id, freq_file, depth_file,
                     nsnes = nrow(freqs)))
 }
 
+#' Read arguments
+#' 
+#' Internal function
+#'
+#' @return
+#' @examples
+#' 
+#' @importFrom argparser arg_parser add_argument parse_args
+process_arguments <- function(){
+  parser <- argparser::arg_parser(paste0("Post-process MIDAS mege SNPs output. ",
+                                         "Create tables with homogeneous, samples ",
+                                         "and descriptions"))
+  
+  # Positional arguments
+  parser <- argparser::add_argument(parser, "type", help = "Type of input to be passed",
+                                    type = "character")
+  parser <- argparser::add_argument(parser, "input", help = paste0("Input dir or file. Processed ",
+                                                                   "according to 'type'"),
+                                    type = "character")
+  parser <- argparser::add_argument(parser, "samples", help = "File containing the samples to keep",
+                                    type = "character")
+  
+  # Optional arguments
+  parser <- argparser::add_argument(parser, "--outdir", help = "Output directory",
+                                    default = "out/", type = "character")
+  parser <- argparser::add_argument(parser,"--missing_value", help = "How to encode missing value",
+                                    default = NA, type = "numeric")
+  parser <- argparser::add_argument(parser, "--overwrite", help = "Whether to overwrite exisiting files",
+                                    flag = TRUE, default = FALSE)
+  parser <- argparser::add_argument(parser, "--genome_ids", help = "File mapping genome names to unique IDs",
+                                    default = NULL, type = "character")
+  parser <- argparser::add_argument(parser, "--results", help = "File to write post-processing results.",
+                                    default = "postprocessing_results.txt", type = "character")
+  
+  # Read arguments
+  args <- argparser::parse_args(parser)
+  
+  return(args)
+}
 #############################
 
 library(plyr)
 library(argparser)
 
+# Read arguments
+args <- process_arguments()
 
-## Now need function that goes through midas output directory tree and
-## postprocess every genome
+# Get samples
+samples <- read.table(args$samples, stringsAsFactors = FALSE)$V1
 
-meta <- read.table("metadata_qin2012.txt", header = TRUE, sep = "\t", stringsAsFactors = FALSE)
-head(meta)
-samples <- meta$ID[ !is.na(meta$Diabetic) ]
-
-missing_value <- NA
-
-input <- "~/micropopgen/exp/2018/2018-09-04.test_merged_snps/merged.snps/"
-type <- "dir"
-outdir <- "out/"
-overwrite <- TRUE
-genome_ids_file <- "genome_ids.txt"
-
-if(type == "dir"){
-  specdirs <- list.dirs(input, recursive = FALSE, full.names = FALSE)
-  genome_ids <- read.table(genome_ids_file, header = TRUE, stringsAsFactors = FALSE)
+# Create run table
+if(args$type == "dir"){
+  if(is.null(args$genome_ids))
+    stop("ERROR: genome_ids cannot be NULL for type dir")
+  
+  specdirs <- list.dirs(args$input, recursive = FALSE, full.names = FALSE)
+  genome_ids <- read.table(args$genome_ids, header = TRUE, stringsAsFactors = FALSE)
   
   if(!all(specdirs %in% genome_ids$species)){
     stop("ERROR: species dirs have no ID")
@@ -139,34 +174,37 @@ if(type == "dir"){
   names(ids) <- genome_ids$species
   
   run_table <- data.frame(genome_id = ids[specdirs],
-                          freq_file = paste0(input, "/", specdirs, "/snps_freq.txt"),
-                          depth_file = paste0(input, "/", specdirs, "/snps_depth.txt"),
-                          info_file = paste0(input, "/", specdirs, "/snps_info.txt"),
-                          new_freq_file = paste0(outdir, "/", ids[specdirs], ".snps_freq.txt"),
-                          new_depth_file = paste0(outdir, "/", ids[specdirs], ".snps_depth.txt"),
-                          new_info_file = paste0(outdir, "/", ids[specdirs], ".snps_info.txt"),
+                          freq_file = paste0(args$input, "/", specdirs, "/snps_freq.txt"),
+                          depth_file = paste0(args$input, "/", specdirs, "/snps_depth.txt"),
+                          info_file = paste0(args$input, "/", specdirs, "/snps_info.txt"),
+                          new_freq_file = paste0(args$outdir, "/", ids[specdirs], ".snps_freq.txt"),
+                          new_depth_file = paste0(args$outdir, "/", ids[specdirs], ".snps_depth.txt"),
+                          new_info_file = paste0(args$outdir, "/", ids[specdirs], ".snps_info.txt"),
                           row.names = ids[specdirs],
                           stringsAsFactors = FALSE)
-  # run_table
-  
-}else if(type == "spec"){
+}else if(args$type == "spec"){
   # A single species dir is passed
   stop("ERROR: type spec not implemented")
-}else if(type == "table"){
+}else if(args$type == "table"){
   # Table of speciesdir, species_name, species_id
   stop("ERROR: type table not implemented")
+}else{
+  stop("ERROR: not recognized type.")
 }
 
-run_table
-if(dir.exists(outdir) && !overwrite){
+# Check of output dir exists and create if required
+if(dir.exists(args$outdir) && !args$overwrite){
   stop("ERROR: Output dir already exists")
-}else if(!dir.exists(outdir)){
+}else if(!dir.exists(args$outdir)){
   cat("\tCreating directory for output..\n")
-  dir.create(outdir)
+  dir.create(args$outdir)
 }
+
 # Call homogenize table
 res <- plyr::mdply(run_table[1:5, ], homogenize_genome_snps,
-                   samples = samples, missing_value = missing_value )
-res
+                   samples = samples, missing_value = args$missing_value )
 
-
+# Write results
+if(!is.null(args$results))
+  write.table(results, args$results, sep = "\t", quote = FALSE,
+              row.names = FALSE, col.names = TRUE)
