@@ -5,6 +5,7 @@
 #' different matrices. It also renames SNPs so that they have
 #' a unique name across all genomes
 #' 
+#' @param genome_id String with genome ID. Used for setting SNP IDs.
 #' @param samples Character vector with IDs of samples that will be
 #' included in the association testing
 #' @param freq_file File with minor allele frequencies. Output from
@@ -29,9 +30,10 @@
 #' @author Sur Herrera Paredes from Fraser Lab
 #' 
 #' @export
-homogenize_genome_snps <- function(samples, freq_file, depth_file,
+homogenize_genome_snps <- function(genome_id, freq_file, depth_file,
                                    info_file, new_freq_file,
                                    new_depth_file, new_info_file,
+                                   samples,
                                    missing_value = NA){
   
   # Read table of allele frequencies
@@ -87,6 +89,7 @@ homogenize_genome_snps <- function(samples, freq_file, depth_file,
 
 
 library(dplyr)
+library(plyr)
 meta <- read.table("metadata_qin2012.txt", header = TRUE, sep = "\t", stringsAsFactors = FALSE)
 head(meta)
 
@@ -105,5 +108,57 @@ new_depth_file <- "processed_snps/G1.snp_depth.txt"
 ## Now need function that goes through midas output directory tree and
 ## postprocess every genome
 
-indir <- "~/micropopgen/exp/2018/2018-09-04.test_merged_snps/merged.snps/"
+meta <- read.table("metadata_qin2012.txt", header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+head(meta)
+samples <- meta$ID[ !is.na(meta$Diabetic) ]
 
+missing_value <- NA
+
+input <- "~/micropopgen/exp/2018/2018-09-04.test_merged_snps/merged.snps/"
+type <- "dir"
+outdir <- "out/"
+overwrite <- TRUE
+genome_ids_file <- "genome_ids.txt"
+
+if(type == "dir"){
+  specdirs <- list.dirs(input, recursive = FALSE, full.names = FALSE)
+  genome_ids <- read.table(genome_ids_file, header = TRUE, stringsAsFactors = FALSE)
+  
+  if(!all(specdirs %in% genome_ids$species)){
+    stop("ERROR: species dirs have no ID")
+  }
+  
+  # Create ids lookup table
+  ids <- genome_ids$id
+  names(ids) <- genome_ids$species
+  
+  run_table <- data.frame(genome_id = ids[specdirs],
+                          freq_file = paste0(indir, "/", specdirs, "/snps_freq.txt"),
+                          depth_file = paste0(indir, "/", specdirs, "/snps_depth.txt"),
+                          info_file = paste0(indir, "/", specdirs, "/snps_info.txt"),
+                          new_freq_file = paste0(outdir, "/", ids[specdirs], ".snps_freq.txt"),
+                          new_depth_file = paste0(outdir, "/", ids[specdirs], ".snps_depth.txt"),
+                          new_info_file = paste0(outdir, "/", ids[specdirs], ".snps_info.txt"),
+                          row.names = ids[specdirs],
+                          stringsAsFactors = FALSE)
+  # run_table
+  
+}else if(type == "spec"){
+  # A single species dir is passed
+  stop("ERROR: type spec not implemented")
+}else if(type == "table"){
+  # Table of speciesdir, species_name, species_id
+  stop("ERROR: type table not implemented")
+}
+
+run_table
+if(dir.exists(outdir) && !overwrite){
+  stop("ERROR: Output dir already exists")
+}else if(!dir.exists(outdir)){
+  cat("\tCreating directory for output..\n")
+  dir.create(outdir)
+}
+# Call homogenize table
+res <- plyr::maply(run_table[1,], homogenize_genome_snps,
+                   samples = samples, missing_value = missing_value )
+res
