@@ -55,6 +55,7 @@ homogenize_genome_snps <- function(genome_id, freq_file, depth_file,
   
   # Check if there are samples and SNPs to process
   if(any(dim(freqs) == 0)){
+    cat("\tNo samples or SNPs found for this genome")
     return(c(0,0))
   }
   
@@ -130,9 +131,9 @@ if(type == "dir"){
   names(ids) <- genome_ids$species
   
   run_table <- data.frame(genome_id = ids[specdirs],
-                          freq_file = paste0(indir, "/", specdirs, "/snps_freq.txt"),
-                          depth_file = paste0(indir, "/", specdirs, "/snps_depth.txt"),
-                          info_file = paste0(indir, "/", specdirs, "/snps_info.txt"),
+                          freq_file = paste0(input, "/", specdirs, "/snps_freq.txt"),
+                          depth_file = paste0(input, "/", specdirs, "/snps_depth.txt"),
+                          info_file = paste0(input, "/", specdirs, "/snps_info.txt"),
                           new_freq_file = paste0(outdir, "/", ids[specdirs], ".snps_freq.txt"),
                           new_depth_file = paste0(outdir, "/", ids[specdirs], ".snps_depth.txt"),
                           new_info_file = paste0(outdir, "/", ids[specdirs], ".snps_info.txt"),
@@ -156,7 +157,7 @@ if(dir.exists(outdir) && !overwrite){
   dir.create(outdir)
 }
 # Call homogenize table
-res <- plyr::maply(run_table[1,], homogenize_genome_snps,
+res <- plyr::maply(run_table[1:3,], homogenize_genome_snps,
                    samples = samples, missing_value = missing_value )
 res
 
