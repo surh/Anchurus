@@ -45,7 +45,7 @@ homogenize_genome_snps <- function(genome_id, freq_file, depth_file,
   # new_info_file <- run_table[i,7]
   
   # Read table of allele frequencies
-  cat("==== Processing genome ", genome_id, " ====")
+  cat("==== Processing genome", genome_id, "====")
   freqs <- read.table(freq_file, header = TRUE,
                       sep = "\t", row.names = 1)
   cat("\tProcessing frequencies...\n")
@@ -58,7 +58,8 @@ homogenize_genome_snps <- function(genome_id, freq_file, depth_file,
   if(any(dim(freqs) == 0)){
     cat("\tNo samples or SNPs found for this genome.\n")
     cat("==== DONE ====\n")
-    return(c(0,0))
+    return(data.frame(nsamples = ncol(freqs),
+                      nsnes = nrow(freqs)))
   }
   
   # Obtain sequencing depths and filter according to allele freqs
@@ -100,7 +101,8 @@ homogenize_genome_snps <- function(genome_id, freq_file, depth_file,
               quote = FALSE, col.names = TRUE, row.names = FALSE)
   
   cat("==== DONE ====\n")
-  return(dim(freqs))
+  return(data.frame(nsamples = ncol(freqs),
+                    nsnes = nrow(freqs)))
 }
 
 #############################
@@ -163,7 +165,7 @@ if(dir.exists(outdir) && !overwrite){
   dir.create(outdir)
 }
 # Call homogenize table
-res <- plyr::maply(run_table, homogenize_genome_snps,
+res <- plyr::mdply(run_table[1:5, ], homogenize_genome_snps,
                    samples = samples, missing_value = missing_value )
 res
 
