@@ -121,7 +121,8 @@ process_arguments <- function(){
                                          "and descriptions"))
   
   # Positional arguments
-  parser <- argparser::add_argument(parser, "type", help = "Type of input to be passed",
+  parser <- argparser::add_argument(parser, "type", help = paste0("Type of input to be passed. ",
+                                                                  "Must be dir, specdir or table."),
                                     type = "character")
   parser <- argparser::add_argument(parser, "input", help = paste0("Input dir or file. Processed ",
                                                                    "according to 'type'"),
@@ -136,7 +137,10 @@ process_arguments <- function(){
                                     default = NA, type = "numeric")
   parser <- argparser::add_argument(parser, "--overwrite", help = "Whether to overwrite exisiting files",
                                     flag = TRUE, default = FALSE)
-  parser <- argparser::add_argument(parser, "--genome_ids", help = "File mapping genome names to unique IDs",
+  parser <- argparser::add_argument(parser, "--genome_ids", help = paste0("For type dir this must be a file ",
+                                                                          "mapping genome names to unique IDs.\n",
+                                                                          "For type specdir thus must be a single ",
+                                                                          "string corresponding to the genome id."),
                                     default = NULL, type = "character")
   parser <- argparser::add_argument(parser, "--results", help = "File to write post-processing results.",
                                     default = "postprocessing_results.txt", type = "character")
@@ -182,14 +186,28 @@ if(args$type == "dir"){
                           new_info_file = paste0(args$outdir, "/", ids[specdirs], ".snps_info.txt"),
                           row.names = ids[specdirs],
                           stringsAsFactors = FALSE)
-}else if(args$type == "spec"){
+}else if(args$type == "specdir"){
   # A single species dir is passed
-  stop("ERROR: type spec not implemented")
+  # stop("ERROR: type specdir not implemented")
+  if(length(args$genome_ids) != 1)
+    stop("ERROR: genome_ids must be a single character string with the specdir type.")
+  
+  # Create run_table
+  run_table <- data.frame(genome_id = args.genome_ids,
+                          freq_file = paste0(args$input, "/snps_freq.txt"),
+                          depth_file = paste0(args$input, "/snps_depth.txt"),
+                          info_file = paste0(args$input, "/snps_info.txt"),
+                          new_freq_file = paste0(args$outdir, "/snps_freq.txt"),
+                          new_depth_file = paste0(args$outdir, "/snps_depth.txt"),
+                          new_info_file = paste0(args$outdir, "/snps_info.txt"),
+                          row.names = args.genome_ids,
+                          stringsAsFactors = FALSE)
+  
 }else if(args$type == "table"){
   # Table of speciesdir, species_name, species_id
   stop("ERROR: type table not implemented")
 }else{
-  stop("ERROR: not recognized type.")
+  stop("ERROR: not recognized type. Must be dir, specdir or table")
 }
 
 # Check of output dir exists and create if required
