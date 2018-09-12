@@ -26,7 +26,7 @@ params.genomes = 'genome_ids.txt' // Must have header row
 
 // Process params
 samples = file(params.samples)
-genomes = file(genomes)
+genomes = file(params.genomes)
 
 // Read genomes file
 reader = genomes.newReader()
