@@ -193,14 +193,14 @@ if(args$type == "dir"){
     stop("ERROR: genome_ids must be a single character string with the specdir type.")
   
   # Create run_table
-  run_table <- data.frame(genome_id = args.genome_ids,
+  run_table <- data.frame(genome_id = args$genome_ids,
                           freq_file = paste0(args$input, "/snps_freq.txt"),
                           depth_file = paste0(args$input, "/snps_depth.txt"),
                           info_file = paste0(args$input, "/snps_info.txt"),
                           new_freq_file = paste0(args$outdir, "/snps_freq.txt"),
                           new_depth_file = paste0(args$outdir, "/snps_depth.txt"),
                           new_info_file = paste0(args$outdir, "/snps_info.txt"),
-                          row.names = args.genome_ids,
+                          row.names = args$genome_ids,
                           stringsAsFactors = FALSE)
   
 }else if(args$type == "table"){
@@ -219,7 +219,7 @@ if(dir.exists(args$outdir) && !args$overwrite){
 }
 
 # Call homogenize table
-res <- plyr::mdply(run_table[1:5, ], homogenize_genome_snps,
+res <- plyr::mdply(run_table, homogenize_genome_snps,
                    samples = samples, missing_value = args$missing_value )
 
 # Write results
