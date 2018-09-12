@@ -4,6 +4,14 @@ Analyzing SNPs in metagenomes
 Anchurus was the son of king Midas of ancient Greece. The repository is named afer him
 because the metagenomic SNPs are obtained through [MIDAS](https://github.com/snayfach/MIDAS)
 
+# Directories
+
+* **run_midas**: This directory contains wrappers to run midas on a series of samples. It
+requires that there are two files per sample corresponding to Illumina forward and reverse
+reads. Wrappers are nextflow pipelines.
+* **analyze_midas**: This directory contains code for analysis after midas has been used to
+call SNPs.
+
 # Copyright & license
 
     (C) Copyright 2018 Sur Herrera Paredes
