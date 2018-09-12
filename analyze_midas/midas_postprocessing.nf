@@ -22,6 +22,7 @@
 params.indir = 'midas.merge/'     // 'midas_merge.py snps' output
 params.samples = 'samples.txt'    // Must NOT have header row
 params.genomes = 'genome_ids.txt' // Must have header row
+params.bindir = '/home/sur/micropopgen/src/Anchurus/analyze_midas/'
 
 
 // Process params
@@ -49,6 +50,34 @@ while(str = reader.readLine()){
   // input specdir
   dir = file("${params.indir}/${row[0]}/")
   id = row[1]
+  freq_file = file("${dir}/snps_freq.txt")
+  depth_file = file("${dir}/snps_depth.txt")
+  info_file = file("${dir}/snps_info.txt")
 
-  GENOMES = GENOMES + [tuple(id, dir)]
+  GENOMES = GENOMES + [tuple(id, dir, freq_file, depth_file, info_file)]
+}
+
+
+process post_process_midas_snps{
+  // module 'R'
+
+  input:
+  set id, dir, freq, depth, info from GENOMES
+  file samples
+  // file genomes
+
+  output:
+  file 'snps_freq.txt' optional true into FREQS
+  file 'snps_depth.txt' optional true into DEPTHS
+  file 'snps_info.txt' optional true into INFOS
+
+  """
+  ${params.bindir}/midas_postprocessing.r \
+    --outdir ./ \
+    --genome_ids ${id} \
+    --overwrite \
+    specdir \
+    ${dir} \
+    ${samples}
+  """
 }
