@@ -115,7 +115,7 @@ process concatenate_depth{
 process concatenate_info{
 
   input:
-  file info from INFO.collect()
+  file info from INFOS.collect()
 
   output:
   file 'info.txt'
