@@ -82,7 +82,6 @@ process post_process_midas_snps{
   """
 }
 
-
 process concatenate_freqs{
 
   input:
@@ -112,7 +111,6 @@ process concatenate_depth{
     --outfile depth.txt
   """
 }
-
 
 process concatenate_info{
 
