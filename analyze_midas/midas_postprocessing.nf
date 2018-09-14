@@ -98,7 +98,7 @@ process concatenate_freqs{
   module 'fraserconda'
   publishDir params.outdir, mode: 'copy'
   cpus 1
-  time 2:00:00
+  time '2:00:00'
   memory params.memory
   maxForks params.njobs
   queue params.queue
@@ -124,7 +124,7 @@ process concatenate_depth{
   module 'fraserconda'
   publishDir params.outdir, mode: 'copy'
   cpus 1
-  time 2:00:00
+  time '2:00:00'
   memory params.memory
   maxForks params.njobs
   queue params.queue
@@ -149,7 +149,7 @@ process concatenate_info{
   module 'fraserconda'
   publishDir params.outdir, mode: 'copy'
   cpus 1
-  time 2:00:00
+  time '2:00:00'
   memory params.memory
   maxForks params.njobs
   queue params.queue
