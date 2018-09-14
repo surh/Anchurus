@@ -32,7 +32,7 @@ def process_arguments():
     # Define required arguments
     required.add_argument("--infiles", help=("File paths of tab delimited "
                                              "files to concatenate."),
-                          required=True, type=str, nargs='*')
+                          required=True, type=str, nargs='+')
 
     # Define other arguments
     parser.add_argument("--outfile", help=("Name of the outfile to create."),
@@ -55,6 +55,7 @@ if __name__ == "__main__":
         header = ''
         for file in args.infiles:
             with open(file) as tab:
+                print("Processing file: {}".format(file))
 
                 # Check header`
                 new_header = tab.readline()
