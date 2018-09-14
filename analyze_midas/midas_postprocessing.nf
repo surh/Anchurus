@@ -24,7 +24,10 @@ params.samples = 'samples.txt'    // Must NOT have header row
 params.genomes = 'genome_ids.txt' // Must have header row
 params.outdir = './'
 params.bindir = '/home/sur/micropopgen/src/Anchurus/analyze_midas/'
-
+params.queue = 'hbfraser,hns,owners'
+params.memory = '2GB'
+params.time = '00:20:00'
+params.njobs = 200
 
 // Process params
 samples = file(params.samples)
@@ -60,7 +63,15 @@ while(str = reader.readLine()){
 
 
 process post_process_midas_snps{
-  // module 'R'
+  module 'R'
+  cpus 1
+  time params.time
+  memory params.memory
+  maxForks params.njobs
+  queue params.queue
+  publishDir params.outdir, mode: 'copy'
+  errorStrategy 'retry'
+  maxRetries 2
 
   input:
   set id, dir, freq, depth, info from GENOMES
@@ -84,7 +95,17 @@ process post_process_midas_snps{
 }
 
 process concatenate_freqs{
+  module 'fraserconda'
   publishDir params.outdir, mode: 'copy'
+  cpus 1
+  time 2:00:00
+  memory params.memory
+  maxForks params.njobs
+  queue params.queue
+  publishDir params.outdir, mode: 'copy'
+  errorStrategy 'retry'
+  maxRetries 2
+
 
   input:
   file '*.txt' from FREQS.collect()
@@ -100,7 +121,16 @@ process concatenate_freqs{
 }
 
 process concatenate_depth{
+  module 'fraserconda'
   publishDir params.outdir, mode: 'copy'
+  cpus 1
+  time 2:00:00
+  memory params.memory
+  maxForks params.njobs
+  queue params.queue
+  publishDir params.outdir, mode: 'copy'
+  errorStrategy 'retry'
+  maxRetries 2
 
   input:
   file '*.txt' from DEPTHS.collect()
@@ -116,7 +146,16 @@ process concatenate_depth{
 }
 
 process concatenate_info{
+  module 'fraserconda'
   publishDir params.outdir, mode: 'copy'
+  cpus 1
+  time 2:00:00
+  memory params.memory
+  maxForks params.njobs
+  queue params.queue
+  publishDir params.outdir, mode: 'copy'
+  errorStrategy 'retry'
+  maxRetries 2
 
   input:
   file '*.txt' from INFOS.collect()
