@@ -110,7 +110,7 @@ process concatenate_freqs{
 
 
   input:
-  file '*.txt' from FREQS.collect()
+  file '*.txt' from FREQS.toList()
 
   output:
   file 'freqs.txt'
