@@ -81,3 +81,50 @@ process post_process_midas_snps{
     ${samples}
   """
 }
+
+
+process concatenate_freqs{
+
+  input:
+  file freqs from FREQS.collect()
+
+  output:
+  file 'freqs.txt'
+
+  """
+  ${params.bindir}/concatenate_check_headers.py \
+    --infiles ${freqs} \
+    --outfile depth.txt
+  """
+}
+
+process concatenate_depth{
+
+  input:
+  file depth from DEPTH.collect()
+
+  output:
+  file 'depth.txt'
+
+  """
+  ${params.bindir}/concatenate_check_headers.py \
+    --infiles ${depth} \
+    --outfile depth.txt
+  """
+}
+
+
+process concatenate_info{
+
+  input:
+  file info from INFO.collect()
+
+  output:
+  file 'info.txt'
+
+  """
+  ${params.bindir}/concatenate_check_headers.py \
+    --infiles ${info} \
+    --outfile info.txt
+  """
+}
