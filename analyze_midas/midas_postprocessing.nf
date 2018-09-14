@@ -100,7 +100,7 @@ process concatenate_freqs{
 process concatenate_depth{
 
   input:
-  file depth from DEPTH.collect()
+  file depth from DEPTHS.collect()
 
   output:
   file 'depth.txt'
