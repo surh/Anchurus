@@ -25,8 +25,6 @@ params.genomes = 'genome_ids.txt' // Must have header row
 params.outdir = './'
 params.bindir = '/home/sur/micropopgen/src/Anchurus/analyze_midas/'
 params.queue = 'hbfraser,hns,owners'
-params.memory = '2GB'
-params.time = '00:20:00'
 params.njobs = 200
 
 // Process params
@@ -65,11 +63,10 @@ while(str = reader.readLine()){
 process post_process_midas_snps{
   module 'R'
   cpus 1
-  time params.time
-  memory params.memory
+  time {20.m + ((task.attempt - 1 ) * 10.m)}
+  memory { 2.GB + ((task.attempt - 1) * 2.GB) }
   maxForks params.njobs
   queue params.queue
-  publishDir params.outdir, mode: 'copy'
   errorStrategy 'retry'
   maxRetries 2
 
@@ -108,7 +105,7 @@ process concatenate_freqs{
 
 
   input:
-  file '*.txt' from FREQS.collect()
+  file '*.txt' from FREQS.collec()
 
   output:
   file 'freqs.txt'
