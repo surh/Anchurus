@@ -67,7 +67,6 @@ process post_process_midas_snps{
   memory { 2.GB + ((task.attempt - 1) * 2.GB) }
   maxForks params.njobs
   queue params.queue
-  publishDir params.outdir, mode: 'copy'
   errorStrategy 'retry'
   maxRetries 2
 
@@ -106,7 +105,7 @@ process concatenate_freqs{
 
 
   input:
-  file '*.txt' from FREQS.toList()
+  file '*.txt' from FREQS.collec()
 
   output:
   file 'freqs.txt'
