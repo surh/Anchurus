@@ -98,7 +98,7 @@ process concatenate_freqs{
   module 'fraserconda'
   publishDir params.outdir, mode: 'copy'
   cpus 1
-  time 2:00:00
+  time '2:00:00'
   memory params.memory
   maxForks params.njobs
   queue params.queue
