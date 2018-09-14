@@ -25,8 +25,6 @@ params.genomes = 'genome_ids.txt' // Must have header row
 params.outdir = './'
 params.bindir = '/home/sur/micropopgen/src/Anchurus/analyze_midas/'
 params.queue = 'hbfraser,hns,owners'
-params.memory = '2.GB'
-params.time = '20.m'
 params.njobs = 200
 
 // Process params
@@ -65,8 +63,6 @@ while(str = reader.readLine()){
 process post_process_midas_snps{
   module 'R'
   cpus 1
-  // time {params.time + ((task.attempt - 1 ) * 10.m)}
-  // memory { params.memory + ((task.attempt - 1) * 2.GB) }
   time {20.m + ((task.attempt - 1 ) * 10.m)}
   memory { 2.GB + ((task.attempt - 1) * 2.GB) }
   maxForks params.njobs
