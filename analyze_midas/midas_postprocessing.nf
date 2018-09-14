@@ -65,8 +65,8 @@ while(str = reader.readLine()){
 process post_process_midas_snps{
   module 'R'
   cpus 1
-  time params.time
-  memory params.memory
+  time {params.time + ((task.attempt - 1 ) * 10.m)}
+  memory {params.memory + ((task.attempt - 1) * 2.GB)}
   maxForks params.njobs
   queue params.queue
   publishDir params.outdir, mode: 'copy'
