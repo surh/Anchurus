@@ -22,6 +22,7 @@
 params.indir = 'midas.merge/'     // 'midas_merge.py snps' output
 params.samples = 'samples.txt'    // Must NOT have header row
 params.genomes = 'genome_ids.txt' // Must have header row
+params.outdir = './'
 params.bindir = '/home/sur/micropopgen/src/Anchurus/analyze_midas/'
 
 
@@ -83,6 +84,7 @@ process post_process_midas_snps{
 }
 
 process concatenate_freqs{
+  publishDir params.outdir, mode: 'copy'
 
   input:
   file '*.txt' from FREQS.collect()
@@ -98,6 +100,7 @@ process concatenate_freqs{
 }
 
 process concatenate_depth{
+  publishDir params.outdir, mode: 'copy'
 
   input:
   file '*.txt' from DEPTHS.collect()
@@ -113,6 +116,7 @@ process concatenate_depth{
 }
 
 process concatenate_info{
+  publishDir params.outdir, mode: 'copy'
 
   input:
   file '*.txt' from INFOS.collect()
