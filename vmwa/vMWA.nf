@@ -70,9 +70,9 @@ process run_vmwa{
   queue params.queue
   errorStrategy 'retry'
   maxRetries 2
-  // module 'R'
+  module 'R'
   time {120.m + ((task.attempt - 1 ) * 60.m)}
-  // memory { 14.GB + ((task.attempt - 1) * 6.GB) }
+  memory { 2.GB + ((task.attempt - 1) * 2.GB) }
 
   input:
   file phenotype
@@ -90,6 +90,7 @@ process run_vmwa{
     ${params.nsamples} \
     --chunk_size ${params.nrows} \
     --outfile results.txt
+    --plot
   """
 }
 
@@ -99,9 +100,9 @@ process run_vmwa_perms{
   queue params.queue
   errorStrategy 'retry'
   maxRetries 2
-  // module 'R'
+  module 'R'
   time {120.m + ((task.attempt - 1 ) * 60.m)}
-  // memory { 14.GB + ((task.attempt - 1) * 6.GB) }
+  memory { 2.GB + ((task.attempt - 1) * 2.GB) }
 
   input:
   file phenoperm from PHENOPERMS.flatten()
@@ -128,9 +129,9 @@ process combine_permutations{
   queue params.queue
   errorStrategy 'retry'
   maxRetries 2
-  // module 'R'
+  module 'R'
   time {240.m + ((task.attempt - 1 ) * 60.m)}
-  // memory { 4.GB + ((task.attempt - 1) * 2.GB) }
+  memory { 4.GB + ((task.attempt - 1) * 2.GB) }
 
   input:
   file 'original.txt' from MWAS
