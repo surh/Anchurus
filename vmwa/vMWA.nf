@@ -53,7 +53,7 @@ process permute_samples{
 process run_vmwa{
 
   input:
-  file phenoperm from PHENOPERMS.flatten()
+  file phenotype
   file snps
   file covariates
 
@@ -64,8 +64,45 @@ process run_vmwa{
   ${params.bindir}/vMWAS.r \
     $snps \
     $covariates \
+    $phenotype \
+    --nrows ${params.nrows} \
+    --outdir ./
+  """
+}
+
+process run_vmwa_perms{
+
+  input:
+  file phenoperm from PHENOPERMS.flatten()
+  file snps
+  file covariates
+
+  output:
+  file 'results.txt' into MWASPERM
+
+  """
+  ${params.bindir}/vMWAS.r \
+    $snps \
+    $covariates \
     $phenoperm \
     --nrows ${params.nrows} \
     --outdir ./
+  """
+}
+
+process combine_permutations{
+
+  input:
+  file 'original.txt' from MWAS
+  file '*.perm' from MWASPERM.collect()
+
+  output:
+  file 'p.value_histogram.svg'
+  file 'results.txt'
+
+  """
+  ${params.bindir}/process_permutations.r \
+     original.txt \
+    --perms *.perm
   """
 }
