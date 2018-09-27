@@ -68,7 +68,7 @@ process run_vmwa{
   maxRetries 2
   module 'R'
   time {120.m + ((task.attempt - 1 ) * 60.m)}
-  memory { 6.GB + ((task.attempt - 1) * 6.GB) }
+  memory { 14.GB + ((task.attempt - 1) * 6.GB) }
 
   input:
   file phenotype
@@ -96,7 +96,7 @@ process run_vmwa_perms{
   maxRetries 2
   module 'R'
   time {120.m + ((task.attempt - 1 ) * 60.m)}
-  memory { 6.GB + ((task.attempt - 1) * 6.GB) }
+  memory { 14.GB + ((task.attempt - 1) * 6.GB) }
 
   input:
   file phenoperm from PHENOPERMS.flatten()
