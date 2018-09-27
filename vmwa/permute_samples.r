@@ -1,6 +1,9 @@
 #!/usr/bin/env Rscript
 
 library(argparser)
+library(tibble)
+library(readr)
+library(magrittr)
 ############
 #' Process command line arguments
 #'
@@ -56,10 +59,9 @@ for(i in 1:args$nperm){
   ii <- sample(ncol(pheno), replace = FALSE)
   perm <- pheno[, ii]
   colnames(perm) <- samples
+  perm <- perm %>% rownames_to_column("Phenotype")
   
   filename <- paste0(args$prefix, i, ".txt")
-  write.table(perm, file = filename, col.names = TRUE,
-              row.names = TRUE, sep = "\t", quote = FALSE)
-  
+  write_tsv(perm, path = filename)
 }
 
