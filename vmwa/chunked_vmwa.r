@@ -1,8 +1,28 @@
+#!/usr/bin/env Rscript
+
+# (C) Copyright 2018 Sur Herrera Paredes
+# 
+# This file is part of RosetteDetector.
+# 
+# RosetteDetector is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# RosetteDetector is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with RosetteDetector.  If not, see <http://www.gnu.org/licenses/>.
+
 library(ggplot2)
 # library(plyr)
 library(dplyr)
 library(tidyr)
 library(readr)
+library(argparser)
 
 ##########################################################
 #' Chunk association
@@ -64,7 +84,43 @@ ggd.qqplot = function(pvector, main=NULL, ...) {
        xlim=c(0,max(e)), ylim=c(0,max(o)))
   lines(e,e,col="red")
 }
+
+#' Process command line arguments
+#'
+#' @return List of arguments
+#' 
+#' @author Sur Herrera Paredes
+#' 
+#' @importFrom argparser arg_parser add_argument parse_args
+#' @export
+process_arguments <- function(){
+  p <- argparser::arg_parser(paste0("Runs variant MWA"))
+  
+  # Positional arguments
+  p <- argparser::add_argument(p, "snps", help = paste0("SNPs file."),
+                               type = "character")
+  p <- argparser::add_argument(p, "covariates", help = paste0("File with covariates."),
+                               type = "character")
+  p <- argparser::add_argument(p, "phenotype", help = paste0("File with phenotype."),
+                               type = "character")
+  p <- argparser::add_argument(p, "nsamples", help = paste0("Number of samples"),
+                               type = "integer")
+  
+  # Optional arguments
+  p <- argparser::add_argument(p, "--nrows", help = "Number of rows to read at a time",
+                               default = 2000, type = "numeric")
+  p <- argparser::add_argument(p, "--outfile", help = "File with results",
+                               default = "association_results.txt", type = "character")
+  p <- argparser::add_argument(p, "--plot", help = "Plot p-values", default = FALSE,
+                               flag = TRUE)
+  
+  # Read arguments
+  args <- argparser::parse_args(p)
+  
+  return(args)
+}
 ########################################################
+
 args <- list(snps = "snps2.txt",
              covariates = "covariates2.txt",
              phenotype = "phenotype2.txt",
@@ -72,6 +128,7 @@ args <- list(snps = "snps2.txt",
              nsamples = 368,
              outfile = "association_results.txt",
              plot = TRUE)
+args <- process_arguments()
 
 # Read data
 col_types <- paste0(c('c', rep('n', args$nsamples)), collapse = "")
@@ -113,7 +170,6 @@ head(Res)
 
 # Write output
 write_tsv(Res, args$outfile)
-
 
 if(args$plot){
   library(ggplot2)
