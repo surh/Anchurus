@@ -25,7 +25,9 @@ params.covariates = 'covariates.txt'
 params.nperm = 1000
 params.bindir = '/home/sur/micropopgen/src/Anchurus/vmwa'
 params.seed = 3094229
-params.nrows = 5000
+params.nrows = 5000as
+params.queue = 'hbfraser,hns,owners'
+params.njobs = 200
 
 // Process
 snps = file(params.snps)
@@ -33,6 +35,14 @@ phenotype = file(params.phenotype)
 covariates = file(params.covariates)
 
 process permute_samples{
+  cpus 1
+  maxForks params.njobs
+  queue params.queue
+  errorStrategy 'retry'
+  maxRetries 2
+  module 'R'
+  time {120.m + ((task.attempt - 1 ) * 60.m)}
+  memory { 2.GB + ((task.attempt - 1) * 2.GB) }
 
   input:
   file phenotype
@@ -51,6 +61,14 @@ process permute_samples{
 }
 
 process run_vmwa{
+  cpus 1
+  maxForks params.njobs
+  queue params.queue
+  errorStrategy 'retry'
+  maxRetries 2
+  module 'R'
+  time {120.m + ((task.attempt - 1 ) * 60.m)}
+  memory { 2.GB + ((task.attempt - 1) * 2.GB) }
 
   input:
   file phenotype
@@ -71,6 +89,14 @@ process run_vmwa{
 }
 
 process run_vmwa_perms{
+  cpus 1
+  maxForks params.njobs
+  queue params.queue
+  errorStrategy 'retry'
+  maxRetries 2
+  module 'R'
+  time {120.m + ((task.attempt - 1 ) * 60.m)}
+  memory { 2.GB + ((task.attempt - 1) * 2.GB) }
 
   input:
   file phenoperm from PHENOPERMS.flatten()
@@ -91,6 +117,14 @@ process run_vmwa_perms{
 }
 
 process combine_permutations{
+  cpus 1
+  maxForks params.njobs
+  queue params.queue
+  errorStrategy 'retry'
+  maxRetries 2
+  module 'R'
+  time {240.m + ((task.attempt - 1 ) * 60.m)}
+  memory { 2.GB + ((task.attempt - 1) * 2.GB) }
 
   input:
   file 'original.txt' from MWAS
