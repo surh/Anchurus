@@ -29,7 +29,7 @@ process_arguments <- function(){
                                default = "phenotype_p", type = "character")
   
   # Read arguments
-  args <- argparser::parse_args(parser)
+  args <- argparser::parse_args(p)
   
   return(args)
 }
