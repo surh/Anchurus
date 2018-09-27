@@ -121,13 +121,13 @@ process_arguments <- function(){
 }
 ########################################################
 
-args <- list(snps = "snps2.txt",
-             covariates = "covariates2.txt",
-             phenotype = "phenotype2.txt",
-             chunk_size = 2000,
-             nsamples = 368,
-             outfile = "association_results.txt",
-             plot = TRUE)
+# args <- list(snps = "snps2.txt",
+#              covariates = "covariates2.txt",
+#              phenotype = "phenotype2.txt",
+#              chunk_size = 2000,
+#              nsamples = 368,
+#              outfile = "association_results.txt",
+#              plot = TRUE)
 args <- process_arguments()
 
 # Read data
@@ -165,8 +165,6 @@ Res <- read_tsv_chunked(file = args$snps,
                                                           SE = "Std. Error",
                                                           t.value = "t value",
                                                           p.value = "Pr(>|t|)")
-
-head(Res)
 
 # Write output
 write_tsv(Res, args$outfile)
