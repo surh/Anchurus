@@ -107,7 +107,7 @@ process_arguments <- function(){
                                type = "integer")
   
   # Optional arguments
-  p <- argparser::add_argument(p, "--nrows", help = "Number of rows to read at a time",
+  p <- argparser::add_argument(p, "--chunk_size", help = "Number of rows to read at a time",
                                default = 2000, type = "numeric")
   p <- argparser::add_argument(p, "--outfile", help = "File with results",
                                default = "association_results.txt", type = "character")
