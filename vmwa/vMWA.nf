@@ -25,7 +25,7 @@ params.covariates = 'covariates.txt'
 params.nperm = 1000
 params.bindir = '/home/sur/micropopgen/src/Anchurus/vmwa'
 params.seed = 3094229
-params.nrows = 5000as
+params.nrows = 5000
 params.queue = 'hbfraser,hns,owners'
 params.njobs = 200
 
