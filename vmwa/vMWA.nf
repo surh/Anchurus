@@ -28,8 +28,12 @@ params.seed = 3094229
 params.nrows = 5000
 params.queue = 'hbfraser,hns,owners'
 params.njobs = 200
+params.nsamples = -1
 
 // Process
+if(params.nsamples <= 0){
+  throw new Exception("Invalid number of samples (nsamples).")
+}
 snps = file(params.snps)
 phenotype = file(params.phenotype)
 covariates = file(params.covariates)
@@ -83,8 +87,9 @@ process run_vmwa{
     $snps \
     $covariates \
     $phenotype \
-    --nrows ${params.nrows} \
-    --outdir ./
+    ${params.nsamples} \
+    --chunk_size ${params.nrows} \
+    --outfile results.txt
   """
 }
 
@@ -111,8 +116,9 @@ process run_vmwa_perms{
     $snps \
     $covariates \
     $phenoperm \
-    --nrows ${params.nrows} \
-    --outdir ./
+    ${params.nsamples} \
+    --chunk_size ${params.nrows} \
+    --outfile results.txt
   """
 }
 
