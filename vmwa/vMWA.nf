@@ -44,9 +44,9 @@ process permute_samples{
   queue params.queue
   errorStrategy 'retry'
   maxRetries 2
-  // module 'R'
+  module 'R'
   time {120.m + ((task.attempt - 1 ) * 60.m)}
-  // memory { 2.GB + ((task.attempt - 1) * 2.GB) }
+  memory { 2.GB + ((task.attempt - 1) * 2.GB) }
 
   input:
   file phenotype
