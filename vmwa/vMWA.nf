@@ -28,8 +28,12 @@ params.seed = 3094229
 params.nrows = 5000
 params.queue = 'hbfraser,hns,owners'
 params.njobs = 200
+params.nsamples = -1
 
 // Process
+if(params.nsamples <= 0){
+  throw new Exception("Invalid number of samples (nsamples).")
+}
 snps = file(params.snps)
 phenotype = file(params.phenotype)
 covariates = file(params.covariates)
@@ -40,9 +44,9 @@ process permute_samples{
   queue params.queue
   errorStrategy 'retry'
   maxRetries 2
-  module 'R'
+  // module 'R'
   time {120.m + ((task.attempt - 1 ) * 60.m)}
-  memory { 2.GB + ((task.attempt - 1) * 2.GB) }
+  // memory { 2.GB + ((task.attempt - 1) * 2.GB) }
 
   input:
   file phenotype
@@ -68,7 +72,7 @@ process run_vmwa{
   maxRetries 2
   module 'R'
   time {120.m + ((task.attempt - 1 ) * 60.m)}
-  memory { 14.GB + ((task.attempt - 1) * 6.GB) }
+  memory { 2.GB + ((task.attempt - 1) * 2.GB) }
 
   input:
   file phenotype
@@ -79,12 +83,14 @@ process run_vmwa{
   file 'results.txt' into MWAS
 
   """
-  ${params.bindir}/vMWAS.r \
+  ${params.bindir}/chunked_vmwa.r \
     $snps \
     $covariates \
     $phenotype \
-    --nrows ${params.nrows} \
-    --outdir ./
+    ${params.nsamples} \
+    --chunk_size ${params.nrows} \
+    --outfile results.txt
+    --plot
   """
 }
 
@@ -96,7 +102,7 @@ process run_vmwa_perms{
   maxRetries 2
   module 'R'
   time {120.m + ((task.attempt - 1 ) * 60.m)}
-  memory { 14.GB + ((task.attempt - 1) * 6.GB) }
+  memory { 2.GB + ((task.attempt - 1) * 2.GB) }
 
   input:
   file phenoperm from PHENOPERMS.flatten()
@@ -107,12 +113,13 @@ process run_vmwa_perms{
   file 'results.txt' into MWASPERM
 
   """
-  ${params.bindir}/vMWAS.r \
+  ${params.bindir}/chunked_vmwa.r \
     $snps \
     $covariates \
     $phenoperm \
-    --nrows ${params.nrows} \
-    --outdir ./
+    ${params.nsamples} \
+    --chunk_size ${params.nrows} \
+    --outfile results.txt
   """
 }
 
