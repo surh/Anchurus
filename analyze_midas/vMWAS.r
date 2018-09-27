@@ -1,13 +1,51 @@
 #!/usr/bin/env Rscript
 library(MatrixEQTL)
 library(ggplot2)
+library(argparser)
+
+#############
+#' Process command line arguments
+#'
+#' @return List of arguments
+#' 
+#' @author Sur Herrera Paredes
+#' 
+#' @importFrom argparser arg_parser add_argument parse_args
+#' @export
+process_arguments <- function(){
+  p <- argparser::arg_parser(paste0("Runs variant MWA"))
+  
+  # Positional arguments
+  p <- argparser::add_argument(p, "snps", help = paste0("SNPs file."),
+                               type = "character")
+  p <- argparser::add_argument(p, "covariates", help = paste0("File with covariates."),
+                               type = "character")
+  p <- argparser::add_argument(p, "phenotype", help = paste0("File with phenotype."),
+                               type = "character")
+  
+  # Optional arguments
+  p <- argparser::add_argument(p, "--nrows", help = "Number of rows to read at a time",
+                               default = 5000, type = "numeric")
+  p <- argparser::add_argument(p, "--outdir", help = "Output directory",
+                               default = "out/", type = "character")
+  
+  # Read arguments
+  args <- argparser::parse_args(p)
+  
+  return(args)
+}
+
+
+
+#############
 
 # Arguments
-args <- list(snps = "snps.txt",
-             covariates = "covariates.txt",
-             phenotype = "phenotype.txt",
-             outdir = "out/",
-             nrows = 1000)
+# args <- list(snps = "snps.txt",
+#              covariates = "covariates.txt",
+#              phenotype = "phenotype.txt",
+#              outdir = "out/",
+#              nrows = 1000)
+args <- process_arguments()
 
 if(!dir.exists(args$outdir))
   dir.create(args$outdir)
