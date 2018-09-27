@@ -62,7 +62,7 @@ for(file in args$perms){
   Perm <- read.table(file, header = TRUE, stringsAsFactors = FALSE)
   row.names(Perm) <- Perm$SNP
   Perm <- Perm[ Res$SNP, ]
-  Res$count <- Res$count + (Perm$beta <= Res$beta)
+  Res$count <- Res$count + (abs(Perm$beta) >= abs(Res$beta))
 }
 
 # Calculate permutation P
