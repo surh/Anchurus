@@ -25,6 +25,26 @@ library(readr)
 library(argparser)
 
 ##########################################################
+#' Internal function
+#'
+#' @param d 
+#' @param f1 
+#'
+#' @return
+#'
+#' @examples
+_fit_model <- function(d, f1) {
+  m1 <- tryCatch(lm(f1, data = d),
+                 error = function(e){list(coefficients=NA)} )
+  if(is.na(m1$coefficients[1])){
+    r <- matrix(rep(NA, 4), nrow = 1)
+  }else{
+    r <- summary(m1)$coefficients["Frequency", ]
+  }
+  
+  return(r)
+}
+
 #' Chunk association
 #' 
 #' Function to be used with readr chunk readers. It requires global variables
@@ -48,11 +68,7 @@ chunk_association <- function(snps, pos){
   # cat(dim(dat), "\n")
   
   # Apply linear regression
-  res <- plyr::ddply(dat, "SNP", function(d, f1){
-    m1 <- lm(f1, data = d)
-    r <- summary(m1)$coefficients["Frequency", ]
-  }, f1 = f1)
-  
+  res <- plyr::ddply(dat, "SNP", _fit_model, f1 = f1)
   return(res)
 }
 
