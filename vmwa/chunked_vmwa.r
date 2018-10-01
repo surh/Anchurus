@@ -37,7 +37,8 @@ fit_model <- function(d, f1) {
   m1 <- tryCatch(lm(f1, data = d),
                  error = function(e){list(coefficients=NA)} )
   if(is.na(m1$coefficients[1])){
-    r <- matrix(rep(NA, 4), nrow = 1)
+    r <- rep(NA, 4)
+    names(r) <- c("Estimate", "Std. Error", "t value", "Pr(>|t|)")
   }else{
     r <- summary(m1)$coefficients["Frequency", ]
   }
