@@ -33,8 +33,8 @@ library(argparser)
 #'
 #' @examples
 fit_model <- function(d, f1) {
-  snp <- unique(d$SNP)
-  cat(snp, "\n")
+  #snp <- unique(d$SNP)
+  #cat(snp, "\n")
   m1 <- tryCatch(lm(f1, data = d),
                  error = function(e){list(coefficients=NA)} )
   if( is.na(m1$coefficients[1]) || is.na(coef(m1)['Frequency']) ){
