@@ -139,15 +139,16 @@ process_arguments <- function(){
 }
 ########################################################
 
-setwd("/godot/users/sur/exp/fraserv/2018/today/")
-args <- list(snps = "test.txt",
-              covariates = "covariates.txt",
-              phenotype = "phenotype.txt",
-              chunk_size = 2000,
-              nsamples = 368,
-              outfile = "association_results.txt",
-              plot = TRUE)
-#args <- process_arguments()
+#setwd("/godot/users/sur/exp/fraserv/2018/today/")
+#args <- list(snps = "test.txt",
+#              covariates = "covariates.txt",
+#              phenotype = "phenotype.txt",
+#              chunk_size = 2000,
+#              nsamples = 368,
+#              outfile = "association_results.txt",
+#              plot = TRUE)
+args <- process_arguments()
+
 # Read data
 col_types <- paste0(c('c', rep('n', args$nsamples)), collapse = "")
 phenotype <- read_tsv(args$phenotype)
