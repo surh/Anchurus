@@ -21,22 +21,29 @@ process_arguments <- function(){
   p <- argparser::arg_parser(paste0("Runs variant MWA"))
   
   # Positional arguments
-  p <- argparser::add_argument(p, "snps", help = paste0("SNPs file."),
+  p <- argparser::add_argument(p, "snps", help = paste0("SNPs file. First column must ",
+                                                        "be named 'site_id'."),
                                type = "character")
-  p <- argparser::add_argument(p, "covariates", help = paste0("File with covariates."),
+  p <- argparser::add_argument(p, "covariates", help = paste0("File with covariates. First ",
+                                                              "column must be namer 'Covariate'."),
                                type = "character")
-  p <- argparser::add_argument(p, "phenotype", help = paste0("File with phenotype."),
+  p <- argparser::add_argument(p, "phenotype", help = paste0("File with phenotype. First ",
+                                                             "column must be named 'Phenotype'."),
                                type = "character")
-  # p <- argparser::add_argument(p, "nsamples", help = paste0("Number of samples"),
-  #                              type = "integer")
-  
+
   # Optional arguments
   p <- argparser::add_argument(p, "--outfile", help = "File with results",
                                default = "association_results.txt", type = "character")
   p <- argparser::add_argument(p, "--maf", help = paste0("Minor allele frequency threshold"),
                                default = 0.05, type = "numeric")
+  p <- argparser::add_argument(p, "--permutations", help = paste0("Whether to permute and ",
+                                                                  "how may permutations."),
+                               default = 0, type = "integer")
   p <- argparser::add_argument(p, "--plot", help = "Plot p-values", default = FALSE,
                                flag = TRUE)
+  p <- argparser::add_argument(p, "--lib", help = paste0("Location of code"),
+                               default = "~/micropopgen/src/Anchurus/vmwa/",
+                               type = "character")
   
   # Read arguments
   args <- argparser::parse_args(p)
@@ -54,8 +61,13 @@ args <- list(snps = "merged.snps/Veillonella_sp_62404/snps_freq.txt",
              phenotype = "phenotype.txt",
              outfile = "association_results.txt",
              maf = 0.05,
-             plot = FALSE)
+             permutations = 0,
+             plot = FALSE,
+             lib = "~/micropopgen/src/Anchurus/vmwa/")
 # args <- process_arguments()
+
+# Source
+source(paste0(args$lib, "/functions.r"))
 
 # Read data
 # col_types <- paste0(c('c', rep('n', args$nsamples)), collapse = "")
@@ -66,15 +78,6 @@ args <- list(snps = "merged.snps/Veillonella_sp_62404/snps_freq.txt",
 # col_types <- paste0(c('c', rep('n', 149)), collapse = "")
 # snps <- read_tsv(args$snps, col_types = col_types)
 # snps
-
-auto_read_tsv <- function(file){
-  # Get header
-  header <- read_tsv(file, n_max = 10)
-  col_types <- paste0(c('c', rep('n', ncol(header) - 1)), collapse = "")
-  tab <- read_tsv(file, col_types = col_types)
-  
-  return(tab)
-}
 
 # Read snps covariates and phenotype
 snps <- auto_read_tsv(args$snps) %>% select(SNP = site_id, everything())
@@ -117,6 +120,7 @@ dat <- covariates %>%
 Res <- chunk_association(snps)
 head(Res)
 Res
+Res[ order(Res[,4]),  ] %>% head
 
 var <- "1000051"
 var <- "119378"
