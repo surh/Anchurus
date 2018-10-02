@@ -23,7 +23,6 @@ library(dplyr)
 library(tidyr)
 library(readr)
 library(argparser)
-
 ##########################################################
 #' Internal function
 #'
@@ -34,9 +33,11 @@ library(argparser)
 #'
 #' @examples
 fit_model <- function(d, f1) {
+  snp <- unique(d$SNP)
+  cat(snp, "\n")
   m1 <- tryCatch(lm(f1, data = d),
                  error = function(e){list(coefficients=NA)} )
-  if(is.na(m1$coefficients[1])){
+  if( is.na(m1$coefficients[1]) || is.na(coef(m1)['Frequency']) ){
     r <- rep(NA, 4)
     names(r) <- c("Estimate", "Std. Error", "t value", "Pr(>|t|)")
   }else{
@@ -138,20 +139,22 @@ process_arguments <- function(){
 }
 ########################################################
 
-# args <- list(snps = "snps2.txt",
-#              covariates = "covariates2.txt",
-#              phenotype = "phenotype2.txt",
-#              chunk_size = 2000,
-#              nsamples = 368,
-#              outfile = "association_results.txt",
-#              plot = TRUE)
-args <- process_arguments()
-
+setwd("/godot/users/sur/exp/fraserv/2018/today/")
+args <- list(snps = "test.txt",
+              covariates = "covariates.txt",
+              phenotype = "phenotype.txt",
+              chunk_size = 2000,
+              nsamples = 368,
+              outfile = "association_results.txt",
+              plot = TRUE)
+#args <- process_arguments()
 # Read data
 col_types <- paste0(c('c', rep('n', args$nsamples)), collapse = "")
-phenotype <- read_tsv(args$phenotype, col_types = col_types)
+phenotype <- read_tsv(args$phenotype)
 covariates <- read_tsv(args$covariates, col_types = col_types)
 snps <- read_tsv(args$snps, col_types = col_types, n_max = 10) # read it to get the colnames
+#snps
+
 
 # Check name consistency
 if(any(colnames(snps)[-1] != colnames(covariates)[-1]))
@@ -175,6 +178,28 @@ dat <- covariates %>%
   spread(Covariate, Value, fill = NA)
 
 # Process file by chunk
+#snps <- read_tsv(args$snps, col_types = col_types)
+#snps
+
+#snps <- snps %>% gather(Sample, Frequency, -SNP, na.rm = TRUE)
+#snps
+#unique(snps$SNP)
+# cat(dim(snps), "\n")
+  
+# Merge snps with covariates
+#dat <- snps %>% inner_join(dat, by = "Sample")
+#dat
+#unique(dat$SNP)
+# cat(dim(dat), "\n")
+  
+# Apply linear regression
+#res <- plyr::ddply(dat, "SNP", fit_model, f1 = f1)
+
+#d <- dat %>% filter(SNP == "G437.327699")
+
+#fit_model(d, f1)
+
+
 Res <- read_tsv_chunked(file = args$snps,
                         callback = DataFrameCallback$new(chunk_association),
                         chunk_size = args$chunk_size,
