@@ -51,7 +51,7 @@ process genome_vmwa{
   file covariates
 
   output:
-  file 'association_results.txt' into ASSOC
+  file "${genome}_associations.txt" into ASSOC
   file 'p.value_histogram.svg' into PVALSHIST
   file 'p.value_qqplot.pnf' into PVALSQQ
   file 'P_histogram.svg' optional true into PHIST
