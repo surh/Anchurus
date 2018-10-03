@@ -53,9 +53,9 @@ process genome_vmwa{
   output:
   file "${genome}_associations.txt" into ASSOC
   file 'p.value_histogram.svg' into PVALSHIST
-  file 'p.value_qqplot.pnf' into PVALSQQ
+  file 'p.value_qqplot.png' into PVALSQQ
   file 'P_histogram.svg' optional true into PHIST
-  file 'P_qqplot.pnf' optional true into PQQ
+  file 'P_qqplot.png' optional true into PQQ
 
   """
   ${params.bindir}/vMWAS.r \
