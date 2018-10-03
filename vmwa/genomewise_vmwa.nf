@@ -30,6 +30,7 @@ params.seed = 5743
 params.queue = 'hbfraser,hns,owners'
 params.njobs = 300
 params.maf = 0.05
+params.outdir = 'results/'
 
 // Process Params
 phenotype = file(params.phenotype)
@@ -41,7 +42,7 @@ SNPS = Channel.fromPath("${params.genomesdir}/**/snps_freq.txt")
 
 
 process genome_vmwa{
-  publishDir path: 'results/', pattern: "*_associations.txt"
+  publishDir path: params.results, pattern: "*_associations.txt", mode: 'copy'
 
   input:
   file genome from GENOMES
@@ -56,9 +57,6 @@ process genome_vmwa{
   file 'P_histogram.svg' optional true into PHIST
   file 'P_qqplot.pnf' optional true into PQQ
 
-  // exec:
-  // println genome
-  // println snps
   """
   ${params.bindir}/vMWAS.r \
     $snps \
