@@ -6,8 +6,6 @@ library(readr)
 library(dplyr)
 library(tidyr)
 
-
-
 #############
 #' Process command line arguments
 #'
@@ -44,6 +42,8 @@ process_arguments <- function(){
   p <- argparser::add_argument(p, "--lib", help = paste0("Location of code"),
                                default = "~/micropopgen/src/Anchurus/vmwa/",
                                type = "character")
+  p <- argparser::add_argument(p, "--seed", help = paste0("Seed for permutations."),
+                               default = 5743, type = "integer")
   
   # Read arguments
   args <- argparser::parse_args(p)
@@ -51,19 +51,48 @@ process_arguments <- function(){
   return(args)
 }
 
-
-
+#' Test all snps
+#'
+#' @param snps snp x sample table. First column must be 'SNP'
+#' @param phenotype phenotype x sample table. First column must
+#' be 'Phenotype'
+#' @param covariate covariate x smaple table. First column must
+#' be 'Covariate'
+#' @param f1 Formula. Left-hand side must be called 'Frequency'
+#'
+#' @return
+#' @export
+#' 
+#' @importFrom magrittr %>%
+#' @importFrom dplyr mutate select
+#' @importFrom tidyr gather spread
+#' @examples
+make_test <- function(snps, phenotype, covariate, f1){
+  # Reformat covariate data
+  dat <- covariates %>%
+    rbind(phenotype %>% 
+            dplyr::mutate(Covariate = Phenotype) %>%
+            dplyr::select(-Phenotype)) %>%
+    tidyr::gather(Sample, Value, -Covariate) %>%
+    tidyr::spread(Covariate, Value, fill = NA)
+  
+  # Make test
+  Res <- chunk_association(snps)
+  
+  return(Res)
+}
 #############
 
 # Arguments
-args <- list(snps = "merged.snps/Veillonella_sp_62404/snps_freq.txt",
+args <- list(snps = "merged.snps/Streptococcus_salivarius_58022/snps_freq.txt",
              covariates = "covariates.txt",
              phenotype = "phenotype.txt",
              outfile = "association_results.txt",
              maf = 0.05,
-             permutations = 0,
+             permutations = 10,
              plot = FALSE,
-             lib = "~/micropopgen/src/Anchurus/vmwa/")
+             lib = "~/micropopgen/src/Anchurus/vmwa/",
+             seed = 5743)
 # args <- process_arguments()
 
 # Source
@@ -107,72 +136,6 @@ f1 <- formula(paste(phenotype$Phenotype,
                           collapse = "+"),
                     sep = "~"))
 
-# Reformat covariate data
-dat <- covariates %>%
-  rbind(phenotype %>% 
-          mutate(Covariate = Phenotype) %>%
-          select(-Phenotype)) %>%
-  gather(Sample, Value, -Covariate) %>%
-  spread(Covariate, Value, fill = NA)
+Res <- make_test(snps, phenotype, covariate, f1)
 
 
-
-Res <- chunk_association(snps)
-head(Res)
-Res
-Res[ order(Res[,4]),  ] %>% head
-
-var <- "1000051"
-var <- "119378"
-d <- snps %>% filter(SNP == var)
-d <- cbind(dat, Frequency = as.numeric(d[1,-1]))
-d
-m1 <- lm(f1, d)
-m1
-summary(m1)
-
-Res %>% filter(SNP == "1000051")
-
-# Set params
-useModel <- modelLINEAR; # modelANOVA, modelLINEAR, or modelLINEAR_CROSS
-output_file_name <- paste0(args$outdir, "/results.txt")
-pvOutputThreshold <- 1;
-errorCovariance <- numeric();
-
-# Load data
-snps <- SlicedData$new();
-snps$fileDelimiter <- "\t";      # the TAB character
-snps$fileOmitCharacters <- "NA"; # denote missing values;
-snps$fileSkipRows <- 1;          # one row of column labels
-snps$fileSkipColumns <- 1;       # one column of row labels
-snps$fileSliceSize <- args$nrows;      # read file in slices of 2,000 rows
-snps$LoadFile(args$snps);
-
-pheno <- SlicedData$new();
-pheno$fileDelimiter <- "\t";      # the TAB character
-pheno$fileOmitCharacters <- "NA"; # denote missing values;
-pheno$fileSkipRows <- 1;          # one row of column labels
-pheno$fileSkipColumns <- 1;       # one column of row labels
-pheno$fileSliceSize <- args$nrows      # read file in slices of 2,000 rows
-pheno$LoadFile(args$phenotype);
-
-cvrt <- SlicedData$new();
-cvrt$fileDelimiter <- "\t";      # the TAB character
-cvrt$fileOmitCharacters <- "NA"; # denote missing values;
-cvrt$fileSkipRows <- 1;          # one row of column labels
-cvrt$fileSkipColumns <- 1;       # one column of row labels
-if(length(args$covariates) > 0){
-  cvrt$LoadFile(args$covariates);
-}
-
-tests <- Matrix_eQTL_main(snps = snps,
-                          gene = pheno,
-                          cvrt = cvrt,
-                          output_file_name = output_file_name,
-                          pvOutputThreshold = pvOutputThreshold,
-                          useModel = useModel, 
-                          errorCovariance = errorCovariance, 
-                          verbose = TRUE,
-                          pvalue.hist = TRUE,
-                          min.pv.by.genesnp = FALSE,
-                          noFDRsaveMemory = FALSE)
