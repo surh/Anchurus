@@ -136,6 +136,32 @@ f1 <- formula(paste(phenotype$Phenotype,
                           collapse = "+"),
                     sep = "~"))
 
-Res <- make_test(snps, phenotype, covariate, f1)
+Res <- make_test(snps = snps, phenotype = phenotype, covariate = covariate, f1 = f1)
 
+
+
+if(args$permutations > 0){
+  Res$N <- 1
+  Res$P <- 1
+  set.seed(seed = args$seed)
+  
+  for(i in 1:args$permutations){
+    # Permute phenotype
+    pheno.p <- phenotype
+    colnames(pheno.p) <- c(colnames(pheno.p)[1],sample(colnames(pheno.p)[-1], replace = FALSE))
+    pheno.p <- pheno.p %>% select(Phenotype, samples)
+    
+    # Generate null stat
+    res.p <- make_test(snps = snps, phenotype = pheno.p, covariate = covariates, f1 = f1)
+    
+    # Count
+    cmp <- abs(res.p$beta) >= abs(Res$beta)
+    na_count <- !is.na(cmp)
+    Res$N <- Res$N + na_count
+    cmp[!na_count] <- 0
+    Res$P <- Res$P + cmp
+  }
+  
+  Res$P <- Res$P / Res$N
+}
 
