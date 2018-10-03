@@ -2,20 +2,20 @@
 
 # (C) Copyright 2018 Sur Herrera Paredes
 # 
-# This file is part of RosetteDetector.
+# This file is part of Anchurus
 # 
-# RosetteDetector is free software: you can redistribute it and/or modify
+# Anchurus is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 # 
-# RosetteDetector is distributed in the hope that it will be useful,
+# Anchurus is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 # 
 # You should have received a copy of the GNU General Public License
-# along with RosetteDetector.  If not, see <http://www.gnu.org/licenses/>.
+# along with Anchurus.  If not, see <http://www.gnu.org/licenses/>.
 
 library(ggplot2)
 # library(plyr)
@@ -23,8 +23,30 @@ library(dplyr)
 library(tidyr)
 library(readr)
 library(argparser)
-
 ##########################################################
+#' Internal function
+#'
+#' @param d 
+#' @param f1 
+#'
+#' @return
+#'
+#' @examples
+fit_model <- function(d, f1) {
+  #snp <- unique(d$SNP)
+  #cat(snp, "\n")
+  m1 <- tryCatch(lm(f1, data = d, singular.ok = FALSE),
+                 error = function(e){list(coefficients=NA)} )
+  if( is.na(m1$coefficients[1]) || is.na(coef(m1)['Frequency']) ){
+    r <- rep(NA, 4)
+    names(r) <- c("Estimate", "Std. Error", "t value", "Pr(>|t|)")
+  }else{
+    r <- summary(m1)$coefficients["Frequency", ]
+  }
+  
+  return(r)
+}
+
 #' Chunk association
 #' 
 #' Function to be used with readr chunk readers. It requires global variables
@@ -48,11 +70,7 @@ chunk_association <- function(snps, pos){
   # cat(dim(dat), "\n")
   
   # Apply linear regression
-  res <- plyr::ddply(dat, "SNP", function(d, f1){
-    m1 <- lm(f1, data = d)
-    r <- summary(m1)$coefficients["Frequency", ]
-  }, f1 = f1)
-  
+  res <- plyr::ddply(dat, "SNP", fit_model, f1 = f1)
   return(res)
 }
 
@@ -121,9 +139,10 @@ process_arguments <- function(){
 }
 ########################################################
 
-# args <- list(snps = "snps2.txt",
-#              covariates = "covariates2.txt",
-#              phenotype = "phenotype2.txt",
+#setwd("/godot/users/sur/exp/fraserv/2018/today/")
+#args <- list(snps = "test.txt",
+#              covariates = "covariates.txt",
+#              phenotype = "phenotype.txt",
 #              chunk_size = 2000,
 #              nsamples = 368,
 #              outfile = "association_results.txt",
@@ -132,9 +151,11 @@ args <- process_arguments()
 
 # Read data
 col_types <- paste0(c('c', rep('n', args$nsamples)), collapse = "")
-phenotype <- read_tsv(args$phenotype, col_types = col_types)
+phenotype <- read_tsv(args$phenotype)
 covariates <- read_tsv(args$covariates, col_types = col_types)
 snps <- read_tsv(args$snps, col_types = col_types, n_max = 10) # read it to get the colnames
+#snps
+
 
 # Check name consistency
 if(any(colnames(snps)[-1] != colnames(covariates)[-1]))
@@ -158,6 +179,28 @@ dat <- covariates %>%
   spread(Covariate, Value, fill = NA)
 
 # Process file by chunk
+#snps <- read_tsv(args$snps, col_types = col_types)
+#snps
+
+#snps <- snps %>% gather(Sample, Frequency, -SNP, na.rm = TRUE)
+#snps
+#unique(snps$SNP)
+# cat(dim(snps), "\n")
+  
+# Merge snps with covariates
+#dat <- snps %>% inner_join(dat, by = "Sample")
+#dat
+#unique(dat$SNP)
+# cat(dim(dat), "\n")
+  
+# Apply linear regression
+#res <- plyr::ddply(dat, "SNP", fit_model, f1 = f1)
+
+#d <- dat %>% filter(SNP == "G437.327699")
+
+#fit_model(d, f1)
+
+
 Res <- read_tsv_chunked(file = args$snps,
                         callback = DataFrameCallback$new(chunk_association),
                         chunk_size = args$chunk_size,
