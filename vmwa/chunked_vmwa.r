@@ -35,7 +35,7 @@ library(argparser)
 fit_model <- function(d, f1) {
   #snp <- unique(d$SNP)
   #cat(snp, "\n")
-  m1 <- tryCatch(lm(f1, data = d),
+  m1 <- tryCatch(lm(f1, data = d, singular.ok = FALSE),
                  error = function(e){list(coefficients=NA)} )
   if( is.na(m1$coefficients[1]) || is.na(coef(m1)['Frequency']) ){
     r <- rep(NA, 4)
