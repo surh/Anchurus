@@ -180,7 +180,7 @@ if(args$plot){
           panel.grid = element_blank())
   ggsave("p.value_histogram.svg", p1, width = 6, height = 4)
   
-  png("p.value_qqplot.png", width = 1000, height = 1000, res = 300)
+  png("p.value_qqplot.png", width = 2000, height = 2000, res = 300)
   ggd.qqplot(Res$p.value)
   dev.off()
   
@@ -191,7 +191,7 @@ if(args$plot){
             panel.grid = element_blank())
     ggsave("P_histogram.svg", p1, width = 6, height = 4)
     
-    png("P_qqplot.png", width = 1000, height = 1000, res = 300)
+    png("P_qqplot.png", width = 2000, height = 2000, res = 300)
     ggd.qqplot(Res$P)
     dev.off()
   }
