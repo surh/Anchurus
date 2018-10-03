@@ -77,9 +77,24 @@ make_test <- function(snps, phenotype, covariate, f1){
     tidyr::spread(Covariate, Value, fill = NA)
   
   # Make test
-  Res <- chunk_association(snps)
+  Res <- association(snps, dat = dat, f1 = f1)
   
   return(Res)
+}
+
+
+association <- function(snps, dat = dat, f1 = f1){
+  # Reformat snps
+  snps <- snps %>% tidyr::gather(Sample, Frequency, -SNP, na.rm = TRUE)
+  # cat(dim(snps), "\n")
+  
+  # Merge snps with covariates
+  dat <- snps %>% dplyr::inner_join(dat, by = "Sample")
+  # cat(dim(dat), "\n")
+  
+  # Apply linear regression
+  res <- plyr::ddply(dat, "SNP", fit_model, f1 = f1)
+  return(res)
 }
 #############
 
