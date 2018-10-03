@@ -27,7 +27,7 @@ params.bindir = '/home/sur/micropopgen/src/Anchurus/vmwa'
 params.seed = 3094229
 params.nrows = 5000
 params.queue = 'hbfraser,hns,owners'
-params.njobs = 200
+params.njobs = 300
 params.nsamples = -1
 
 // Process
@@ -71,7 +71,7 @@ process run_vmwa{
   errorStrategy 'retry'
   maxRetries 2
   module 'R'
-  time {120.m + ((task.attempt - 1 ) * 60.m)}
+  time {300.m + ((task.attempt - 1 ) * 120.m)}
   memory { 2.GB + ((task.attempt - 1) * 2.GB) }
 
   input:
@@ -101,7 +101,7 @@ process run_vmwa_perms{
   errorStrategy 'retry'
   maxRetries 2
   module 'R'
-  time {120.m + ((task.attempt - 1 ) * 60.m)}
+  time {300.m + ((task.attempt - 1 ) * 120.m)}
   memory { 2.GB + ((task.attempt - 1) * 2.GB) }
 
   input:
