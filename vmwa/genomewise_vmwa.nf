@@ -43,6 +43,14 @@ SNPS = Channel.fromPath("${params.genomesdir}/**/snps_freq.txt")
 
 process genome_vmwa{
   publishDir path: params.outdir, pattern: "*_associations.txt", mode: 'copy'
+  cpus 1
+  maxForks params.njobs
+  queue params.queue
+  errorStrategy 'retry'
+  maxRetries 2
+  module 'R'
+  time {(20.m + 3.m * params.nperm) + ((task.attempt - 1 ) * 60.m)}
+  memory 2.GB
 
   input:
   file genome from GENOMES
