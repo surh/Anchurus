@@ -84,29 +84,19 @@ make_test <- function(snps, phenotype, covariate, f1){
 #############
 
 # Arguments
-args <- list(snps = "merged.snps/Streptococcus_salivarius_58022/snps_freq.txt",
-             covariates = "covariates.txt",
-             phenotype = "phenotype.txt",
-             outfile = "association_results.txt",
-             maf = 0.05,
-             permutations = 10,
-             plot = FALSE,
-             lib = "~/micropopgen/src/Anchurus/vmwa/",
-             seed = 5743)
-# args <- process_arguments()
+# args <- list(snps = "merged.snps/Streptococcus_salivarius_58022/snps_freq.txt",
+#              covariates = "covariates.txt",
+#              phenotype = "phenotype.txt",
+#              outfile = "association_results.txt",
+#              maf = 0.05,
+#              permutations = 10,
+#              plot = FALSE,
+#              lib = "~/micropopgen/src/Anchurus/vmwa/",
+#              seed = 5743)
+args <- process_arguments()
 
 # Source
 source(paste0(args$lib, "/functions.r"))
-
-# Read data
-# col_types <- paste0(c('c', rep('n', args$nsamples)), collapse = "")
-# phenotype <- read_tsv(args$phenotype)
-# covariates <- read_tsv(args$covariates, col_types = col_types)
-# snps <- read_tsv(args$snps, col_types = col_types, n_max = 10) # read it to get the colnames
-# 
-# col_types <- paste0(c('c', rep('n', 149)), collapse = "")
-# snps <- read_tsv(args$snps, col_types = col_types)
-# snps
 
 # Read snps covariates and phenotype
 snps <- auto_read_tsv(args$snps) %>% select(SNP = site_id, everything())
@@ -124,11 +114,6 @@ covariates <- covariates %>% select(Covariate, samples)
 # Filter by MAF
 ii <- snps %>% select(-SNP) %>% rowMeans >= args$maf
 snps <- snps[ ii, ]
-snps
-# ii <- snps %>% select(-SNP) %>% colSums > 0
-# snps <- snps[ ,c(TRUE, ii) ]
-# snps <- 
-# 
 
 # Make formula
 f1 <- formula(paste(phenotype$Phenotype,
@@ -138,14 +123,14 @@ f1 <- formula(paste(phenotype$Phenotype,
 
 Res <- make_test(snps = snps, phenotype = phenotype, covariate = covariate, f1 = f1)
 
-
-
 if(args$permutations > 0){
   Res$N <- 1
   Res$P <- 1
   set.seed(seed = args$seed)
   
   for(i in 1:args$permutations){
+    if( i %% 100 == 1 ) cat("Running permutation ", i, "...\n", sep = '')
+    
     # Permute phenotype
     pheno.p <- phenotype
     colnames(pheno.p) <- c(colnames(pheno.p)[1],sample(colnames(pheno.p)[-1], replace = FALSE))
@@ -165,3 +150,34 @@ if(args$permutations > 0){
   Res$P <- Res$P / Res$N
 }
 
+# Write results
+write_tsv(Res, args$outfile)
+
+
+
+if(args$plot){
+  library(ggplot2)
+  # library(svglite)
+  
+  p1 <- ggplot(Res, aes(x = p.value)) +
+    geom_histogram(bins = 20) +
+    theme(panel.background = element_rect(color = "black", fill = NA, size= 3),
+          panel.grid = element_blank())
+  ggsave("p.value_histogram.svg", p1, width = 6, height = 4)
+  
+  png("p.value_qqplot.png", width = 1000, height = 1000, res = 300)
+  ggd.qqplot(Res$p.value)
+  dev.off()
+  
+  if(args$permutations > 0){
+    p1 <- ggplot(Res, aes(x = P)) +
+      geom_histogram(bins = 20) +
+      theme(panel.background = element_rect(color = "black", fill = NA, size= 3),
+            panel.grid = element_blank())
+    ggsave("P_histogram.svg", p1, width = 6, height = 4)
+    
+    png("P_qqplot.png", width = 1000, height = 1000, res = 300)
+    ggd.qqplot(Res$P)
+    dev.off()
+  }
+}
