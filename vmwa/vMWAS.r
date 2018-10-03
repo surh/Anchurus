@@ -37,7 +37,7 @@ process_arguments <- function(){
   p <- argparser::add_argument(p, "--permutations", help = paste0("Whether to permute and ",
                                                                   "how may permutations."),
                                default = 0, type = "integer")
-  p <- argparser::add_argument(p, "--plot", help = "Plot p-values", default = FALSE,
+  p <- argparser::add_argument(p, "--plot", help = "Plot p-values",
                                flag = TRUE)
   p <- argparser::add_argument(p, "--lib", help = paste0("Location of code"),
                                default = "~/micropopgen/src/Anchurus/vmwa/",
