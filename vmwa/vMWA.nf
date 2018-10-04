@@ -30,8 +30,8 @@ params.queue = 'hbfraser,hns,owners'
 params.njobs = 300
 
 // Hard-coded params
-time_baseline = 960.m
-time_extra = 960.m
+time_baseline = 1440.m
+time_extra = 1440.m
 
 // Process
 if(params.nsamples <= 0){
