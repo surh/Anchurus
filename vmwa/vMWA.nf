@@ -28,8 +28,10 @@ params.seed = 3094229
 params.nrows = 20000
 params.queue = 'hbfraser,hns,owners'
 params.njobs = 300
-params.nsamples = -1
-params.vmwa_retries = 2
+
+// Hard-coded params
+time_baseline = 960.m
+time_extra = 960.m
 
 // Process
 if(params.nsamples <= 0){
@@ -72,7 +74,7 @@ process run_vmwa{
   errorStrategy 'retry'
   maxRetries params.vmwa_retries
   module 'R'
-  time {720.m + ((task.attempt - 1 ) * 120.m)}
+  time {time_baseline + ((task.attempt - 1 ) * time_extra)}
   memory { 4.GB + ((task.attempt - 1) * 2.GB) }
 
   input:
@@ -102,7 +104,7 @@ process run_vmwa_perms{
   errorStrategy 'retry'
   maxRetries params.vmwa_retries
   module 'R'
-  time {720.m + ((task.attempt - 1 ) * 120.m)}
+  time {time_baseline + ((task.attempt - 1 ) * time_extra)}
   memory { 4.GB + ((task.attempt - 1) * 2.GB) }
 
   input:
