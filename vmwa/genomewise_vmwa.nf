@@ -27,7 +27,7 @@ params.covariates = 'covariates.txt'
 params.nperm = 1000
 params.bindir = '/home/sur/micropopgen/src/Anchurus/vmwa'
 params.seed = 5743
-params.queue = 'hbfraser,hns,owners'
+params.queue = 'hbfraser,hns'
 params.njobs = 300
 params.maf = 0.05
 params.outdir = 'results/'
@@ -49,8 +49,8 @@ process genome_vmwa{
   errorStrategy 'retry'
   maxRetries 2
   module 'R'
-  time {(20.m + (3.m * params.nperm)) + ((task.attempt - 1 ) * 60.m)}
-  memory {4.GB + ((task.attempt - 1) * 2.GB)}
+  time {(60.m + (3.m * params.nperm)) + ((task.attempt - 1 ) * 60.m)}
+  memory {5.GB + ((task.attempt - 1) * 2.GB)}
 
   input:
   file genome from GENOMES
