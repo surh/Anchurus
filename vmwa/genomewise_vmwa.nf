@@ -49,7 +49,7 @@ process genome_vmwa{
   errorStrategy 'retry'
   maxRetries 2
   module 'R'
-  time {(20.m + 3.m * params.nperm) + ((task.attempt - 1 ) * 60.m)}
+  time {(20.m + (3.m * params.nperm)) + ((task.attempt - 1 ) * 60.m)}
   memory {4.GB + ((task.attempt - 1) * 2.GB)}
 
   input:
