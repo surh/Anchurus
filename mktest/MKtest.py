@@ -481,9 +481,10 @@ def process_arguments():
                                              "pandas or classes"),
                         default='pandas', type=str,
                         choices=['pandas', 'classes'])
-    parser.add_argument("--min_count", help=("min depth at a position in "
-                                             "a sample to consider that "
-                                             "sample in that position"),
+    parser.add_argument("--min_count", help=("Min number of reads (depth) "
+                                             " at a position in a sample to "
+                                             "consider that sample for "
+                                             "that position."),
                         default=1, type=int)
     parser.add_argument("--min_cov", help=("min metagenomic coverage across "
                                            "genome in a sample to keep that "
@@ -553,21 +554,27 @@ def process_metadata_file(mapfile, permute=False):
 
 
 def process_snps_depth_file(args, Groups, Sites):
-    """Use depth to decide which samples to keep.
-    It modifies Sites and returns Counts"""
+    """Use depth to decide which samples to keep for each site.
+
+    It modifies Sites by removing sites that do not have samples at
+    minimum depth for both groups. It returns the dictionary Counts,
+    that provides presence absence vector per site indicating which
+    samples passed the threshold for each site."""
 
     Counts = {}
     with open(args.indir + '/snps_depth.txt') as depth_fh:
+        # Read header
         header = depth_fh.readline()
         header = header.rstrip()
         header = header.split('\t')
 
-        # Get sample and column indices
+        # Get sample and column indices per sample
         samples = header[1:]
         indices = {}
         for s in samples:
             indices[s] = header.index(s)
 
+        # Read all lines after header
         depth_reader = csv.reader(depth_fh, delimiter='\t')
         i = 0
         for row in depth_reader:
@@ -579,41 +586,33 @@ def process_snps_depth_file(args, Groups, Sites):
             # Get site ID and check if it is in Sites (for MK this is
             # equivalent to check if this a gene)
             site_id = row[0]
-            # print(site_id)
             if not (site_id in Sites):
                 continue
 
-            # Get all counts and convert to integer
+            # Get all counts, convert to integer and decide which are present
+            # based on min depth threshold
             counts = row[1:]
-            counts = list(map(int, counts))
-            # print(counts)
-
-            # Convert count to presence/absence vector based on
-            # threshold of number of counts to use position in sample
-            counts = [int(c >= args.min_count) for c in counts]
+            # counts = list(map(int, counts))
+            # counts = [int(c >= args.min_count) for c in counts]
+            counts = np.array(list(map(int, counts)))
+            counts = counts <= args.min_count
 
             # Get counts per group
-            # GLITCH: Here it fails if map has extra samples not present in
-            # files
-            # print(set(Groups[args.group1]) & set(indices.keys()))
-            # print(args.group1)
-            # print(Groups[args.group1])
-            # print(indices.keys())
-            # print(set(indices.keys()))
+            # samples1 = [int(counts[ indices[l] - 1 ]) for l in set(Groups[args.group1]) & set(indices.keys())]
+            # samples2 = [int(counts[ indices[l] - 1 ]) for l in set(Groups[args.group2]) & set(indices.keys())]
+            # samples1 = sum(samples1)
+            # samples2 = sum(samples2)
+            samples1 = np.in1d(samples, Groups[args.group1]).sum()
+            samples2 = np.in1d(samples, Groups[args.group2]).sum()
 
-            samples1 = [int(counts[ indices[l] - 1 ]) for l in set(Groups[args.group1]) & set(indices.keys())]
-            samples2 = [int(counts[ indices[l] - 1 ]) for l in set(Groups[args.group2]) & set(indices.keys())]
-            samples1 = sum(samples1)
-            samples2 = sum(samples2)
-            # print(samples1)
-            # print(samples2)
+            # Keep sites with at least one sample per group
             if not (samples1 > 1 and samples2 > 1):
-                # print("\t====Group1:{},Group2:{},SiteID:{}====".format(samples1,samples2,site_id))
-                # delete
-                # print(site_id)
+                # Delete sites that don't pass the tresshold
                 if site_id in Sites:
                     del Sites[site_id]
             else:
+                # If site is kept, create dictionary entry with index of
+                # samples tothat pass threshold
                 # NOTE: ASSUMING SAME ORDER IN SAMPLES BETWEEN SITES
                 Counts[site_id] = counts
 
