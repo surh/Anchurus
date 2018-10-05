@@ -215,8 +215,9 @@ class MKtest:
 
 
 def calculate_contingency_tables(Samples, Groups, args):
-    """Take metadata and locations of MIDAS files and
-    calculate MK contingency tables"""
+    """Take metadata dictionaries and location of MIDAS merge
+    files, and calculate MK contingency tables. Ideally run
+    after confirming existence of MIDAS files."""
 
     print("\tRead snps_info.txt")
     Genes, Sites = process_snp_info_file(args)
@@ -716,18 +717,25 @@ def process_snp_freq_file(args, Counts, Groups, Samples, Sites):
 
 
 def process_snp_info_file(args):
-    """Process the snps_info.txt file from MIDAS"""
+    """Process the snps_info.txt file from MIDAS. Assumes column
+    info based on hard-coded values. Developped for MIDAS 1.3.1.abs
+
+    Returns dictionaries of Genes (class Gene) and
+    Sites (class GenineSite)"""
 
     Genes = {}
     Sites = {}
     with open(args.indir + '/snps_info.txt') as info_fh:
+        # Get headers
         header = info_fh.readline()
         header = header.split('\t')
-        # print(header)
+
+        # Create reader for following lines
         info_reader = csv.reader(info_fh, delimiter='\t')
         i = 0
 
-        # Set columns
+        # Set columns. These are hard-coded values that specify which
+        # information is on each column. Based on MIDAS 1.3.1
         site_id_col = 0
         contig_col = 1
         pos_col = 2
@@ -749,30 +757,27 @@ def process_snp_info_file(args):
         # print(">Gene id: {}".format(header[gene_id_col]))
         # print(">Aminoacids: {}".format(header[aminoacids_col]))
 
+        # Read each line after header
         for row in info_reader:
             i += 1
+
+            # Break if max number of rows given
             if i > args.nrows:
                 break
-            # print(row)
-            # print(row[gene_id_col], row[site_id_col])
-            # print(row[aminoacids_col])
+
+            # Get info
             gene = row[gene_id_col]
             site_id = row[site_id_col]
             aminoacids = row[aminoacids_col]
-            # print(aminoacids)
-            # print(site_id)
 
+            # Skip intergenig regions
             if gene == 'NA':
-                # skip intergenig regions
                 continue
 
-            # print("\tgene")
-            # Get aminoacid per position
+            # Get aminoacid per variant
             aa = aminoacids.split(',')
-            # print(aa)
 
-            # Define site
-            # print(site_id)
+            # Define GenomeSite object
             Sites[site_id] = GenomeSite(site_id=site_id,
                                         contig=row[contig_col],
                                         position=row[pos_col],
@@ -786,23 +791,20 @@ def process_snp_info_file(args):
                                         aminoacid_G=aa[2],
                                         aminoacid_T=aa[3])
 
-            # For genes
+            # Define Gene object
+            # Check if site is in previously defined gene
             if gene in Genes:
-                # update genes
+                # Update gene if already present by extending position.
                 Genes[gene].extend(row[pos_col])
-                # print(gene)
-                # print(Genes[gene])
-                # Genes[gene].info()
 
             else:
-                # Define gene
-                Genes[gene] = Gene(gene_id=gene, contig=row[contig_col],
-                                   start=row[pos_col], end=row[pos_col])
-                # Genes[gene].info()
-                # print(Genes[gene])
+                # Create new Gene object
+                Genes[gene] = Gene(gene_id=gene,
+                                   contig=row[contig_col],
+                                   start=row[pos_col],
+                                   end=row[pos_col])
 
     info_fh.close()
-    # print(Groups)
 
     return Genes, Sites
 
@@ -991,13 +993,10 @@ if __name__ == "__main__":
     confirm_midas_merge_files(args)
 
     if args.functions == 'classes':
-        # Read mapping files
         # Create dictionaries that have all the samples per group (Groups),
         # and the group to which each sample belongs (Samples)
-        # Probably should change this to pandas
         print("Read metadata")
         Samples, Groups = process_metadata_file(args.metadata_file)
-        # print(Groups)
 
         print("Calculate MK contingency tables")
         MK, Genes = calculate_contingency_tables(Samples, Groups, args)
