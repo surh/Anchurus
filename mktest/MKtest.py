@@ -259,11 +259,11 @@ def calculate_mk_oddsratio(map, info, depth, freq, depth_thres=1):
     # Calculate MK contingency table per gene
     Genes = pd.DataFrame(columns=['Gene', 'Dn', 'Ds', 'Pn', 'Ps'])
     for g in info.gene_id.unique():
-        dat = info.loc[info.gene_id == g,:].copy()
+        dat = info.loc[info.gene_id == g, :].copy()
         tab = pd.crosstab(dat.Effect, dat.Type,
                           rownames=['Effect'],
                           colnames=['Type'])
-        tab = tab.reindex(index=pd.Index(['n','s']),
+        tab = tab.reindex(index=pd.Index(['n', 's']),
                           columns=pd.Index(['fixed', 'polymorphic']),
                           fill_value=0)
         s = pd.Series(g, index=['Gene']).append(tab.fixed).append(tab.polymorphic)
@@ -426,7 +426,7 @@ def determine_site_dist(map, depth, freq, info, depth_thres=1):
         # Determine if it is polymorphic or fixed
         site_crosstab = pd.crosstab(site.freq >= 0.5, site.Group)
         if site_crosstab.shape == (2,2):
-            if (np.matrix(site_crosstab).diagonal() == [0,0]).all() or (np.fliplr(np.matrix(site_crosstab)).diagonal() == [0, 0]).all():
+            if (np.matrix(site_crosstab).diagonal() == [0, 0]).all() or (np.fliplr(np.matrix(site_crosstab)).diagonal() == [0, 0]).all():
                 mutation_type = 'fixed'
             else:
                 mutation_type = 'polymorphic'
@@ -528,16 +528,19 @@ def process_arguments():
 
 
 def process_metadata_file(mapfile, permute=False):
-    """Process metadata file and permute if needed"""
+    """Process metadata file and permute if needed.
+    Creates dictionaries of ID => group and grop => IDs.
+    Uses pandas."""
 
     map = pd.read_csv(mapfile, sep='\t')
 
     if permute:
         map['Group'] = np.random.permutation(map.Group)
 
-    # Samples = dict(zip(map.ID, map.Group))
+    # Create dictionary sampleID => group
     Samples = {map.ID[i]: [map.Group[i]] for i in range(len(map))}
 
+    # Create dictionary group => sampleIDs
     Groups = dict()
     for g in set(map.Group):
         samples = list(map.ID[map.Group == g])
@@ -561,15 +564,14 @@ def process_snps_depth_file(args, Groups, Sites):
         indices = {}
         for s in samples:
             indices[s] = header.index(s)
-        # print(indices)
 
         depth_reader = csv.reader(depth_fh, delimiter='\t')
         i = 0
         for row in depth_reader:
             i += 1
+            # Break if max number of rows passed.
             if i > args.nrows:
                 break
-            # print(row)
 
             # Get site ID and check if it is in Sites (for MK this is
             # equivalent to check if this a gene)
@@ -1005,7 +1007,8 @@ if __name__ == "__main__":
             print("Seed is {}".format(str(args.seed)))
             np.random.seed(args.seed)
             for i in range(args.permutations):
-                Sp, Gp = process_metadata_file(args.metadata_file, permute=True)
+                Sp, Gp = process_metadata_file(args.metadata_file,
+                                               permute=True)
                 mk, genes = calculate_contingency_tables(Sp, Gp, args)
                 MK.append(mk)
 
