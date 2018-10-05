@@ -252,17 +252,24 @@ def calculate_mk_oddsratio(map, info, depth, freq, depth_thres=1):
 
     print("\tDetermining if sites are fixed or polymorphic")
     # Determine type of mutation
-    info['Type'] = determine_site_dist(map=map, depth=depth, freq=freq, info=info, depth_thres=depth_thres)
+    info['Type'] = determine_site_dist(map=map, depth=depth, freq=freq,
+                                       info=info, depth_thres=depth_thres)
 
     print("\tCalculate MK contingency table per gene")
     # Calculate MK contingency table per gene
     Genes = pd.DataFrame(columns=['Gene', 'Dn', 'Ds', 'Pn', 'Ps'])
     for g in info.gene_id.unique():
         dat = info.loc[info.gene_id == g,:].copy()
-        tab = pd.crosstab(dat.Effect, dat.Type, rownames=['Effect'], colnames=['Type'])
-        tab = tab.reindex(index=pd.Index(['n','s']), columns=pd.Index(['fixed', 'polymorphic']), fill_value=0)
+        tab = pd.crosstab(dat.Effect, dat.Type,
+                          rownames=['Effect'],
+                          colnames=['Type'])
+        tab = tab.reindex(index=pd.Index(['n','s']),
+                          columns=pd.Index(['fixed', 'polymorphic']),
+                          fill_value=0)
         s = pd.Series(g, index=['Gene']).append(tab.fixed).append(tab.polymorphic)
-        Genes = Genes.append(pd.DataFrame([list(s)], columns=Genes.columns), ignore_index=True)
+        Genes = Genes.append(pd.DataFrame([list(s)],
+                                          columns=Genes.columns),
+                             ignore_index=True)
 
     print("\tCalculate statistic")
     # Calculate ratio
