@@ -561,7 +561,9 @@ def process_snps_depth_file(args, Groups, Sites):
     It modifies Sites by removing sites that do not have samples at
     minimum depth for both groups. It returns the dictionary Counts,
     that provides presence absence vector per site indicating which
-    samples passed the threshold for each site."""
+    samples passed the threshold for each site.
+
+    Might not need indices anymore."""
 
     Counts = {}
     with open(args.indir + '/snps_depth.txt') as depth_fh:
@@ -627,38 +629,38 @@ def process_snp_freq_file(args, Counts, Groups, Samples, Sites):
     """Process snp_freq.txt from MIDAS. Produces MK table"""
 
     print("Processing snp_freq.txt")
-    # print(Groups)
     MK = {}
     with open(args.indir + '/snps_freq.txt') as freqs_fh:
+        # Read header
         header = freqs_fh.readline()
         header = header.rstrip()
         header = header.split('\t')
 
-        # Get sample and column indices
+        # Get sample and column indices per sample
         samples = header[1:]
         indices = {}
         for s in samples:
             indices[s] = header.index(s)
-        # print(indices)
-        # print(header)
 
+        # Read all lines after header
         freqs_reader = csv.reader(freqs_fh, delimiter='\t')
         i = 0
         for row in freqs_reader:
             i += 1
+            # Break if max number of rows passed.
             if i > args.nrows:
                 break
 
-            # Check if site was selected based on sites
+            # Skip is site not selected (because not in gene
+            # or not enough depth)
             site_id = row[0]
-            # print(site_id)
             if not (site_id in Sites):
-                # print("==Skipping")
                 continue
 
+            # Get info from GenomeSite and Gene objects
             gene = Sites[site_id].gene_id
             s_type = Sites[site_id].substitution_type()
-            present_index = np.array(Counts[site_id])
+            present_index = Counts[site_id]
             group_index = np.array([Samples[s][0] for s in samples])
     #         if site_id == '77719':
             # print("==========================")
@@ -679,26 +681,23 @@ def process_snp_freq_file(args, Counts, Groups, Samples, Sites):
 
             # find allele per sample
             allele_freqs = np.array([int(float(f) < 0.5) for f in row[1:]])
-            # print("allele_freqs", allele_freqs)
 
             # Remove non covered positions
             ii = np.where(present_index)
             group_index = group_index[ii]
             allele_freqs = allele_freqs[ii]
-            # print("group_index", group_index, len(group_index))
-            # print("allele_freqs", allele_freqs, len(allele_freqs))
 
             # Count alleles per group
             group1_count = allele_freqs[np.where(group_index == args.group1)].sum()
             group2_count = allele_freqs[np.where(group_index == args.group2)].sum()
-            # print("group1_count", group1_count)
-            # print("group2_count", group2_count)
 
+            # Classify variants based on distribution
             if group1_count > 0 and group2_count > 0:
                 fixed = False
             elif group1_count > 0 or group2_count > 0:
                 fixed = True
 
+            # Classify variants based on effect on aminoacid
             if s_type == 'synonymous':
                 if fixed:
                     MK[gene].update(Ds=1)
