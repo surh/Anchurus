@@ -219,6 +219,8 @@ def calculate_contingency_tables(Samples, Groups, args):
     files, and calculate MK contingency tables. Ideally run
     after confirming existence of MIDAS files."""
 
+    # Find total number of sites and genes present. Define an object
+    # per site and gene.
     print("\tRead snps_info.txt")
     Genes, Sites = process_snp_info_file(args)
     # print("Number of sites: {}".format(str(len(Sites))))
