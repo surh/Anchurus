@@ -215,14 +215,19 @@ class MKtest:
 
 
 def calculate_contingency_tables(Samples, Groups, args):
-    """Take metadata and locations of MIDAS files and
-    calculate MK contingency tables"""
+    """Take metadata dictionaries and location of MIDAS merge
+    files, and calculate MK contingency tables. Ideally run
+    after confirming existence of MIDAS files."""
 
+    # Find total number of sites and genes present. Define an object
+    # per site and gene.
     print("\tRead snps_info.txt")
     Genes, Sites = process_snp_info_file(args)
     # print("Number of sites: {}".format(str(len(Sites))))
     # print("Number of genes: {}".format(str(len(Genes))))
 
+    # Remove sites that do not have at least one sample per group at
+    # minimum depth. And find which samples are to be used per site (Counts).
     print("\tChose sites based on depth in groups to compare")
     Counts = process_snps_depth_file(args, Groups, Sites)
     # print("Number of sites: {}".format(str(len(Sites))))
@@ -252,17 +257,24 @@ def calculate_mk_oddsratio(map, info, depth, freq, depth_thres=1):
 
     print("\tDetermining if sites are fixed or polymorphic")
     # Determine type of mutation
-    info['Type'] = determine_site_dist(map=map, depth=depth, freq=freq, info=info, depth_thres=depth_thres)
+    info['Type'] = determine_site_dist(map=map, depth=depth, freq=freq,
+                                       info=info, depth_thres=depth_thres)
 
     print("\tCalculate MK contingency table per gene")
     # Calculate MK contingency table per gene
     Genes = pd.DataFrame(columns=['Gene', 'Dn', 'Ds', 'Pn', 'Ps'])
     for g in info.gene_id.unique():
-        dat = info.loc[info.gene_id == g,:].copy()
-        tab = pd.crosstab(dat.Effect, dat.Type, rownames=['Effect'], colnames=['Type'])
-        tab = tab.reindex(index=pd.Index(['n','s']), columns=pd.Index(['fixed', 'polymorphic']), fill_value=0)
+        dat = info.loc[info.gene_id == g, :].copy()
+        tab = pd.crosstab(dat.Effect, dat.Type,
+                          rownames=['Effect'],
+                          colnames=['Type'])
+        tab = tab.reindex(index=pd.Index(['n', 's']),
+                          columns=pd.Index(['fixed', 'polymorphic']),
+                          fill_value=0)
         s = pd.Series(g, index=['Gene']).append(tab.fixed).append(tab.polymorphic)
-        Genes = Genes.append(pd.DataFrame([list(s)], columns=Genes.columns), ignore_index=True)
+        Genes = Genes.append(pd.DataFrame([list(s)],
+                                          columns=Genes.columns),
+                             ignore_index=True)
 
     print("\tCalculate statistic")
     # Calculate ratio
@@ -419,7 +431,7 @@ def determine_site_dist(map, depth, freq, info, depth_thres=1):
         # Determine if it is polymorphic or fixed
         site_crosstab = pd.crosstab(site.freq >= 0.5, site.Group)
         if site_crosstab.shape == (2,2):
-            if (np.matrix(site_crosstab).diagonal() == [0,0]).all() or (np.fliplr(np.matrix(site_crosstab)).diagonal() == [0, 0]).all():
+            if (np.matrix(site_crosstab).diagonal() == [0, 0]).all() or (np.fliplr(np.matrix(site_crosstab)).diagonal() == [0, 0]).all():
                 mutation_type = 'fixed'
             else:
                 mutation_type = 'polymorphic'
@@ -471,9 +483,10 @@ def process_arguments():
                                              "pandas or classes"),
                         default='pandas', type=str,
                         choices=['pandas', 'classes'])
-    parser.add_argument("--min_count", help=("min depth at a position in "
-                                             "a sample to consider that "
-                                             "sample in that position"),
+    parser.add_argument("--min_count", help=("Min number of reads (depth) "
+                                             " at a position in a sample to "
+                                             "consider that sample for "
+                                             "that position."),
                         default=1, type=int)
     parser.add_argument("--min_cov", help=("min metagenomic coverage across "
                                            "genome in a sample to keep that "
@@ -521,16 +534,19 @@ def process_arguments():
 
 
 def process_metadata_file(mapfile, permute=False):
-    """Process metadata file and permute if needed"""
+    """Process metadata file and permute if needed.
+    Creates dictionaries of ID => group and grop => IDs.
+    Uses pandas."""
 
     map = pd.read_csv(mapfile, sep='\t')
 
     if permute:
         map['Group'] = np.random.permutation(map.Group)
 
-    # Samples = dict(zip(map.ID, map.Group))
+    # Create dictionary sampleID => group
     Samples = {map.ID[i]: [map.Group[i]] for i in range(len(map))}
 
+    # Create dictionary group => sampleIDs
     Groups = dict()
     for g in set(map.Group):
         samples = list(map.ID[map.Group == g])
@@ -540,68 +556,67 @@ def process_metadata_file(mapfile, permute=False):
 
 
 def process_snps_depth_file(args, Groups, Sites):
-    """Use depth to decide which samples to keep.
-    It modifies Sites and returns Counts"""
+    """Use depth to decide which samples to keep for each site.
+
+    It modifies Sites by removing sites that do not have samples at
+    minimum depth for both groups. It returns the dictionary Counts,
+    that provides presence absence vector per site indicating which
+    samples passed the threshold for each site.
+
+    Might not need indices anymore."""
 
     Counts = {}
     with open(args.indir + '/snps_depth.txt') as depth_fh:
+        # Read header
         header = depth_fh.readline()
         header = header.rstrip()
         header = header.split('\t')
 
-        # Get sample and column indices
+        # Get sample and column indices per sample
         samples = header[1:]
         indices = {}
         for s in samples:
             indices[s] = header.index(s)
-        # print(indices)
 
+        # Read all lines after header
         depth_reader = csv.reader(depth_fh, delimiter='\t')
         i = 0
         for row in depth_reader:
             i += 1
+            # Break if max number of rows passed.
             if i > args.nrows:
                 break
-            # print(row)
 
             # Get site ID and check if it is in Sites (for MK this is
             # equivalent to check if this a gene)
             site_id = row[0]
-            # print(site_id)
             if not (site_id in Sites):
                 continue
 
-            # Get all counts and convert to integer
+            # Get all counts, convert to integer and decide which are present
+            # based on min depth threshold
             counts = row[1:]
-            counts = list(map(int, counts))
-            # print(counts)
-
-            # Convert count to presence/absence vector based on
-            # threshold of number of counts to use position in sample
-            counts = [int(c >= args.min_count) for c in counts]
+            # counts = list(map(int, counts))
+            # counts = [int(c >= args.min_count) for c in counts]
+            counts = np.array(list(map(int, counts)))
+            counts = counts <= args.min_count
 
             # Get counts per group
-            # GLITCH: Here it fails if map has extra samples not present in
-            # files
-            # print(set(Groups[args.group1]) & set(indices.keys()))
-            # print(args.group1)
-            # print(Groups[args.group1])
-            # print(indices.keys())
-            # print(set(indices.keys()))
+            # samples1 = [int(counts[ indices[l] - 1 ]) for l in set(Groups[args.group1]) & set(indices.keys())]
+            # samples2 = [int(counts[ indices[l] - 1 ]) for l in set(Groups[args.group2]) & set(indices.keys())]
+            # samples1 = sum(samples1)
+            # samples2 = sum(samples2)
+            samples1 = np.in1d(samples, Groups[args.group1]).sum()
+            samples2 = np.in1d(samples, Groups[args.group2]).sum()
 
-            samples1 = [int(counts[ indices[l] - 1 ]) for l in set(Groups[args.group1]) & set(indices.keys())]
-            samples2 = [int(counts[ indices[l] - 1 ]) for l in set(Groups[args.group2]) & set(indices.keys())]
-            samples1 = sum(samples1)
-            samples2 = sum(samples2)
-            # print(samples1)
-            # print(samples2)
+            # Keep sites with at least one sample per group
             if not (samples1 > 1 and samples2 > 1):
-                # print("\t====Group1:{},Group2:{},SiteID:{}====".format(samples1,samples2,site_id))
-                # delete
-                # print(site_id)
+                # Delete sites that don't pass the tresshold
                 if site_id in Sites:
                     del Sites[site_id]
             else:
+                # If site is kept, create dictionary entry with index of
+                # samples tothat pass threshold
                 # NOTE: ASSUMING SAME ORDER IN SAMPLES BETWEEN SITES
                 Counts[site_id] = counts
 
@@ -614,38 +629,38 @@ def process_snp_freq_file(args, Counts, Groups, Samples, Sites):
     """Process snp_freq.txt from MIDAS. Produces MK table"""
 
     print("Processing snp_freq.txt")
-    # print(Groups)
     MK = {}
     with open(args.indir + '/snps_freq.txt') as freqs_fh:
+        # Read header
         header = freqs_fh.readline()
         header = header.rstrip()
         header = header.split('\t')
 
-        # Get sample and column indices
+        # Get sample and column indices per sample
         samples = header[1:]
         indices = {}
         for s in samples:
             indices[s] = header.index(s)
-        # print(indices)
-        # print(header)
 
+        # Read all lines after header
         freqs_reader = csv.reader(freqs_fh, delimiter='\t')
         i = 0
         for row in freqs_reader:
             i += 1
+            # Break if max number of rows passed.
             if i > args.nrows:
                 break
 
-            # Check if site was selected based on sites
+            # Skip is site not selected (because not in gene
+            # or not enough depth)
             site_id = row[0]
-            # print(site_id)
             if not (site_id in Sites):
-                # print("==Skipping")
                 continue
 
+            # Get info from GenomeSite and Gene objects
             gene = Sites[site_id].gene_id
             s_type = Sites[site_id].substitution_type()
-            present_index = np.array(Counts[site_id])
+            present_index = Counts[site_id]
             group_index = np.array([Samples[s][0] for s in samples])
     #         if site_id == '77719':
             # print("==========================")
@@ -666,26 +681,23 @@ def process_snp_freq_file(args, Counts, Groups, Samples, Sites):
 
             # find allele per sample
             allele_freqs = np.array([int(float(f) < 0.5) for f in row[1:]])
-            # print("allele_freqs", allele_freqs)
 
             # Remove non covered positions
             ii = np.where(present_index)
             group_index = group_index[ii]
             allele_freqs = allele_freqs[ii]
-            # print("group_index", group_index, len(group_index))
-            # print("allele_freqs", allele_freqs, len(allele_freqs))
 
             # Count alleles per group
             group1_count = allele_freqs[np.where(group_index == args.group1)].sum()
             group2_count = allele_freqs[np.where(group_index == args.group2)].sum()
-            # print("group1_count", group1_count)
-            # print("group2_count", group2_count)
 
+            # Classify variants based on distribution
             if group1_count > 0 and group2_count > 0:
                 fixed = False
             elif group1_count > 0 or group2_count > 0:
                 fixed = True
 
+            # Classify variants based on effect on aminoacid
             if s_type == 'synonymous':
                 if fixed:
                     MK[gene].update(Ds=1)
@@ -707,18 +719,25 @@ def process_snp_freq_file(args, Counts, Groups, Samples, Sites):
 
 
 def process_snp_info_file(args):
-    """Process the snps_info.txt file from MIDAS"""
+    """Process the snps_info.txt file from MIDAS. Assumes column
+    info based on hard-coded values. Developped for MIDAS 1.3.1.abs
+
+    Returns dictionaries of Genes (class Gene) and
+    Sites (class GenineSite)"""
 
     Genes = {}
     Sites = {}
     with open(args.indir + '/snps_info.txt') as info_fh:
+        # Get headers
         header = info_fh.readline()
         header = header.split('\t')
-        # print(header)
+
+        # Create reader for following lines
         info_reader = csv.reader(info_fh, delimiter='\t')
         i = 0
 
-        # Set columns
+        # Set columns. These are hard-coded values that specify which
+        # information is on each column. Based on MIDAS 1.3.1
         site_id_col = 0
         contig_col = 1
         pos_col = 2
@@ -740,30 +759,27 @@ def process_snp_info_file(args):
         # print(">Gene id: {}".format(header[gene_id_col]))
         # print(">Aminoacids: {}".format(header[aminoacids_col]))
 
+        # Read each line after header
         for row in info_reader:
             i += 1
+
+            # Break if max number of rows given
             if i > args.nrows:
                 break
-            # print(row)
-            # print(row[gene_id_col], row[site_id_col])
-            # print(row[aminoacids_col])
+
+            # Get info
             gene = row[gene_id_col]
             site_id = row[site_id_col]
             aminoacids = row[aminoacids_col]
-            # print(aminoacids)
-            # print(site_id)
 
+            # Skip intergenig regions
             if gene == 'NA':
-                # skip intergenig regions
                 continue
 
-            # print("\tgene")
-            # Get aminoacid per position
+            # Get aminoacid per variant
             aa = aminoacids.split(',')
-            # print(aa)
 
-            # Define site
-            # print(site_id)
+            # Define GenomeSite object
             Sites[site_id] = GenomeSite(site_id=site_id,
                                         contig=row[contig_col],
                                         position=row[pos_col],
@@ -777,23 +793,20 @@ def process_snp_info_file(args):
                                         aminoacid_G=aa[2],
                                         aminoacid_T=aa[3])
 
-            # For genes
+            # Define Gene object
+            # Check if site is in previously defined gene
             if gene in Genes:
-                # update genes
+                # Update gene if already present by extending position.
                 Genes[gene].extend(row[pos_col])
-                # print(gene)
-                # print(Genes[gene])
-                # Genes[gene].info()
 
             else:
-                # Define gene
-                Genes[gene] = Gene(gene_id=gene, contig=row[contig_col],
-                                   start=row[pos_col], end=row[pos_col])
-                # Genes[gene].info()
-                # print(Genes[gene])
+                # Create new Gene object
+                Genes[gene] = Gene(gene_id=gene,
+                                   contig=row[contig_col],
+                                   start=row[pos_col],
+                                   end=row[pos_col])
 
     info_fh.close()
-    # print(Groups)
 
     return Genes, Sites
 
@@ -982,13 +995,10 @@ if __name__ == "__main__":
     confirm_midas_merge_files(args)
 
     if args.functions == 'classes':
-        # Read mapping files
         # Create dictionaries that have all the samples per group (Groups),
         # and the group to which each sample belongs (Samples)
-        # Probably should change this to pandas
         print("Read metadata")
         Samples, Groups = process_metadata_file(args.metadata_file)
-        # print(Groups)
 
         print("Calculate MK contingency tables")
         MK, Genes = calculate_contingency_tables(Samples, Groups, args)
@@ -998,7 +1008,8 @@ if __name__ == "__main__":
             print("Seed is {}".format(str(args.seed)))
             np.random.seed(args.seed)
             for i in range(args.permutations):
-                Sp, Gp = process_metadata_file(args.metadata_file, permute=True)
+                Sp, Gp = process_metadata_file(args.metadata_file,
+                                               permute=True)
                 mk, genes = calculate_contingency_tables(Sp, Gp, args)
                 MK.append(mk)
 
