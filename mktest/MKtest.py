@@ -226,6 +226,8 @@ def calculate_contingency_tables(Samples, Groups, args):
     # print("Number of sites: {}".format(str(len(Sites))))
     # print("Number of genes: {}".format(str(len(Genes))))
 
+    # Remove sites that do not have at least one sample per group at
+    # minimum depth. And find which samples are to be used per site (Counts).
     print("\tChose sites based on depth in groups to compare")
     Counts = process_snps_depth_file(args, Groups, Sites)
     # print("Number of sites: {}".format(str(len(Sites))))
