@@ -234,8 +234,6 @@ def calculate_contingency_tables(Map, args):
     # print("Number of genes: {}".format(str(len(Genes))))
     # print("Sites with counts: {}".format(str(len(Counts))))
 
-    quit()
-
     print("\tRead frequencies and calculate")
     MK = process_snp_freq_file(args, Counts, Map, Sites)
     # print("Number of sites: {}".format(str(len(Sites))))
@@ -628,7 +626,7 @@ def process_snps_depth_file(args, Map, Sites):
     return Counts
 
 
-def process_snp_freq_file(args, Counts, Groups, Samples, Sites):
+def process_snp_freq_file(args, Counts, Map, Sites):
     """Process snp_freq.txt from MIDAS. Produces MK table"""
 
     print("Processing snp_freq.txt")
@@ -639,11 +637,14 @@ def process_snp_freq_file(args, Counts, Groups, Samples, Sites):
         header = header.rstrip()
         header = header.split('\t')
 
-        # Get sample and column indices per sample
-        samples = header[1:]
-        indices = {}
-        for s in samples:
-            indices[s] = header.index(s)
+        # Get samples
+        samples = np.array(header[1:])
+
+        # Match map to samples in file
+        Map_present = Map.loc[samples]
+
+        # Create index of for samples to keep based on Map
+        s_ii = Map_present.Group.notnull()
 
         # Read all lines after header
         freqs_reader = csv.reader(freqs_fh, delimiter='\t')
