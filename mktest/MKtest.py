@@ -271,7 +271,8 @@ def calculate_mk_oddsratio(map, info, depth, freq, depth_thres=1):
         tab = tab.reindex(index=pd.Index(['n', 's']),
                           columns=pd.Index(['fixed', 'polymorphic']),
                           fill_value=0)
-        s = pd.Series(g, index=['Gene']).append(tab.fixed).append(tab.polymorphic)
+        s = pd.Series(g, index=['Gene']).append(
+            tab.fixed).append(tab.polymorphic)
         Genes = Genes.append(pd.DataFrame([list(s)],
                                           columns=Genes.columns),
                              ignore_index=True)
@@ -279,7 +280,8 @@ def calculate_mk_oddsratio(map, info, depth, freq, depth_thres=1):
     print("\tCalculate statistic")
     # Calculate ratio
     np.seterr(divide='ignore', invalid='ignore')
-    Genes['ratio'] = pd.to_numeric(Genes.Dn * Genes.Ps) / pd.to_numeric(Genes.Ds * Genes.Pn)
+    Genes['ratio'] = pd.to_numeric(
+        Genes.Dn * Genes.Ps) / pd.to_numeric(Genes.Ds * Genes.Pn)
     np.seterr(divide='raise', invalid='raise')
     Genes.replace(np.inf, np.nan, inplace=True)
     # Genes['hg.pval'] = Genes.apply(mktest_fisher_exact, axis=1)
@@ -430,7 +432,7 @@ def determine_site_dist(map, depth, freq, info, depth_thres=1):
 
         # Determine if it is polymorphic or fixed
         site_crosstab = pd.crosstab(site.freq >= 0.5, site.Group)
-        if site_crosstab.shape == (2,2):
+        if site_crosstab.shape == (2, 2):
             if (np.matrix(site_crosstab).diagonal() == [0, 0]).all() or (np.fliplr(np.matrix(site_crosstab)).diagonal() == [0, 0]).all():
                 mutation_type = 'fixed'
             else:
@@ -665,40 +667,30 @@ def process_snp_freq_file(args, Counts, Map, Sites):
             gene = Sites[site_id].gene_id
             s_type = Sites[site_id].substitution_type()
             present_index = Counts[site_id]
-            group_index = np.array([Samples[s][0] for s in samples])
-    #         if site_id == '77719':
-            # print("==========================")
-            # print(row)
-            # print(site_id)
-            # print("Major Allele: {}".format(Sites[site_id].major_allele))
-            # print("Minor Allele: {}".format(Sites[site_id].minor_allele))
-            # print("Substitution type: {}".format(s_type))
-            # print("Gene: {}".format(gene))
-            # print(present_index)
-            # print(group_index)
-            # print("==========================")
 
-            # Create MKtest if needed
+            # Initiallize MKtest object if SNP is in novel gene
             if not (gene in MK):
-                # print("adding to MK")
                 MK[gene] = MKtest(name=gene)
 
             # find allele per sample
-            allele_freqs = np.array([int(float(f) < 0.5) for f in row[1:]])
+            allele = np.array(row[1:], dtype='float') < 0.5
 
-            # Remove non covered positions
-            ii = np.where(present_index)
-            group_index = group_index[ii]
-            allele_freqs = allele_freqs[ii]
-
-            # Count alleles per group
-            group1_count = allele_freqs[np.where(group_index == args.group1)].sum()
-            group2_count = allele_freqs[np.where(group_index == args.group2)].sum()
+            # Count major allele on each group
+            group1_count = (present_index &
+                            s_ii &
+                            allele &
+                            (Map_present.Group == args.group1)).sum()
+            group2_count = (present_index &
+                            s_ii &
+                            allele &
+                            (Map_present.Group == args.group2)).sum()
 
             # Classify variants based on distribution
             if group1_count > 0 and group2_count > 0:
                 fixed = False
-            elif group1_count > 0 or group2_count > 0:
+            elif group1_count == 0 and group2_count == 0:
+                fixed = False
+            else:
                 fixed = True
 
             # Classify variants based on effect on aminoacid
@@ -714,9 +706,6 @@ def process_snp_freq_file(args, Counts, Map, Sites):
                     MK[gene].update(Pn=1)
             else:
                 raise ValueError("Invalid substitution type")
-
-            # print("==========================")
-
     freqs_fh.close()
 
     return MK
@@ -816,7 +805,7 @@ def process_snp_info_file(args):
 
 
 def read_and_process_data(map_file, info_file, depth_file, freqs_file,
-                         groups, cov_thres=1, nrows=float('inf')):
+                          groups, cov_thres=1, nrows=float('inf')):
     """Reads MIDAS output files, selects gene sites and samples above threshold,
     determines mutation effect (s or n) and makes sure files are consistent
     with each other"""
@@ -1064,9 +1053,11 @@ if __name__ == "__main__":
             # Perms
 
             # Calculate permutation p-values
-            Genes['nperm'] = args.permutations + 1 - pd.isnull(Perms).sum(axis=1)
+            Genes['nperm'] = args.permutations + \
+                1 - pd.isnull(Perms).sum(axis=1)
             np.seterr(invalid='ignore', divide='ignore')
-            Genes['P'] = np.greater_equal(Perms[:, np.repeat(0, args.permutations + 1)], Perms).sum(axis=1) / Genes['nperm']
+            Genes['P'] = np.greater_equal(Perms[:, np.repeat(
+                0, args.permutations + 1)], Perms).sum(axis=1) / Genes['nperm']
             np.seterr(invalid='raise', divide='raise')
 
         # Write results
