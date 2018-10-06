@@ -214,7 +214,7 @@ class MKtest:
         return(ni)
 
 
-def calculate_contingency_tables(Samples, Groups, args):
+def calculate_contingency_tables(Map, args):
     """Take metadata dictionaries and location of MIDAS merge
     files, and calculate MK contingency tables. Ideally run
     after confirming existence of MIDAS files."""
@@ -229,13 +229,15 @@ def calculate_contingency_tables(Samples, Groups, args):
     # Remove sites that do not have at least one sample per group at
     # minimum depth. And find which samples are to be used per site (Counts).
     print("\tChose sites based on depth in groups to compare")
-    Counts = process_snps_depth_file(args, Groups, Sites)
+    Counts = process_snps_depth_file(args, Map, Sites)
     # print("Number of sites: {}".format(str(len(Sites))))
     # print("Number of genes: {}".format(str(len(Genes))))
     # print("Sites with counts: {}".format(str(len(Counts))))
 
+    quit()
+
     print("\tRead frequencies and calculate")
-    MK = process_snp_freq_file(args, Counts, Groups, Samples, Sites)
+    MK = process_snp_freq_file(args, Counts, Map, Sites)
     # print("Number of sites: {}".format(str(len(Sites))))
     # print("Number of genes: {}".format(str(len(Genes))))
     # print("Sites with counts: {}".format(str(len(Counts))))
@@ -539,23 +541,27 @@ def process_metadata_file(mapfile, permute=False):
     Uses pandas."""
 
     map = pd.read_csv(mapfile, sep='\t')
+    map.index = map.ID
+    # print(map.head())
 
-    if permute:
-        map['Group'] = np.random.permutation(map.Group)
+    # if permute:
+    #     map['Group'] = np.random.permutation(map.Group)
+    #
+    # # Create dictionary sampleID => group
+    # Samples = {map.ID[i]: [map.Group[i]] for i in range(len(map))}
+    #
+    # # Create dictionary group => sampleIDs
+    # Groups = dict()
+    # for g in set(map.Group):
+    #     samples = list(map.ID[map.Group == g])
+    #     Groups[g] = samples
 
-    # Create dictionary sampleID => group
-    Samples = {map.ID[i]: [map.Group[i]] for i in range(len(map))}
+    # NOTE: ADD CHECKS FOR COLUMN NAMES AND VALUES
 
-    # Create dictionary group => sampleIDs
-    Groups = dict()
-    for g in set(map.Group):
-        samples = list(map.ID[map.Group == g])
-        Groups[g] = samples
-
-    return Samples, Groups
+    return map
 
 
-def process_snps_depth_file(args, Groups, Sites):
+def process_snps_depth_file(args, Map, Sites):
     """Use depth to decide which samples to keep for each site.
 
     It modifies Sites by removing sites that do not have samples at
@@ -572,11 +578,14 @@ def process_snps_depth_file(args, Groups, Sites):
         header = header.rstrip()
         header = header.split('\t')
 
-        # Get sample and column indices per sample
-        samples = header[1:]
-        indices = {}
-        for s in samples:
-            indices[s] = header.index(s)
+        # Get samples
+        samples = np.array(header[1:])
+
+        # Match map to samples in file
+        Map_present = Map.loc[samples]
+
+        # Create index of for samples to keep based on Map
+        s_ii = Map_present.Group.notnull()
 
         # Read all lines after header
         depth_reader = csv.reader(depth_fh, delimiter='\t')
@@ -596,18 +605,12 @@ def process_snps_depth_file(args, Groups, Sites):
             # Get all counts, convert to integer and decide which are present
             # based on min depth threshold
             counts = row[1:]
-            # counts = list(map(int, counts))
-            # counts = [int(c >= args.min_count) for c in counts]
-            counts = np.array(list(map(int, counts)))
-            counts = counts <= args.min_count
+            counts = np.array(counts, dtype='int')
+            counts = counts >= args.min_count
 
             # Get counts per group
-            # samples1 = [int(counts[ indices[l] - 1 ]) for l in set(Groups[args.group1]) & set(indices.keys())]
-            # samples2 = [int(counts[ indices[l] - 1 ]) for l in set(Groups[args.group2]) & set(indices.keys())]
-            # samples1 = sum(samples1)
-            # samples2 = sum(samples2)
-            samples1 = np.in1d(samples, Groups[args.group1]).sum()
-            samples2 = np.in1d(samples, Groups[args.group2]).sum()
+            samples1 = (Map_present.Group[counts & s_ii] == args.group1).sum()
+            samples2 = (Map_present.Group[counts & s_ii] == args.group2).sum()
 
             # Keep sites with at least one sample per group
             if not (samples1 > 1 and samples2 > 1):
@@ -997,11 +1000,13 @@ if __name__ == "__main__":
     if args.functions == 'classes':
         # Create dictionaries that have all the samples per group (Groups),
         # and the group to which each sample belongs (Samples)
+        # Read DataFrame
+        # NOTE: need to check names
         print("Read metadata")
-        Samples, Groups = process_metadata_file(args.metadata_file)
+        Map = process_metadata_file(args.metadata_file)
 
         print("Calculate MK contingency tables")
-        MK, Genes = calculate_contingency_tables(Samples, Groups, args)
+        MK, Genes = calculate_contingency_tables(Map, args)
         MK = [MK]
         if args.permutations > 0:
             print("Permuting")
