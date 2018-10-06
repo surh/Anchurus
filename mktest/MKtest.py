@@ -234,6 +234,7 @@ def calculate_contingency_tables(Map, args):
     # print("Number of genes: {}".format(str(len(Genes))))
     # print("Sites with counts: {}".format(str(len(Counts))))
 
+    # Identify alleles and calculate contingency table
     print("\tRead frequencies and calculate")
     MK = process_snp_freq_file(args, Counts, Map, Sites)
     # print("Number of sites: {}".format(str(len(Sites))))
@@ -631,7 +632,7 @@ def process_snps_depth_file(args, Map, Sites):
 def process_snp_freq_file(args, Counts, Map, Sites):
     """Process snp_freq.txt from MIDAS. Produces MK table"""
 
-    print("Processing snp_freq.txt")
+    print("\tProcessing snp_freq.txt")
     MK = {}
     with open(args.indir + '/snps_freq.txt') as freqs_fh:
         # Read header
