@@ -43,7 +43,7 @@ FREQS = Channel.fromPath("${params.genomesdir}/**/snps_freq.txt")
 DEPTHS = Channel.fromPath("${params.genomesdir}/**/snps_depth.txt")
 INFOS = Channel.fromPath("${params.genomesdir}/**/snps_info.txt")
 
-process genome_vmwa{
+process genome_mktest{
   publishDir path: params.outdir, pattern: "*_mktest.txt", mode: 'copy'
   cpus 1
   maxForks params.njobs
