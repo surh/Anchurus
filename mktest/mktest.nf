@@ -55,7 +55,7 @@ process genome_vmwa{
 
   input:
   file genome from GENOMES
-  file freqs from SNPS
+  file freqs from FREQS
   file depths from DEPTHS
   file infos from INFOS
   file map
