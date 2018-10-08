@@ -263,19 +263,19 @@ def calculate_mk_oddsratio(map, info, depth, freq, depth_thres=1):
     # print(info.shape)
     # print(freq.shape)
     # print(depth.shape)
-    print(info.head())
+    # print(info.head(45))
 
     print("\tCalculate MK contingency table per gene")
     # Calculate MK contingency table per gene
     Genes = pd.DataFrame(columns=['Gene', 'Dn', 'Ds', 'Pn', 'Ps'])
     for g in info.gene_id.unique():
         dat = info.loc[info.gene_id == g, :].copy()
-        print(g)
+        # print(g)
         # print(dat.shape)
         tab = pd.crosstab(dat.Effect, dat.Type,
                           rownames=['Effect'],
                           colnames=['Type'])
-        print(tab)
+        # print(tab)
         tab = tab.reindex(index=pd.Index(['n', 's']),
                           columns=pd.Index(['fixed', 'polymorphic']),
                           fill_value=0)
@@ -411,10 +411,13 @@ def determine_mutation_effect(r):
     """Mini function for apply, takes a series and checks if the mutation
     is synonymous (s) or non-synonymopus (n)"""
 
-    ii = r.loc[['count_a', 'count_c', 'count_g', 'count_t']] > 0
-    aa = np.array(r.amino_acids.split(sep=','))
+    # print(r)
+    # ii = r.loc[['count_a', 'count_c', 'count_g', 'count_t']] > 0
+    aa = pd.Series(r.amino_acids.split(sep=','),
+                   index=['A', 'C', 'G', 'T'])
+    # aa = np.array(r.amino_acids.split(sep=','))
 
-    if all(aa[ii][0] == aa[ii]):
+    if aa[r.major_allele] == aa[r.minor_allele]:
         effect = 's'
     else:
         effect = 'n'
@@ -425,6 +428,7 @@ def determine_mutation_effect(r):
 def determine_site_dist(map, depth, freq, info, depth_thres=1):
     """For all sites, determine if they are fixed or polymorphic"""
 
+    group1, group2 = map.Group.unique()
     Dist = []
     for i in range(info.shape[0]):
         # Add samples IDs as map header and match samples
@@ -437,18 +441,22 @@ def determine_site_dist(map, depth, freq, info, depth_thres=1):
 
         # Remove samples without information for site
         site = site[site.depth >= depth_thres]
+        # print(site)
 
         # Determine if it is polymorphic or fixed
-        site_crosstab = pd.crosstab(site.freq < 0.5, site.Group)
-        if site_crosstab.shape == (2, 2):
-            if (np.matrix(site_crosstab).diagonal() == [0, 0]).all() or (np.fliplr(np.matrix(site_crosstab)).diagonal() == [0, 0]).all():
-                mutation_type = 'fixed'
-            else:
-                mutation_type = 'polymorphic'
+        # site_crosstab = pd.crosstab(site.freq < 0.5, site.Group)
+        site_crosstab = np.array([[sum((site.Group == group1) & (site.freq >= 0.5)),
+                                   sum((site.Group == group2) & (site.freq >= 0.5))],
+                                  [sum((site.Group == group1) & (site.freq < 0.5)),
+                                   sum((site.Group == group2) & (site.freq < 0.5))]])
+        # print(site_crosstab)
+        if( (site_crosstab.diagonal() == [0,0]).all() or (np.fliplr(site_crosstab).diagonal() == [0,0]).all()):
+            mutation_type = 'fixed'
         else:
-            mutation_type = np.nan
+            mutation_type = 'polymorphic'
 
         Dist.append(mutation_type)
+        # print(info.site_id.iloc[i], mutation_type)
 
     return(Dist)
 
