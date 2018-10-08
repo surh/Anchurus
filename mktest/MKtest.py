@@ -789,7 +789,7 @@ def process_snp_info_file(args):
 
             # Get aminoacid per variant
             aa = aminoacids.split(',')
-            print(site_id)
+            # print(site_id)
 
             # Define GenomeSite object
             Sites[site_id] = GenomeSite(site_id=site_id,
