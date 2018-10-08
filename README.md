@@ -6,11 +6,16 @@ because the metagenomic SNPs are obtained through [MIDAS](https://github.com/sna
 
 # Directories
 
+* **analyze_midas**: This directory contains code for analysis after midas has been used to
+call SNPs.
+* **mktest**: This directory contains code to perform the McDonald-Kreitman test on
+gene frequencies, between two groups.
 * **run_midas**: This directory contains wrappers to run midas on a series of samples. It
 requires that there are two files per sample corresponding to Illumina forward and reverse
 reads. Wrappers are nextflow pipelines.
-* **analyze_midas**: This directory contains code for analysis after midas has been used to
-call SNPs.
+* **vmwa**: This directory contains code for testing association between genetic variants
+of bacteria and a host phenotype.
+
 
 # Copyright & license
 
@@ -28,4 +33,3 @@ call SNPs.
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
