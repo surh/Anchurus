@@ -74,7 +74,6 @@ process genome_mktest{
     --permutations ${params.nperm} \
     --seed ${params.seed} \
     --min_cov 0 \
-    --outfile ${genome}_mktest.txt \
-    --nrows 100
+    --outfile ${genome}_mktest.txt
   """
 }
