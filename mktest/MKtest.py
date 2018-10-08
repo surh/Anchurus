@@ -598,7 +598,7 @@ def process_snps_depth_file(args, Map, Sites):
         samples = np.array(header[1:])
 
         # Match map to samples in file
-        Map_present = Map.loc[samples]
+        Map_present = Map.loc[samples].copy()
 
         # Create index of for samples to keep based on Map
         s_ii = Map_present.Group.notnull()
@@ -659,7 +659,7 @@ def process_snp_freq_file(args, Counts, Map, Sites):
         samples = np.array(header[1:])
 
         # Match map to samples in file
-        Map_present = Map.loc[samples]
+        Map_present = Map.loc[samples].copy()
 
         # Create index of for samples to keep based on Map
         s_ii = Map_present.Group.notnull()
