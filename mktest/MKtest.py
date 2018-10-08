@@ -260,15 +260,22 @@ def calculate_mk_oddsratio(map, info, depth, freq, depth_thres=1):
     # Determine type of mutation
     info['Type'] = determine_site_dist(map=map, depth=depth, freq=freq,
                                        info=info, depth_thres=depth_thres)
+    # print(info.shape)
+    # print(freq.shape)
+    # print(depth.shape)
+    print(info.head())
 
     print("\tCalculate MK contingency table per gene")
     # Calculate MK contingency table per gene
     Genes = pd.DataFrame(columns=['Gene', 'Dn', 'Ds', 'Pn', 'Ps'])
     for g in info.gene_id.unique():
         dat = info.loc[info.gene_id == g, :].copy()
+        print(g)
+        # print(dat.shape)
         tab = pd.crosstab(dat.Effect, dat.Type,
                           rownames=['Effect'],
                           colnames=['Type'])
+        print(tab)
         tab = tab.reindex(index=pd.Index(['n', 's']),
                           columns=pd.Index(['fixed', 'polymorphic']),
                           fill_value=0)
@@ -432,7 +439,7 @@ def determine_site_dist(map, depth, freq, info, depth_thres=1):
         site = site[site.depth >= depth_thres]
 
         # Determine if it is polymorphic or fixed
-        site_crosstab = pd.crosstab(site.freq >= 0.5, site.Group)
+        site_crosstab = pd.crosstab(site.freq < 0.5, site.Group)
         if site_crosstab.shape == (2, 2):
             if (np.matrix(site_crosstab).diagonal() == [0, 0]).all() or (np.fliplr(np.matrix(site_crosstab)).diagonal() == [0, 0]).all():
                 mutation_type = 'fixed'
@@ -632,7 +639,7 @@ def process_snps_depth_file(args, Map, Sites):
 def process_snp_freq_file(args, Counts, Map, Sites):
     """Process snp_freq.txt from MIDAS. Produces MK table"""
 
-    print("\tProcessing snp_freq.txt")
+    print("Processing snp_freq.txt")
     MK = {}
     with open(args.indir + '/snps_freq.txt') as freqs_fh:
         # Read header
@@ -707,6 +714,8 @@ def process_snp_freq_file(args, Counts, Map, Sites):
                     MK[gene].update(Pn=1)
             else:
                 raise ValueError("Invalid substitution type")
+
+            # print("\t".join([gene, s_type, str(fixed), site_id]))
     freqs_fh.close()
 
     return MK
@@ -826,6 +835,8 @@ def read_and_process_data(map_file, info_file, depth_file, freqs_file,
     # Remove site_id columns
     depth = depth.drop(axis=1, labels='site_id')
     freq = freq.drop(axis=1, labels='site_id')
+    # print(depth.shape)
+    # print(freq.shape)
 
     # subset for tests
     if nrows < float('inf'):
@@ -852,6 +863,8 @@ def read_and_process_data(map_file, info_file, depth_file, freqs_file,
     ci = depth.columns.isin(map.ID)
     depth = depth.loc[:, ci]
     freq = freq.loc[:, ci]
+    # print(depth.shape)
+    # print(freq.shape)
 
     # Reorder map
     map = map.loc[depth.columns, :]
@@ -864,6 +877,8 @@ def read_and_process_data(map_file, info_file, depth_file, freqs_file,
     map = map.loc[ci, :]
     depth = depth.loc[:, map.index]
     freq = freq.loc[:, map.index]
+    # print(depth.shape)
+    # print(freq.shape)
 
     return map, freq, info, depth
 
