@@ -784,11 +784,12 @@ def process_snp_info_file(args):
             aminoacids = row[aminoacids_col]
 
             # Skip intergenig regions
-            if gene == 'NA':
+            if gene == 'NA' or aminoacids == 'NA':
                 continue
 
             # Get aminoacid per variant
             aa = aminoacids.split(',')
+            # print(site_id, aminoacids, aa)
             # print(site_id)
 
             # Define GenomeSite object
