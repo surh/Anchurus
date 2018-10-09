@@ -1029,9 +1029,9 @@ if __name__ == "__main__":
             print("Seed is {}".format(str(args.seed)))
             np.random.seed(args.seed)
             for i in range(args.permutations):
-                Sp, Gp = process_metadata_file(args.metadata_file,
+                Map_p = process_metadata_file(args.metadata_file,
                                                permute=True)
-                mk, genes = calculate_contingency_tables(Sp, Gp, args)
+                mk, genes = calculate_contingency_tables(Map_p, args)
                 MK.append(mk)
 
         print("Testing and writing")
