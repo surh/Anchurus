@@ -50,7 +50,7 @@ process genome_mktest{
   queue params.queue
   errorStrategy 'retry'
   module 'fraserconda'
-  time 300.m
+  time 3000.m
   memory 5.GB
 
   input:
