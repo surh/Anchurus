@@ -137,10 +137,10 @@ class MKtest:
     def hg_test(self, pseudocount=0):
         """Hypergeometric (Fisher's exact) test"""
 
-        res = stats.fisher_exact([[self.Ds + pseudocount,
-                                   self.Ps + pseudocount],
-                                  [self.Dn + pseudocount,
-                                   self.Pn + pseudocount]])
+        res = stats.fisher_exact([[self.Dn + pseudocount,
+                                   self.Pn + pseudocount],
+                                  [self.Ds + pseudocount,
+                                   self.Ps + pseudocount]])
         return res
 
     def g_test(self, correction, pseudocount=0):
@@ -784,11 +784,12 @@ def process_snp_info_file(args):
             aminoacids = row[aminoacids_col]
 
             # Skip intergenig regions
-            if gene == 'NA':
+            if gene == 'NA' or aminoacids == 'NA':
                 continue
 
             # Get aminoacid per variant
             aa = aminoacids.split(',')
+            # print(site_id, aminoacids, aa)
             # print(site_id)
 
             # Define GenomeSite object
@@ -1028,9 +1029,9 @@ if __name__ == "__main__":
             print("Seed is {}".format(str(args.seed)))
             np.random.seed(args.seed)
             for i in range(args.permutations):
-                Sp, Gp = process_metadata_file(args.metadata_file,
+                Map_p = process_metadata_file(args.metadata_file,
                                                permute=True)
-                mk, genes = calculate_contingency_tables(Sp, Gp, args)
+                mk, genes = calculate_contingency_tables(Map_p, args)
                 MK.append(mk)
 
         print("Testing and writing")

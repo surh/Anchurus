@@ -50,7 +50,7 @@ process genome_mktest{
   queue params.queue
   errorStrategy 'retry'
   module 'fraserconda'
-  time 300.m
+  time 3000.m
   memory 5.GB
 
   input:
@@ -73,6 +73,7 @@ process genome_mktest{
     --min_count ${params.min_count} \
     --permutations ${params.nperm} \
     --seed ${params.seed} \
+    --test ratio \
     --min_cov 0 \
     --outfile ${genome}_mktest.txt
   """
