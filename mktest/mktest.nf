@@ -73,6 +73,7 @@ process genome_mktest{
     --min_count ${params.min_count} \
     --permutations ${params.nperm} \
     --seed ${params.seed} \
+    --test ratio \
     --min_cov 0 \
     --outfile ${genome}_mktest.txt
   """

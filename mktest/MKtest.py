@@ -137,10 +137,10 @@ class MKtest:
     def hg_test(self, pseudocount=0):
         """Hypergeometric (Fisher's exact) test"""
 
-        res = stats.fisher_exact([[self.Ds + pseudocount,
-                                   self.Ps + pseudocount],
-                                  [self.Dn + pseudocount,
-                                   self.Pn + pseudocount]])
+        res = stats.fisher_exact([[self.Dn + pseudocount,
+                                   self.Pn + pseudocount],
+                                  [self.Ds + pseudocount,
+                                   self.Ps + pseudocount]])
         return res
 
     def g_test(self, correction, pseudocount=0):
