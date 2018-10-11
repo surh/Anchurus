@@ -102,6 +102,10 @@ fit_model <- function(d, f1) {
 ggd.qqplot = function(pvector, main=NULL, ...) {
   # http://GettingGeneticsDone.blogspot.com/
   # See http://gettinggeneticsdone.blogspot.com/p/copyright.html
+  
+  # removing zeroes before log-transformation
+  pvector[ pvector == 0 ] <- min(pvector[ pvector > 0 ])
+  
   o = -log10(sort(pvector,decreasing=F))
   e = -log10( 1:length(o)/length(o) )
   plot(e,o,pch=19,cex=1, main=main, ...,
