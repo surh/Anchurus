@@ -181,7 +181,7 @@ if(args$plot){
   ggsave("p.value_histogram.svg", p1, width = 6, height = 4)
   
   png("p.value_qqplot.png", width = 2000, height = 2000, res = 300)
-  ggd.qqplot(p)
+  ggd.qqplot(Res$p.value)
   dev.off()
   
   if(args$permutations > 0){
