@@ -560,17 +560,8 @@ def process_metadata_file(mapfile, permute=False):
     map.index = map.ID
     # print(map.head())
 
-    # if permute:
-    #     map['Group'] = np.random.permutation(map.Group)
-    #
-    # # Create dictionary sampleID => group
-    # Samples = {map.ID[i]: [map.Group[i]] for i in range(len(map))}
-    #
-    # # Create dictionary group => sampleIDs
-    # Groups = dict()
-    # for g in set(map.Group):
-    #     samples = list(map.ID[map.Group == g])
-    #     Groups[g] = samples
+    if permute:
+        map.Group = np.random.permutation(map.Group)
 
     # NOTE: ADD CHECKS FOR COLUMN NAMES AND VALUES
 
