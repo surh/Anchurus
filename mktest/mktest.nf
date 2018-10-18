@@ -49,7 +49,7 @@ process genome_mktest{
   maxForks params.njobs
   queue params.queue
   errorStrategy 'retry'
-  module 'fraserconda/5.0'
+  module 'fraserconda/5.3a'
   time 3000.m
   memory 5.GB
 
