@@ -82,6 +82,7 @@ def gene_ids(gene, type):
         genes = [gene]
     elif type == "file":
         with open(gene, 'r') as ih:
+            print("Reading gene list from file.")
             genes = ih.readlines()
             genes = [g.rstrip("\r\n") for g in genes]
         ih.close()
@@ -165,8 +166,8 @@ if __name__ == "__main__":
 
     # Get gene names
     genes = gene_ids(args.gene, args.type)
+    print("Extracting data from {} genes".format(str(len(genes))))
 
-    print(genes)
     # Prepare output directory
     if os.path.isdir(args.outdir):
         raise ValueError("Output directory already exists")
