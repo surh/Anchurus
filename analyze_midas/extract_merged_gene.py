@@ -99,6 +99,8 @@ def extract_genes_info(gene, depth_file, freq_file, info_file, outdir):
     with open(info_file, 'r') as i_info, open(o_info_file, 'w') as o_info:
         header = i_info.readline().rstrip("\r\n")
         o_info.write(''.join([header, "\n"]))
+        header = i_info.readline().rstrip("\r\n")
+        o_info.write(''.join([header, "\n"]))
 
     i_info.close()
     o_info.close()
