@@ -81,7 +81,7 @@ def gene_ids(gene, type):
     elif type == "file":
         with open(gene, 'r') as ih:
             genes = ih.readlines()
-            genes = [g.rstrip("\n") for g in genes]
+            genes = [g.rstrip("\r\n") for g in genes]
         ih.close()
     else:
         raise ValueError("Unknown type passsed")
@@ -89,10 +89,35 @@ def gene_ids(gene, type):
     return genes
 
 
+def extract_genes_info(gene, depth_file, freq_file, info_file, outdir):
+    """Extract info from positions for some genes"""
+
+    # First read info file
+    o_info_file = '/'.join([outdir, 'snps_info.txt'])
+    with open(info_file, 'r') as i_info, open(o_info_file, 'w') as o_info:
+        header = i_info.readline().rstrip("\r\n")
+        o_info =
+
+    i_info.close()
+    o_info.close()
+
+
+
 if __name__ == "__main__":
     args = process_arguments()
 
+    # Check input
     depth_file, freq_file, info_file = check_midas_merge_output(args.indir)
+
+    # Get gene names
     genes = gene_ids(args.gene, args.type)
 
     print(genes)
+    # Prepare output directory
+    if os.path.isdir(args.outdir):
+        raise ValueError("Output directory already exists")
+    else:
+        os.mkdir(args.outdir)
+
+    # Getting data
+    # extract_genes_info(genes, depth_file, freq_file, info_file, args.outdir)
