@@ -80,7 +80,8 @@ def gene_ids(gene, type):
         genes = [gene]
     elif type == "file":
         with open(gene, 'r') as ih:
-            genes = ih.readlines().rstrip('\n')
+            genes = ih.readlines()
+            genes = [g.rstrip("\n") for g in genes]
         ih.close()
     else:
         raise ValueError("Unknown type passsed")
