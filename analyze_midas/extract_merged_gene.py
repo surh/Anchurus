@@ -39,7 +39,7 @@ def process_arguments():
     parser.add_argument("--type", help=("Type of gene parameter. id or file"),
                         type=str,
                         default="id",
-                        choice=['id', 'file'])
+                        choices=['id', 'file'])
     parser.add_argument("--outdir", help=("Output directory to write files"))
 
     # Read arguments
