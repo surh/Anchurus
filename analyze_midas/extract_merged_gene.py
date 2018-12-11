@@ -122,4 +122,4 @@ if __name__ == "__main__":
         os.mkdir(args.outdir)
 
     # Getting data
-    # extract_genes_info(genes, depth_file, freq_file, info_file, args.outdir)
+    extract_genes_info(genes, depth_file, freq_file, info_file, args.outdir)
