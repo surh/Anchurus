@@ -98,6 +98,7 @@ def extract_genes_info(gene, depth_file, freq_file, info_file, outdir):
     o_info_file = '/'.join([outdir, 'snps_info.txt'])
     keep_positions = []
     with open(info_file, 'r') as i_info, open(o_info_file, 'w') as o_info:
+        print("Extracting positions from info file.")
         header = i_info.readline().rstrip("\r\n")
         o_info.write(''.join([header, "\n"]))
         for line in i_info:
@@ -112,6 +113,36 @@ def extract_genes_info(gene, depth_file, freq_file, info_file, outdir):
                 o_info.write(''.join([line, "\n"]))
     i_info.close()
     o_info.close()
+    print("\tFound {} positions".format(str(len(pos_id))))
+
+    extract_lines_from_file
+
+
+def extract_lines_from_file(infile, outfile, ids, id_col=0, header=True):
+    """Takes a tab-delimited file and copies lines with an ID within
+    the given set to a new file"""
+
+    found_positions = []
+    with open(infile, 'r') as ih, open(outfile, 'w') as oh:
+        print("Extracting lines from {}".format(infile))
+        header = ih.readline().rstrip("\r\n")
+        oh.write(''.join([header, "\n"]))
+        for line in ih:
+            line = line.rstrip("\r\n")
+            fields = line.split("\t")
+            pos_id = fields[id_col]
+            if pos_id in ids:
+                found_positions.append(pos_id)
+                oh.write(''.join([line, "\n"]))
+    ih.close()
+    oh.close()
+    print("\tFound {} positions".format(str(len(found_positions))))
+
+    if len(found_positions) != len(ids):
+        raise ValueError("Number of found positions does not match "
+                         "expected positions")
+
+    return found_positions
 
 
 if __name__ == "__main__":
