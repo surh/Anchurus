@@ -113,7 +113,7 @@ def extract_genes_info(gene, depth_file, freq_file, info_file, outdir):
                 o_info.write(''.join([line, "\n"]))
     i_info.close()
     o_info.close()
-    print("\tFound {} positions".format(str(len(pos_id))))
+    print("\tFound {} positions".format(str(len(keep_positions))))
 
     # Get depth and freq file
     o_depth_file = '/'.join([outdir, 'snps_depth.txt'])
