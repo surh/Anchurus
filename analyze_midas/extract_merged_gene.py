@@ -96,15 +96,22 @@ def extract_genes_info(gene, depth_file, freq_file, info_file, outdir):
 
     # First read info file
     o_info_file = '/'.join([outdir, 'snps_info.txt'])
+    keep_positions = []
     with open(info_file, 'r') as i_info, open(o_info_file, 'w') as o_info:
         header = i_info.readline().rstrip("\r\n")
         o_info.write(''.join([header, "\n"]))
-        header = i_info.readline().rstrip("\r\n")
-        o_info.write(''.join([header, "\n"]))
-
+        for line in i_info:
+            line = line.rstrip("\r\n")
+            fields = line.split("\t")
+            # The following are hard-coded field numbers
+            # Rely on MIDAS 1.3.1
+            curr_gene = fields[12]
+            pos_id = fields[0]
+            if curr_gene in genes:
+                keep_positions.append(pos_id)
+                o_info.write(''.join([line, "\n"]))
     i_info.close()
     o_info.close()
-
 
 
 if __name__ == "__main__":
