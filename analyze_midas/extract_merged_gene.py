@@ -40,7 +40,9 @@ def process_arguments():
                         type=str,
                         default="id",
                         choices=['id', 'file'])
-    parser.add_argument("--outdir", help=("Output directory to write files"))
+    parser.add_argument("--outdir", help=("Output directory to write files"),
+                        type=str,
+                        default='out/')
 
     # Read arguments
     print("Reading arguments")
