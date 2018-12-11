@@ -115,7 +115,18 @@ def extract_genes_info(gene, depth_file, freq_file, info_file, outdir):
     o_info.close()
     print("\tFound {} positions".format(str(len(pos_id))))
 
-    extract_lines_from_file
+    # Get depth and freq file
+    o_depth_file = '/'.join([outdir, 'snps_depth.txt'])
+    o_freq_file = '/'.join([outdir, 'snps_freq.txt'])
+    extract_lines_from_file(infile=depth_file, outfile=o_depth_file,
+                            ids=keep_positions, id_col=0,
+                            header=True)
+
+    extract_lines_from_file(infile=freq_file, outfile=o_freq_file,
+                            ids=keep_positions, id_col=0,
+                            header=True)
+
+    return
 
 
 def extract_lines_from_file(infile, outfile, ids, id_col=0, header=True):
@@ -125,8 +136,9 @@ def extract_lines_from_file(infile, outfile, ids, id_col=0, header=True):
     found_positions = []
     with open(infile, 'r') as ih, open(outfile, 'w') as oh:
         print("Extracting lines from {}".format(infile))
-        header = ih.readline().rstrip("\r\n")
-        oh.write(''.join([header, "\n"]))
+        if header:
+            header = ih.readline().rstrip("\r\n")
+            oh.write(''.join([header, "\n"]))
         for line in ih:
             line = line.rstrip("\r\n")
             fields = line.split("\t")
