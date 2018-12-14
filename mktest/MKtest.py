@@ -571,7 +571,7 @@ def process_metadata_file(mapfile, permute=False):
 def process_snps_depth_file(args, Map, Sites):
     """Use depth to decide which samples to keep for each site.
 
-    It modifies Sites by removing sites that do not have samples at
+    It modifies Sites by removing sites that do not have two samples at
     minimum depth for both groups. It returns the dictionary Counts,
     that provides presence absence vector per site indicating which
     samples passed the threshold for each site.
@@ -619,7 +619,7 @@ def process_snps_depth_file(args, Map, Sites):
             samples1 = (Map_present.Group[counts & s_ii] == args.group1).sum()
             samples2 = (Map_present.Group[counts & s_ii] == args.group2).sum()
 
-            # Keep sites with at least one sample per group
+            # Keep sites with at least two samples per group
             if not (samples1 > 1 and samples2 > 1):
                 # Delete sites that don't pass the tresshold
                 if site_id in Sites:
