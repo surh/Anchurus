@@ -755,7 +755,6 @@ def test_and_write_results(MK, Genes, outfile,
         perm_list = [''.join([t, '.perm']) for t in test]
     else:
         perm_list = []
-
     header = header_base + test + pval_list + perm_list
 
     # Open files for output
