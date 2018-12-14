@@ -628,6 +628,7 @@ def process_snps_depth_file(args, Map, Sites):
                 # If site is kept, create dictionary entry with index of
                 # samples tothat pass threshold
                 # NOTE: ASSUMING SAME ORDER IN SAMPLES BETWEEN SITES
+                # NOTE: counts DOES NOT include information from map!!
                 Counts[site_id] = counts
 
     depth_fh.close()
