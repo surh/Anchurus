@@ -576,25 +576,47 @@ def process_snp_freq_file(args, Counts, Map, Sites):
             # Identify samples with major allele
             allele = np.array(row[1:], dtype='float') < 0.5
 
-            # Count major allele on group1
-            group1_count = (present_index &
-                            s_ii &
-                            allele &
-                            (Map_present.Group == args.group1)).sum()
-            group2_count = (present_index &
-                            s_ii &
-                            allele &
-                            (Map_present.Group == args.group2)).sum()
+            # Count major allele on each group
+            g1_major = (present_index &
+                        s_ii &
+                        allele &
+                        (Map_present.Group == args.group1)).sum()
+            g2_major = (present_index &
+                        s_ii &
+                        allele &
+                        (Map_present.Group == args.group2)).sum()
 
-            # Classify variants based on distribution
-            if group1_count > 0 and group2_count > 0:
-                fixed = False
-            elif group1_count == 0 and group2_count == 0:
-                fixed = False
-            else:
+            # Count minor allele on each group
+            g1_minor = (present_index &
+                        s_ii &
+                        np.logical_not(allele) &
+                        (Map_present.Group == args.group1)).sum()
+            g2_minor = (present_index &
+                        s_ii &
+                        np.logical_not(allele) &
+                        (Map_present.Group == args.group2)).sum()
+
+            # Count per allele
+            major_total = g1_major + g2_major
+            minor_total = g1_minor + g2_minor
+
+            # Classify variants based on distribution across groups
+            if major_total == 0 or minor_total == 0:
+                # Delete sites that are invariant among samples in this set
+                del Sites[site_id]
+            elif (g1_major > 0 and g2_major == 0 and
+                  g1_minor == 0 and g2_minor > 0):
+                # Group1 has major allele and Group2 has minor allele
                 fixed = True
+            elif (g1_major == 0 and g2_major > 0 and
+                  g1_minor > 0 and g2_minor == 0):
+                # Group1 has minor allele and Group2 has major allele
+                fixed = True
+            else:
+                # It is Polymorphic
+                fixed = False
 
-            # Classify variants based on effect on aminoacid
+            # Place variants into the MK contingency table
             if s_type == 'synonymous':
                 if fixed:
                     MK[gene].update(Ds=1)
