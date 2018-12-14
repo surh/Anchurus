@@ -573,10 +573,10 @@ def process_snp_freq_file(args, Counts, Map, Sites):
             if not (gene in MK):
                 MK[gene] = MKtest(name=gene)
 
-            # find allele per sample
+            # Identify samples with major allele
             allele = np.array(row[1:], dtype='float') < 0.5
 
-            # Count major allele on each group
+            # Count major allele on group1
             group1_count = (present_index &
                             s_ii &
                             allele &
