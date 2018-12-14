@@ -674,8 +674,6 @@ def process_snp_info_file(args):
 
             # Get aminoacid per variant
             aa = aminoacids.split(',')
-            # print(site_id, aminoacids, aa)
-            # print(site_id)
 
             # Define GenomeSite object
             Sites[site_id] = GenomeSite(site_id=site_id,
@@ -743,11 +741,7 @@ def test_and_write_results(MK, Genes, outfile,
         fh.write("\t".join(header) + "\n")
 
         # Iterate over every MK element
-        # print(MK[0])
         for gene, mk in MK[0].items():
-            # print(gene)
-            # print(mk.Dn, mk.Ds, mk.Pn, mk.Ps)
-
             if permutations == 0:
                 # Calculate statistics
                 tests = calculate_statistic(mk, test, pseudocount)
@@ -760,22 +754,8 @@ def test_and_write_results(MK, Genes, outfile,
                        str(mk.Dn), str(mk.Ds),
                        str(mk.Pn), str(mk.Ps)] + res
 
-                # res = [gene, Genes[gene].contig, str(Genes[gene].start),
-                #        str(Genes[gene].end),
-                #        str(mk.Dn), str(mk.Ds), str(mk.Pn), str(mk.Ps),
-                #        str(ni), str(ratio), str(ratio_pseudo),
-                #        str(hg_odds), str(hg_p), str(hg_odds_pseudo),
-                #        str(hg_p_pseudo),
-                #        str(g_none_p), str(g_yates_p),str(g_williams_p),
-                #        str(g_none_p_pseudo), str(g_yates_p_pseudo),
-                #        str(g_williams_p_pseudo),
-                #        str(alpha), str(alpha_pseudo)]
-
-                # th.write(str(res) + "\n")
+                # Write results
                 fh.write("\t".join(res) + "\n")
-                # alpha = mk.alpha()
-                # print("MK ratio is: {}".format(str(ratio)))
-                # print("MK alpha is: {}".format(str(alpha)))
             elif permutations > 0:
                 res = test_by_permutation(gene, MK, permutations,
                                           test, pval_list, pseudocount)
@@ -791,7 +771,6 @@ def test_and_write_results(MK, Genes, outfile,
                 raise ValueError("Invalid permutations")
 
     fh.close()
-    # th.close()
 
 
 def test_by_permutation(gene, MK, permutations, test, pval_list, pseudocount):
@@ -816,7 +795,6 @@ def test_by_permutation(gene, MK, permutations, test, pval_list, pseudocount):
 
     keys = np.concatenate((test, pval_list, nperm_names))
     vals = np.concatenate((perm_table[0], perm_pvals, nperms))
-    # vals = np.array(vals, dtype=np.character)
     res = dict(zip(keys, vals))
 
     return res
