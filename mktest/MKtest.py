@@ -604,6 +604,7 @@ def process_snp_freq_file(args, Counts, Map, Sites):
             if major_total == 0 or minor_total == 0:
                 # Delete sites that are invariant among samples in this set
                 del Sites[site_id]
+                continue
             elif (g1_major > 0 and g2_major == 0 and
                   g1_minor == 0 and g2_minor > 0):
                 # Group1 has major allele and Group2 has minor allele
