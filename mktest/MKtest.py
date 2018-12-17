@@ -245,59 +245,6 @@ def calculate_contingency_tables(Map, args):
     return MK, Genes
 
 
-def calculate_mk_oddsratio(map, info, depth, freq, depth_thres=1):
-    """Determine if sites are fixed of polymorphic, calculate MK
-    contingency table per gene, and calculate odds ratio"""
-
-    if not all(map.index == depth.columns):
-        raise ValueError("Samples in map and depth don't match")
-    if not all(map.index == freq.columns):
-        raise ValueError("Samples in map and freq don't match")
-    if not all(freq.columns == depth.columns):
-        raise ValueError("Samples in freq and depth don't match")
-
-    print("\tDetermining if sites are fixed or polymorphic")
-    # Determine type of mutation
-    info['Type'] = determine_site_dist(map=map, depth=depth, freq=freq,
-                                       info=info, depth_thres=depth_thres)
-    # print(info.shape)
-    # print(freq.shape)
-    # print(depth.shape)
-    # print(info.head(45))
-
-    print("\tCalculate MK contingency table per gene")
-    # Calculate MK contingency table per gene
-    Genes = pd.DataFrame(columns=['Gene', 'Dn', 'Ds', 'Pn', 'Ps'])
-    for g in info.gene_id.unique():
-        dat = info.loc[info.gene_id == g, :].copy()
-        # print(g)
-        # print(dat.shape)
-        tab = pd.crosstab(dat.Effect, dat.Type,
-                          rownames=['Effect'],
-                          colnames=['Type'])
-        # print(tab)
-        tab = tab.reindex(index=pd.Index(['n', 's']),
-                          columns=pd.Index(['fixed', 'polymorphic']),
-                          fill_value=0)
-        s = pd.Series(g, index=['Gene']).append(
-            tab.fixed).append(tab.polymorphic)
-        Genes = Genes.append(pd.DataFrame([list(s)],
-                                          columns=Genes.columns),
-                             ignore_index=True)
-
-    print("\tCalculate statistic")
-    # Calculate ratio
-    np.seterr(divide='ignore', invalid='ignore')
-    Genes['ratio'] = pd.to_numeric(
-        Genes.Dn * Genes.Ps) / pd.to_numeric(Genes.Ds * Genes.Pn)
-    np.seterr(divide='raise', invalid='raise')
-    Genes.replace(np.inf, np.nan, inplace=True)
-    # Genes['hg.pval'] = Genes.apply(mktest_fisher_exact, axis=1)
-    # Genes.head()
-
-    return Genes, info
-
-
 def calculate_statistic(mk, test, pseudocount=0):
     """Takes an MK object and returns a dictionary
     with the statistics asked"""
@@ -407,60 +354,6 @@ def confirm_midas_merge_files(args):
     return
 
 
-def determine_mutation_effect(r):
-    """Mini function for apply, takes a series and checks if the mutation
-    is synonymous (s) or non-synonymopus (n)"""
-
-    # print(r)
-    # ii = r.loc[['count_a', 'count_c', 'count_g', 'count_t']] > 0
-    aa = pd.Series(r.amino_acids.split(sep=','),
-                   index=['A', 'C', 'G', 'T'])
-    # aa = np.array(r.amino_acids.split(sep=','))
-
-    if aa[r.major_allele] == aa[r.minor_allele]:
-        effect = 's'
-    else:
-        effect = 'n'
-
-    return effect
-
-
-def determine_site_dist(map, depth, freq, info, depth_thres=1):
-    """For all sites, determine if they are fixed or polymorphic"""
-
-    group1, group2 = map.Group.unique()
-    Dist = []
-    for i in range(info.shape[0]):
-        # Add samples IDs as map header and match samples
-        # in map with samples in depth
-
-        # Create site data frame
-        site = map.copy()
-        site['depth'] = depth.loc[depth.index[i], map.index]
-        site['freq'] = freq.loc[freq.index[i], map.index]
-
-        # Remove samples without information for site
-        site = site[site.depth >= depth_thres]
-        # print(site)
-
-        # Determine if it is polymorphic or fixed
-        # site_crosstab = pd.crosstab(site.freq < 0.5, site.Group)
-        site_crosstab = np.array([[sum((site.Group == group1) & (site.freq >= 0.5)),
-                                   sum((site.Group == group2) & (site.freq >= 0.5))],
-                                  [sum((site.Group == group1) & (site.freq < 0.5)),
-                                   sum((site.Group == group2) & (site.freq < 0.5))]])
-        # print(site_crosstab)
-        if( (site_crosstab.diagonal() == [0,0]).all() or (np.fliplr(site_crosstab).diagonal() == [0,0]).all()):
-            mutation_type = 'fixed'
-        else:
-            mutation_type = 'polymorphic'
-
-        Dist.append(mutation_type)
-        # print(info.site_id.iloc[i], mutation_type)
-
-    return(Dist)
-
-
 def mktest_fisher_exact(g):
     """Per perform the fisher's exact test on a gene MK
     contingency table."""
@@ -497,10 +390,10 @@ def process_arguments():
                           required=True)
 
     # Define other arguments
-    parser.add_argument("--functions", help=("Which set of functions to use, "
-                                             "pandas or classes"),
-                        default='pandas', type=str,
-                        choices=['pandas', 'classes'])
+    parser.add_argument("--functions", help=("Which set of functions to use. "
+                                             "Currently only one supported."),
+                        default='classes', type=str,
+                        choices=['classes'])
     parser.add_argument("--min_count", help=("Min number of reads (depth) "
                                              " at a position in a sample to "
                                              "consider that sample for "
@@ -571,7 +464,7 @@ def process_metadata_file(mapfile, permute=False):
 def process_snps_depth_file(args, Map, Sites):
     """Use depth to decide which samples to keep for each site.
 
-    It modifies Sites by removing sites that do not have samples at
+    It modifies Sites by removing sites that do not have two samples at
     minimum depth for both groups. It returns the dictionary Counts,
     that provides presence absence vector per site indicating which
     samples passed the threshold for each site.
@@ -619,7 +512,7 @@ def process_snps_depth_file(args, Map, Sites):
             samples1 = (Map_present.Group[counts & s_ii] == args.group1).sum()
             samples2 = (Map_present.Group[counts & s_ii] == args.group2).sum()
 
-            # Keep sites with at least one sample per group
+            # Keep sites with at least two samples per group
             if not (samples1 > 1 and samples2 > 1):
                 # Delete sites that don't pass the tresshold
                 if site_id in Sites:
@@ -628,6 +521,7 @@ def process_snps_depth_file(args, Map, Sites):
                 # If site is kept, create dictionary entry with index of
                 # samples tothat pass threshold
                 # NOTE: ASSUMING SAME ORDER IN SAMPLES BETWEEN SITES
+                # NOTE: counts DOES NOT include information from map!!
                 Counts[site_id] = counts
 
     depth_fh.close()
@@ -679,28 +573,51 @@ def process_snp_freq_file(args, Counts, Map, Sites):
             if not (gene in MK):
                 MK[gene] = MKtest(name=gene)
 
-            # find allele per sample
+            # Identify samples with major allele
             allele = np.array(row[1:], dtype='float') < 0.5
 
             # Count major allele on each group
-            group1_count = (present_index &
-                            s_ii &
-                            allele &
-                            (Map_present.Group == args.group1)).sum()
-            group2_count = (present_index &
-                            s_ii &
-                            allele &
-                            (Map_present.Group == args.group2)).sum()
+            g1_major = (present_index &
+                        s_ii &
+                        allele &
+                        (Map_present.Group == args.group1)).sum()
+            g2_major = (present_index &
+                        s_ii &
+                        allele &
+                        (Map_present.Group == args.group2)).sum()
 
-            # Classify variants based on distribution
-            if group1_count > 0 and group2_count > 0:
-                fixed = False
-            elif group1_count == 0 and group2_count == 0:
-                fixed = False
-            else:
+            # Count minor allele on each group
+            g1_minor = (present_index &
+                        s_ii &
+                        np.logical_not(allele) &
+                        (Map_present.Group == args.group1)).sum()
+            g2_minor = (present_index &
+                        s_ii &
+                        np.logical_not(allele) &
+                        (Map_present.Group == args.group2)).sum()
+
+            # Count per allele
+            major_total = g1_major + g2_major
+            minor_total = g1_minor + g2_minor
+
+            # Classify variants based on distribution across groups
+            if major_total == 0 or minor_total == 0:
+                # Delete sites that are invariant among samples in this set
+                del Sites[site_id]
+                continue
+            elif (g1_major > 0 and g2_major == 0 and
+                  g1_minor == 0 and g2_minor > 0):
+                # Group1 has major allele and Group2 has minor allele
                 fixed = True
+            elif (g1_major == 0 and g2_major > 0 and
+                  g1_minor > 0 and g2_minor == 0):
+                # Group1 has minor allele and Group2 has major allele
+                fixed = True
+            else:
+                # It is Polymorphic
+                fixed = False
 
-            # Classify variants based on effect on aminoacid
+            # Place variants into the MK contingency table
             if s_type == 'synonymous':
                 if fixed:
                     MK[gene].update(Ds=1)
@@ -780,8 +697,6 @@ def process_snp_info_file(args):
 
             # Get aminoacid per variant
             aa = aminoacids.split(',')
-            # print(site_id, aminoacids, aa)
-            # print(site_id)
 
             # Define GenomeSite object
             Sites[site_id] = GenomeSite(site_id=site_id,
@@ -815,75 +730,6 @@ def process_snp_info_file(args):
     return Genes, Sites
 
 
-def read_and_process_data(map_file, info_file, depth_file, freqs_file,
-                          groups, cov_thres=1, nrows=float('inf')):
-    """Reads MIDAS output files, selects gene sites and samples above threshold,
-    determines mutation effect (s or n) and makes sure files are consistent
-    with each other"""
-
-    print("\tReading data...")
-    # Read data
-    info = pd.read_csv(info_file, sep="\t")
-    depth = pd.read_csv(depth_file, sep="\t")
-    freq = pd.read_csv(freqs_file, sep="\t")
-
-    # Remove non gene sites
-    ii = ~info.gene_id.isnull()
-    info = info.loc[ii, :]
-    depth = depth.loc[ii, :]
-    freq = freq.loc[ii, :]
-
-    # Remove site_id columns
-    depth = depth.drop(axis=1, labels='site_id')
-    freq = freq.drop(axis=1, labels='site_id')
-    # print(depth.shape)
-    # print(freq.shape)
-
-    # subset for tests
-    if nrows < float('inf'):
-        nrows = int(nrows)
-        info = info.head(nrows)
-        depth = depth.head(nrows)
-        freq = freq.head(nrows)
-
-    print("\tClassifying sites into synonymous and non-synonymous")
-    # Determine effect of sites (this is constant and indepentent of samples)
-    info['Effect'] = info.apply(determine_mutation_effect, axis=1)
-
-    # Check that sample names match between freq and depth
-    if not all(freq.columns == depth.columns):
-        raise ValueError("Columns don't match between freq and depth files")
-
-    print("\tFiltering samples by group and coverage")
-    # Read map file and select groups
-    map = pd.read_csv(map_file, sep="\t")
-    map.index = map.ID
-    map = map.loc[map.Group.isin(groups), :].copy()
-
-    # Remove samples from other groups
-    ci = depth.columns.isin(map.ID)
-    depth = depth.loc[:, ci]
-    freq = freq.loc[:, ci]
-    # print(depth.shape)
-    # print(freq.shape)
-
-    # Reorder map
-    map = map.loc[depth.columns, :]
-
-    # Calculate coverage in sites
-    map['coverage'] = depth.mean(axis=0)
-
-    # Remove samples below coverage
-    ci = map.coverage >= cov_thres
-    map = map.loc[ci, :]
-    depth = depth.loc[:, map.index]
-    freq = freq.loc[:, map.index]
-    # print(depth.shape)
-    # print(freq.shape)
-
-    return map, freq, info, depth
-
-
 def test_and_write_results(MK, Genes, outfile,
                            test='hg', pseudocount=0,
                            permutations=0):
@@ -909,7 +755,6 @@ def test_and_write_results(MK, Genes, outfile,
         perm_list = [''.join([t, '.perm']) for t in test]
     else:
         perm_list = []
-
     header = header_base + test + pval_list + perm_list
 
     # Open files for output
@@ -918,11 +763,7 @@ def test_and_write_results(MK, Genes, outfile,
         fh.write("\t".join(header) + "\n")
 
         # Iterate over every MK element
-        # print(MK[0])
         for gene, mk in MK[0].items():
-            # print(gene)
-            # print(mk.Dn, mk.Ds, mk.Pn, mk.Ps)
-
             if permutations == 0:
                 # Calculate statistics
                 tests = calculate_statistic(mk, test, pseudocount)
@@ -935,22 +776,8 @@ def test_and_write_results(MK, Genes, outfile,
                        str(mk.Dn), str(mk.Ds),
                        str(mk.Pn), str(mk.Ps)] + res
 
-                # res = [gene, Genes[gene].contig, str(Genes[gene].start),
-                #        str(Genes[gene].end),
-                #        str(mk.Dn), str(mk.Ds), str(mk.Pn), str(mk.Ps),
-                #        str(ni), str(ratio), str(ratio_pseudo),
-                #        str(hg_odds), str(hg_p), str(hg_odds_pseudo),
-                #        str(hg_p_pseudo),
-                #        str(g_none_p), str(g_yates_p),str(g_williams_p),
-                #        str(g_none_p_pseudo), str(g_yates_p_pseudo),
-                #        str(g_williams_p_pseudo),
-                #        str(alpha), str(alpha_pseudo)]
-
-                # th.write(str(res) + "\n")
+                # Write results
                 fh.write("\t".join(res) + "\n")
-                # alpha = mk.alpha()
-                # print("MK ratio is: {}".format(str(ratio)))
-                # print("MK alpha is: {}".format(str(alpha)))
             elif permutations > 0:
                 res = test_by_permutation(gene, MK, permutations,
                                           test, pval_list, pseudocount)
@@ -966,7 +793,6 @@ def test_and_write_results(MK, Genes, outfile,
                 raise ValueError("Invalid permutations")
 
     fh.close()
-    # th.close()
 
 
 def test_by_permutation(gene, MK, permutations, test, pval_list, pseudocount):
@@ -991,7 +817,6 @@ def test_by_permutation(gene, MK, permutations, test, pval_list, pseudocount):
 
     keys = np.concatenate((test, pval_list, nperm_names))
     vals = np.concatenate((perm_table[0], perm_pvals, nperms))
-    # vals = np.array(vals, dtype=np.character)
     res = dict(zip(keys, vals))
 
     return res
@@ -1021,7 +846,7 @@ if __name__ == "__main__":
             np.random.seed(args.seed)
             for i in range(args.permutations):
                 Map_p = process_metadata_file(args.metadata_file,
-                                               permute=True)
+                                              permute=True)
                 mk, genes = calculate_contingency_tables(Map_p, args)
                 MK.append(mk)
 
@@ -1030,52 +855,5 @@ if __name__ == "__main__":
                                test=args.test,
                                pseudocount=args.pseudocount,
                                permutations=args.permutations)
-    elif args.functions == 'pandas':
-        # Create file names
-        info_file = ''.join([args.indir, '/snps_info.txt'])
-        depth_file = ''.join([args.indir, '/snps_depth.txt'])
-        freqs_file = ''.join([args.indir, '/snps_freq.txt'])
-
-        # Prepare list of groups
-        groups = [args.group1, args.group2]
-
-        map, freq, info, depth = read_and_process_data(map_file=args.metadata_file,
-                                                       info_file=info_file,
-                                                       depth_file=depth_file,
-                                                       freqs_file=freqs_file,
-                                                       groups=groups,
-                                                       cov_thres=args.min_cov,
-                                                       nrows=args.nrows)
-        Genes, info = calculate_mk_oddsratio(map=map, info=info,
-                                             depth=depth, freq=freq,
-                                             depth_thres=args.min_count)
-
-        # Perform permutations if needed
-        if args.permutations > 0:
-            Perms = np.empty((Genes.shape[0], args.permutations + 1))
-            Perms[:] = np.nan
-            Perms[:, 0] = Genes.ratio
-            np.random.seed(args.seed)
-            print("Seed for permutations is {}".format(args.seed))
-            for i in range(1, args.permutations + 1):
-                # print(i)
-                map_i = map.copy()
-                map_i['Group'] = np.random.permutation(map_i.Group)
-                Genes_i, info_i = calculate_mk_oddsratio(map=map_i,
-                                                         info=info,
-                                                         depth=depth,
-                                                         freq=freq,
-                                                         depth_thres=args.min_count)
-                Perms[:, i] = Genes_i.ratio
-            # Perms
-
-            # Calculate permutation p-values
-            Genes['nperm'] = args.permutations + \
-                1 - pd.isnull(Perms).sum(axis=1)
-            np.seterr(invalid='ignore', divide='ignore')
-            Genes['P'] = np.greater_equal(Perms[:, np.repeat(
-                0, args.permutations + 1)], Perms).sum(axis=1) / Genes['nperm']
-            np.seterr(invalid='raise', divide='raise')
-
-        # Write results
-        Genes.to_csv(args.outfile, sep="\t", na_rep='NA', index=False)
+    else:
+        raise ValueError("Invalid --functions argument")

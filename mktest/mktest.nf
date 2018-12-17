@@ -26,7 +26,6 @@ params.map = 'map.txt'
 params.group1 = ''
 params.group2 = ''
 params.nperm = 0
-params.bindir = '/home/sur/micropopgen/src/Anchurus/mktest'
 params.seed = 371
 params.queue = 'hbfraser,hns'
 params.njobs = 300
@@ -49,7 +48,7 @@ process genome_mktest{
   maxForks params.njobs
   queue params.queue
   errorStrategy 'retry'
-  module 'fraserconda/5.3a'
+  module 'fraserconda'
   time 3000.m
   memory 5.GB
 
@@ -64,7 +63,7 @@ process genome_mktest{
   file "${genome}_mktest.txt" into MKTESTS
 
   """
-  ${params.bindir}/MKtest.py \
+  ${workflow.projectDir}/MKtest.py \
     --indir $genome \
     --metadata_file $map \
     --group1 ${params.group1} \
