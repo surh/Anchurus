@@ -28,7 +28,7 @@ params.map_file = 'map.txt'
 
 // Process params
 genomes_file = file(params.genomes_file)
-map_file = Channel.fromPath(params.map_file)
+map_file = file(params.map_file)
 
 // Read list of genomes
 reader = genomes_file.newReader()
@@ -47,7 +47,7 @@ process metawas{
 
   input:
   val genome from Channel.from(GENOMES)
-  file map_file
+  file map_file name 'map.txt'
 
   output:
   file "metawas/lmm/lmm.assoc.txt"
