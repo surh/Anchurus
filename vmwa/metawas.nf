@@ -24,6 +24,7 @@
 params.genomes_file = 'genomes.txt'
 params.midas_dir = ''
 params.outdir = 'output'
+params.map_file = 'map.txt'
 
 // Process params
 genomes_file = file(params.genomes_file)
@@ -46,6 +47,7 @@ process metawas{
 
   input:
   val genome from GENOMES
+  file "map.txt" from Channel.fromPath(params.map_file)
 
   output:
   file "output/lmm.assoc.txt"
