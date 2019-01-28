@@ -50,7 +50,7 @@ process metawas{
   file "map.txt" from Channel.fromPath(params.map_file)
 
   output:
-  file "output/lmm.assoc.txt"
+  file "metawas/lmm.assoc.txt"
 
   """
   Rscript /home/sur/micropopgen/src/HMVAR/inst/scripts/bugwas.r \
