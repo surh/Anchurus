@@ -41,7 +41,7 @@ process metawas{
   cpus 1
   time '2h'
   module 'R/3.5.1server'
-  publishDir params.outdir, mode: 'copy', saveAs: {"${genome}_${it}"}
+  publishDir params.outdir, mode: 'copy', saveAs: {"${genome}_lmm.assoc.txt"}
 
   input:
   val genome from GENOMES
