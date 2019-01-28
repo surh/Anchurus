@@ -45,7 +45,7 @@ process metawas{
   publishDir params.outdir, mode: 'copy', saveAs: {"${genome}_lmm.assoc.txt"}
 
   input:
-  val genome from GENOMES
+  val genome from Channel.from(GENOMES)
   file "map.txt" from Channel.fromPath(params.map_file)
 
   output:
