@@ -40,8 +40,6 @@ while(str = reader.readLine()){
 process metawas{
   cpus 1
   time '2h'
-  memory params.memory
-  maxForks params.njobs
   module 'R/3.5.1server'
   publishDir params.outdir, mode: 'copy', saveAs: {"${val}_${it}"}
 
