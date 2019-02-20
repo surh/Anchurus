@@ -46,6 +46,7 @@ process metawas{
   module 'R/3.5.1server'
   maxForks 10
   publishDir params.outdir, mode: 'copy', saveAs: {"${genome}_lmm.results.txt"}
+  errorStrategy 'ignore'
 
   input:
   val genome from Channel.from(GENOMES)
