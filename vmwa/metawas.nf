@@ -44,7 +44,7 @@ process metawas{
   cpus 1
   time '2h'
   module 'R/3.5.1server'
-  maxForks 4
+  maxForks 10
   publishDir params.outdir, mode: 'copy', saveAs: {"${genome}_lmm.results.txt"}
 
   input:
