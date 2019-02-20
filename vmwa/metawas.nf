@@ -25,10 +25,12 @@ params.genomes_file = 'genomes.txt'
 params.midas_dir = ''
 params.outdir = 'output'
 params.map_file = 'map.txt'
+params.pcs_file = 'pcs.txt'
 
 // Process params
 genomes_file = file(params.genomes_file)
 map_file = file(params.map_file)
+pcs_file = file(params.pcs_file)
 
 // Read list of genomes
 reader = genomes_file.newReader()
@@ -43,14 +45,15 @@ process metawas{
   time '2h'
   module 'R/3.5.1server'
   maxForks 4
-  publishDir params.outdir, mode: 'copy', saveAs: {"${genome}_lmm.assoc.txt"}
+  publishDir params.outdir, mode: 'copy', saveAs: {"${genome}_lmm.results.txt"}
 
   input:
   val genome from Channel.from(GENOMES)
   file map_file name 'map.txt'
+  file pcs_file
 
   output:
-  file "metawas/lmm/lmm.assoc.txt"
+  file "metawas/lmm.results.txt"
 
   """
   Rscript /home/sur/micropopgen/src/HMVAR/inst/scripts/bugwas.r \
