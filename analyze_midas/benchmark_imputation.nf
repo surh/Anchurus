@@ -20,6 +20,8 @@
 // Parameters
 params.dirs = ''
 params.bin = ''
+params.map = 'map.txt'
+params.seed = 76543
 params.njobs = 10
 param.outdir = "output/"
 params.memory = "20G"
@@ -31,3 +33,33 @@ if(params.bin == ''){
   error "You must provide a path to the benchmark_imputation.r executable."
 }
 dirs = file(dirs)
+map = file(params.map)
+
+// Read list of dirs
+DIRS = Channel.fromPath(dirs).
+  splitCsv(sep: "\t").
+  map{row -> tuple(file(row[0]))}
+
+process benchmark_imputation{
+  label 'r'
+  memory params.memory
+  time params.time
+  makForks params.njobs
+
+  input:
+  set file(specdir) from DIRS
+  file map
+
+  output:
+  file 'benchmark_imputation/imputation_results.txt' into IMPRES
+  file 'benchmark_imputation/summary_stats.txt' into IMPSUM
+
+  """
+  ${params.bin} \
+    $specdir \
+    --map_file $map \
+    --outdir benchmark_imputation \
+    --m 5 \
+    --seed ${params.seed}
+  """
+}
