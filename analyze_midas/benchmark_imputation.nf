@@ -43,6 +43,7 @@ DIRS = Channel.fromPath(dirs).
 
 process benchmark_imputation{
   label 'r'
+  errorStrategy 'ignore'
   memory params.memory
   time params.time
   maxForks params.njobs
