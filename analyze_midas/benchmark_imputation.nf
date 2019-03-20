@@ -33,7 +33,7 @@ params.queue = 'hbfraser,hns'
 if(params.bin == ''){
   error "You must provide a path to the benchmark_imputation.r executable."
 }
-dirs = file(dirs)
+dirs = file(params.dirs)
 map = file(params.map)
 
 // Read list of dirs
