@@ -45,7 +45,7 @@ process benchmark_imputation{
   label 'r'
   memory params.memory
   time params.time
-  makForks params.njobs
+  maxForks params.njobs
   queue params.queue
   cpus 1
   publishDir params.outdir,
