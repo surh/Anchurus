@@ -26,6 +26,7 @@ params.njobs = 10
 param.outdir = "output/"
 params.memory = "20G"
 params.time = "10:00:00"
+params.queue = 'hbfraser,hns'
 
 
 // Process params
@@ -45,6 +46,7 @@ process benchmark_imputation{
   memory params.memory
   time params.time
   makForks params.njobs
+  queue params.queue
 
   input:
   set file(specdir) from DIRS
