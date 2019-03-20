@@ -108,3 +108,15 @@ process collect_summaries{
     --outfile imputation_summary.txt
   """
 }
+
+// Example nextflow.config
+/*
+process {
+  executor = 'slurm'
+  withLabel: py3 {
+    module = 'fraserconda'
+  }
+  withLabel: r {
+    module = 'R/3.5.1server'
+  }
+}
