@@ -39,7 +39,7 @@ map = file(params.map)
 // Read list of dirs
 DIRS = Channel.fromPath(dirs).
   splitCsv(sep: "\t").
-  map{row -> tuple(file(row[0]))}
+  map{row -> tuple(row[0], file(row[1]))}
 
 process benchmark_imputation{
   label 'r'
@@ -48,14 +48,22 @@ process benchmark_imputation{
   makForks params.njobs
   queue params.queue
   cpus 1
+  publishDir params.outdir,
+    pattern: "allele_freq_histogram.svg",
+    saveAs: {"figures/${spec}.allele_freq_histogram.svg"}
+  publishDir params.outdir,
+    pattern: "observed_vs_imputed.svg",
+    saveAs: {"figures/${spec}.observed_vs_imputed.svg"}
 
   input:
-  set file(specdir) from DIRS
+  set spec, file(specdir) from DIRS
   file map
 
   output:
   file 'benchmark_imputation/imputation_results.txt' into IMPRES
   file 'benchmark_imputation/summary_stats.txt' into IMPSUM
+  file 'benchmark_imputation/data_hidden_geno_files/allele_freq_histogram.svg'
+  file 'benchmark_imputation/data_hidden_geno_files/observed_vs_imputed.svg'
 
   """
   ${params.bin} \
