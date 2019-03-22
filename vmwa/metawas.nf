@@ -79,7 +79,7 @@ process metawas{
 
   input:
   set genome, file(specdir) from DIRS
-  file map_file
+  file map
   file pcs
 
   output:
