@@ -136,3 +136,14 @@ process metawas{
   else
     error "Invalid argument specification"
 }
+
+
+// Example nextflow.config
+/*
+process {
+  executor = 'slurm'
+  withLabel: r {
+    module = 'R/3.5.1server'
+  }
+}
+*/
