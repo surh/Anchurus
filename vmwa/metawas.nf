@@ -1,5 +1,5 @@
 #!/usr/bin/env nextflow
-// Copyright (C) 2018 Sur Herrera Paredes
+// Copyright (C) 2018-2019 Sur Herrera Paredes
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -52,14 +52,6 @@ if(params.pcs != ''){
   pcs = false
 }
 
-
-
-// Read list of genomes
-// reader = genomes_file.newReader()
-// GENOMES = []
-// while(str = reader.readLine()){
-//   GENOMES = GENOMES + [str]
-// }
 // Read list of dirs
 DIRS = Channel.fromPath(dirs).
   splitCsv(sep: "\t").
