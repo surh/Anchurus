@@ -72,8 +72,18 @@ process metawas{
   time params.time
   // module 'R/3.5.1server'
   maxForks params.njobs
-  publishDir params.outdir, mode: 'copy', saveAs: {"${genome}_lmm.results.txt"}
-  // errorStrategy 'ignore'
+  publishDir params.outdir,
+    pattern: "metawas/lmm.results.txt",
+    mode: 'copy',
+    saveAs: {"lmmpcs/${genome}_lmm.results.txt"}
+  publishDir params.outdir,
+    pattern: "metawas/lmm/lmm.assoc.txt",
+    mode: 'copy',
+    saveAs: {"lmm/${genome}_lmm.assoc.txt"}
+  publishDir params.outdir,
+    pattern: "metawas/imputed/imputed.mean.genotype.txt",
+    mode: 'link',
+    saveAs: {"imputed/${genome}_imputed.mean.genotype.txt"}
 
   input:
   set genome, file(specdir) from DIRS
@@ -81,7 +91,10 @@ process metawas{
   file pcs
 
   output:
-  // file "metawas/lmm.results.txt"
+  file "metawas/lmm.results.txt" optional true
+  file "metawas/lmm/lmm.assoc.txt"
+  file "metawas/imputed/imputed.mean.genotype.txt" optional true
+
 
   script:
   if(pcs && impute)
