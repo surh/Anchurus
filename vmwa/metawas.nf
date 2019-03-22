@@ -89,7 +89,7 @@ process metawas{
 
 
   script:
-  if(pcs && impute)
+  if(pcs && params.impute)
     """
     Rscript ${params.bin} \
       $specdir \
@@ -101,7 +101,7 @@ process metawas{
       --pcs $pcs \
       --pval_thres ${params.pval_thres}
     """
-  else if(pcs && impute == false)
+  else if(pcs && params.impute == false)
     """
     Rscript ${params.bin} \
       $specdir \
@@ -112,7 +112,7 @@ process metawas{
       --pcs $pcs \
       --pval_thres ${params.pval_thres}
     """
-  else if(pcs == false && impute)
+  else if(pcs == false && params.impute)
     """
     Rscript ${params.bin} \
       $specdir \
@@ -123,7 +123,7 @@ process metawas{
       --impute \
       --pval_thres ${params.pval_thres}
     """
-  else if(pcs == false && impute == false)
+  else if(pcs == false && params.impute == false)
     """
     Rscript ${params.bin} \
       $specdir \
