@@ -25,7 +25,7 @@ params.dirs = ''
 params.bin = ''
 params.focal_group = ''
 params.outdir = 'metawas'
-params.map_file = 'map.txt'
+params.map = 'map.txt'
 params.pcs = ''
 params.impute = false
 params.time = '5:00:00'
@@ -33,17 +33,21 @@ params.njobs = 20
 
 // Process params
 if(params.dirs == ''){
-  error "No list of directories provided"
+  error "No list of directories provided."
 }
 if(params.bin == ''){
-  error "genome_metawas.r exectuable not provided"
+  error "genome_metawas.r exectuable not provided."
+}
+if(params.focal_group == ''){
+  error "A focal group must be provided."
 }
 
 dirs = file(params.dirs)
-map_file = file(params.map_file)
-pcs_file = file(params.pcs_file)
+map = file(params.map)
 if(params.pcs != ''){
   pcs = file(params.pcs)
+}else{
+  pcs = false
 }
 
 
@@ -60,7 +64,6 @@ DIRS = Channel.fromPath(dirs).
   map{row -> tuple(row[0], file(row[1]))}
 
 
-
 process metawas{
   label 'r'
   cpus 1
@@ -71,15 +74,16 @@ process metawas{
   // errorStrategy 'ignore'
 
   input:
-  val genome from Channel.from(GENOMES)
-  file map_file name 'map.txt'
-  file pcs_file
+  set genome, file(specdir) from Channel.from(DIRS)
+  file map_file
+  file pcs
 
   output:
-  file "metawas/lmm.results.txt"
+  // file "metawas/lmm.results.txt"
 
+  script:
   """
-  Rscript /home/sur/micropopgen/src/HMVAR/inst/scripts/bugwas.r \
+  Rscript ${params.bin} \
     ${params.midas_dir} \
     ${genome}
   """
