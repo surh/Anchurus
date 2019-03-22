@@ -21,30 +21,52 @@
 
 
 // Params
-params.genomes_file = 'genomes.txt'
-params.midas_dir = ''
-params.outdir = 'output'
+params.dirs = ''
+params.bin = ''
+params.focal_group = ''
+params.outdir = 'metawas'
 params.map_file = 'map.txt'
-params.pcs_file = 'pcs.txt'
+params.pcs = ''
+params.impute = false
+params.time = '5:00:00'
+params.njobs = 20
 
 // Process params
-genomes_file = file(params.genomes_file)
+if(params.dirs == ''){
+  error "No list of directories provided"
+}
+if(params.bin == ''){
+  error "genome_metawas.r exectuable not provided"
+}
+
+dirs = file(params.dirs)
 map_file = file(params.map_file)
 pcs_file = file(params.pcs_file)
-
-// Read list of genomes
-reader = genomes_file.newReader()
-GENOMES = []
-while(str = reader.readLine()){
-  GENOMES = GENOMES + [str]
+if(params.pcs != ''){
+  pcs = file(params.pcs)
 }
 
 
+
+// Read list of genomes
+// reader = genomes_file.newReader()
+// GENOMES = []
+// while(str = reader.readLine()){
+//   GENOMES = GENOMES + [str]
+// }
+// Read list of dirs
+DIRS = Channel.fromPath(dirs).
+  splitCsv(sep: "\t").
+  map{row -> tuple(row[0], file(row[1]))}
+
+
+
 process metawas{
+  label 'r'
   cpus 1
-  time '2h'
-  module 'R/3.5.1server'
-  maxForks 10
+  time params.time
+  // module 'R/3.5.1server'
+  maxForks params.njobs
   publishDir params.outdir, mode: 'copy', saveAs: {"${genome}_lmm.results.txt"}
   // errorStrategy 'ignore'
 
