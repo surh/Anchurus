@@ -62,7 +62,7 @@ process metawas{
   label 'r'
   cpus 1
   time params.time
-  // module 'R/3.5.1server'
+  errorStrategy 'ignore'
   maxForks params.njobs
   publishDir params.outdir,
     pattern: "metawas/lmm.results.txt",
