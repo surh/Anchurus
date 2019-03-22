@@ -26,6 +26,8 @@ params.bin = ''
 params.focal_group = ''
 params.outdir = 'metawas'
 params.map = 'map.txt'
+params.gemma = 'gemma'
+params.pval_thres = 1e-6
 params.pcs = ''
 params.impute = false
 params.time = '5:00:00'
@@ -74,7 +76,7 @@ process metawas{
   // errorStrategy 'ignore'
 
   input:
-  set genome, file(specdir) from Channel.from(DIRS)
+  set genome, file(specdir) from DIRS
   file map_file
   file pcs
 
@@ -82,10 +84,50 @@ process metawas{
   // file "metawas/lmm.results.txt"
 
   script:
-  """
-  Rscript ${params.bin} \
-    ${params.midas_dir} \
-    ${genome}
-  """
-
+  if(pcs && impute)
+    """
+    Rscript ${params.bin} \
+      $specdir \
+      ${params.focal_group} \
+      --map_file $map \
+      --outdir metawas \
+      --gemma ${params.gemma} \
+      --impute \
+      --pcs $pcs \
+      --pval_thres ${params.pval_thres}
+    """
+  else if(pcs && impute == false)
+    """
+    Rscript ${params.bin} \
+      $specdir \
+      ${params.focal_group} \
+      --map_file $map \
+      --outdir metawas \
+      --gemma ${params.gemma} \
+      --pcs $pcs \
+      --pval_thres ${params.pval_thres}
+    """
+  else if(pcs == false && impute)
+    """
+    Rscript ${params.bin} \
+      $specdir \
+      ${params.focal_group} \
+      --map_file $map \
+      --outdir metawas \
+      --gemma ${params.gemma} \
+      --impute \
+      --pval_thres ${params.pval_thres}
+    """
+  else if(pcs == false && impute == false)
+    """
+    Rscript ${params.bin} \
+      $specdir \
+      ${params.focal_group} \
+      --map_file $map \
+      --outdir metawas \
+      --gemma ${params.gemma} \
+      --pval_thres ${params.pval_thres}
+    """
+  else
+    error "Invalid argument specification"
 }
