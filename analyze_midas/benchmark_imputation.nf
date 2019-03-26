@@ -63,7 +63,7 @@ process benchmark_imputation{
   output:
   file 'benchmark_imputation/imputation_results.txt' into IMPRES
   file 'benchmark_imputation/summary_stats.txt' into IMPSUM
-  file 'benchmark_imputation/data_hidden_geno_files/allele_freq_histogram.svg'
+  file 'benchmark_imputation/data_hidden_geno_files/allele_freq_histograms.svg'
   file 'benchmark_imputation/data_hidden_geno_files/observed_vs_imputed.svg'
 
   """
