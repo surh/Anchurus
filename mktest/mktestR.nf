@@ -14,7 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-// Script to run mktest on all genomes in a folder
+// Pipeline for mktest via R script on list of genomes and genome DIRS
+// with output from MIDAS merge.
 
 // Paramteres
 params.genomesdir = './'
@@ -31,10 +32,6 @@ params.freq_thres = 0.5
 map = file(params.map)
 
 // Get files
-// GENOMES = Channel.fromPath("${params.genomesdir}/*", type: 'dir')
-// FREQS = Channel.fromPath("${params.genomesdir}/**/snps_freq.txt")
-// DEPTHS = Channel.fromPath("${params.genomesdir}/**/snps_depth.txt")
-// INFOS = Channel.fromPath("${params.genomesdir}/**/snps_info.txt")
 GENOMES = Channel.fromPath(dirs).
   splitCsv(sep: "\t").
   map{row -> tuple(row[0], file(row[1]))}
@@ -51,10 +48,6 @@ process genome_mktest{
   queue params.queue
 
   input:
-  // file genome from GENOMES
-  // file freqs from FREQS
-  // file depths from DEPTHS
-  // file infos from INFOS
   set genome, file(genomedir) from GENOMES
   file "$genomedir/snps_info.txt"
   file "$genomedir/snps_depth.txt"
