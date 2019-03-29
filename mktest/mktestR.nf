@@ -18,7 +18,7 @@
 // with output from MIDAS merge.
 
 // Paramteres
-params.genomesdir = './'
+params.genomes = ''
 params.bin = ''
 params.map = 'map.txt'
 params.focal_group = false
@@ -32,7 +32,7 @@ params.freq_thres = 0.5
 map = file(params.map)
 
 // Get files
-GENOMES = Channel.fromPath(dirs).
+GENOMES = Channel.fromPath(params.genomes).
   splitCsv(sep: "\t").
   map{row -> tuple(row[0], file(row[1]))}
 
