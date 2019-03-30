@@ -37,9 +37,9 @@ GENOMES = Channel.fromPath(genomes).
   splitCsv(sep: "\t").
   map{row -> tuple(row[0],
     file(row[1]),
-    file("$row[1]/snps_info.txt"),
-    file("$row[1]/snps_depth.txt"),
-    file("$row[1]/snps_freq.txt"))}
+    file("${row[1]}/snps_info.txt"),
+    file("${row[1]}/snps_depth.txt"),
+    file("${row[1]}/snps_freq.txt"))}
 
 process genome_mktest{
   label 'r'
