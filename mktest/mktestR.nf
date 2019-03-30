@@ -69,7 +69,7 @@ process genome_mktest{
       $genomedir \
       $map \
       --depth_thres ${params.min_count} \
-      --frep_thres ${params.freq_thres} \
+      --freq_thres ${params.freq_thres} \
       --focal_group ${params.focal_group} \
       --test \
       --outfile mktest.txt
@@ -80,7 +80,7 @@ process genome_mktest{
       $genome \
       $map \
       --depth_thres ${params.min_count} \
-      --frep_thres ${params.freq_thres} \
+      --freq_thres ${params.freq_thres} \
       --test \
       --outfile ${genome}_mktest.txt
     """
