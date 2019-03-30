@@ -30,12 +30,12 @@ params.freq_thres = 0.5
 
 // Process Params
 map = file(params.map)
+genomes = file(params.genomes)
 
 // Get files
-GENOMES = Channel.fromPath(params.genomes).
+GENOMES = Channel.fromPath(genomes).
   splitCsv(sep: "\t").
   map{row -> tuple(row[0], file(row[1]))}
-
 
 process genome_mktest{
   label 'r'
