@@ -35,7 +35,11 @@ genomes = file(params.genomes)
 // Get files
 GENOMES = Channel.fromPath(genomes).
   splitCsv(sep: "\t").
-  map{row -> tuple(row[0], file(row[1]))}
+  map{row -> tuple(row[0],
+    file(row[1]),
+    file("$row[1]/snps_info.txt"),
+    file("$row[1]/snps_depth.txt"),
+    file("$row[1]/snps_freq.txt"))}
 
 process genome_mktest{
   label 'r'
@@ -48,10 +52,11 @@ process genome_mktest{
   queue params.queue
 
   input:
-  set genome, file(genomedir) from GENOMES
-  file "$genomedir/snps_info.txt"
-  file "$genomedir/snps_depth.txt"
-  file "$genomedir/snps_freq.txt"
+  set genome,
+    file(genomedir),
+    file(info),
+    file(depth),
+    file(freq) from GENOMES
   file map
 
   output:
