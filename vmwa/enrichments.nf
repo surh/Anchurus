@@ -29,7 +29,8 @@ FILES = Channel.fromPath(files).
 
 
 process genome_enrichments{
-  publishDir parasms.outdir, mode: 'copy'
+  publishDir params.outdir, mode: 'copy'
+  makForks = 4
 
   input:
   set spec, file(lmm), file(closest), file(annots) from FILES
@@ -42,9 +43,9 @@ process genome_enrichments{
     $lmm \
     $closest \
     $annots \
-    --dist_thres ${param.dist_thres} \
+    --dist_thres ${params.dist_thres} \
     --count_thres ${params.count_thres} \
-    --outdir enrichments/
+    --outdir enrichments/ \
     --prefix $spec
   """
 }
