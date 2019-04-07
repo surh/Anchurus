@@ -39,7 +39,7 @@ process genome_enrichments{
   file "enrichments/*"
 
   """
-  Rscript "~/micropopgen/src/HMVAR/inst/scripts/metawas_enrichments.r" \
+  Rscript ~/micropopgen/src/HMVAR/inst/scripts/metawas_enrichments.r \
     $lmm \
     $closest \
     $annots \
