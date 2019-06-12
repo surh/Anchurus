@@ -84,7 +84,7 @@ process metawas{
 
   output:
   file "metawas/lmm.results.txt" optional true
-  file "metawas/lmm/lmm.assoc.txt"
+  file "metawas/lmm/lmm.assoc.txt" optional true
   file "metawas/imputed/imputed.mean.genotype.txt" optional true
 
 
