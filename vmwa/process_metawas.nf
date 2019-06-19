@@ -43,6 +43,14 @@ while( line = reader.readLine() ) {
 }
 
 
+
+myReader = genomes_file.newReader()
+String line
+while( line = myReader.readLine() ) {
+    println line
+}
+myReader.close()
+
 process manhattans{
   publishDir "${params.outdir}/manhattans/", mode: 'rellink'
   label 'r'
