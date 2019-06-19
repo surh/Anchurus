@@ -44,7 +44,7 @@ while( (line = reader.readLine()) != null ) {
 println "=================================="
 
 process manhattans{
-  publishDir "${params.outdir}/manhattans/", mode: 'rellink'
+  publishDir params.outdir, mode: 'rellink'
   label 'r'
 
   input:
