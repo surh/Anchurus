@@ -54,9 +54,9 @@ process manhattans{
 
   """
   stitch_file.r ${params.scripts}/manhattan_type.r \
-    $metawas_dir
-    'manhattans/'
-    $params.metawas_pval
+    $metawas_dir \
+    'manhattans/' \
+    $params.metawas_pval \
     $params.metawas_suffix
   """
 }
