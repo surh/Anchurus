@@ -35,6 +35,7 @@ genomes_file = file(params.genomes_file)
 reader = genomes_file.newReader()
 GENOMES = []
 while( line = reader.readLine() ) {
+  println line
   GENOMES = GENOMES + [tuple(line,
     file("${metawas_dir}/${line}${params.metawas_suffix}"),
     file("${params.midas_db}/rep_genomes/${line}/genome.features.gz"))]
