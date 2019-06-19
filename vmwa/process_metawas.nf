@@ -15,7 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // Takes output of metawas.nf and performs the next steps. Requires HMVAR,
-//  stitch_file.r in PATH, and the location of HMVAR scripts.
+//  stitch_file.r in PATH, and the location of HMVAR scripts. And bedtools
 
 // parameters
 params.midas_db = ''
