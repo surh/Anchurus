@@ -14,9 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-// Nextflow pipeline that takes a matrix of SNP frequencies, a file
-// with phenotypes and a matrix of covariates and performs association
-// for all SNPs and testing via permutation.
+// Script that runfs MKtest.py on a set of folders.
 
 // Script to run mktest on all genomes in a folder
 
