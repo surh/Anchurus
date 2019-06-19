@@ -63,7 +63,7 @@ process manhattans{
 
 // Copied from micropopgen snps_to_genes.nf
 process snps_to_genes{
-  publishDir "params.outdir/closest/", mode: 'rellink', pattern: "*.closest"
+  publishDir "${params.outdir}/closest/", mode: 'rellink', pattern: "*.closest"
   maxForks 20
 
   input:
