@@ -34,7 +34,7 @@ genomes_file = file(params.genomes_file)
  // Read genomes file
 reader = genomes_file.newReader()
 GENOMES = []
-String line
+// String line
 while( line = reader.readLine() ) {
   println line
   GENOMES = GENOMES + [tuple(line,
