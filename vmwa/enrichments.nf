@@ -31,7 +31,7 @@ FILES = Channel.fromPath(files).
 
 
 process genome_enrichments{
-  publishDir params.outdir, mode: 'copy'
+  publishDir params.outdir, mode: 'rellink'
   makForks = 20
   module 'R/3.5.1server'
 
