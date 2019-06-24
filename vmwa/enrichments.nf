@@ -44,11 +44,11 @@ process genome_enrichments{
   """
   Rscript ~/micropopgen/src/HMVAR/inst/bin/annotation_enrichments.r \
     $lmm \
+    enrichments/ 
     --closest $closest \
     --annotations $annots \
     --dist_thres ${params.dist_thres} \
     --count_thres ${params.count_thres} \
-    --outdir enrichments/ 
     --annot_column ${params.annot_column}
     --score_column ${params.score_column}
   """
