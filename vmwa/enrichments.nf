@@ -17,7 +17,9 @@
 params.files = ''
 params.dist_thres = 500
 params.count_thres = 3
-params.outdir = 'enrichments/'
+params.outdir = 'enrichments/''
+params.annot_column = 'GO_terms'
+params.score_column = 'p_lrt.lmmpcs'
 
 // Process
 files = file(params.files)
@@ -40,13 +42,14 @@ process genome_enrichments{
   file "enrichments/*"
 
   """
-  Rscript ~/micropopgen/src/HMVAR/inst/scripts/metawas_enrichments.r \
+  Rscript ~/micropopgen/src/HMVAR/inst/bin/annotation_enrichments.r \
     $lmm \
-    $closest \
-    $annots \
+    --closest $closest \
+    --annotations $annots \
     --dist_thres ${params.dist_thres} \
     --count_thres ${params.count_thres} \
-    --outdir enrichments/ \
-    --prefix $spec
+    --outdir enrichments/ 
+    --annot_column ${params.annot_column}
+    --score_column ${params.score_column}
   """
 }
