@@ -17,7 +17,7 @@
 params.files = ''
 params.dist_thres = 500
 params.count_thres = 3
-params.outdir = 'enrichments/''
+params.outdir = 'enrichments/'
 params.annot_column = 'GO_terms'
 params.score_column = 'p_lrt.lmmpcs'
 
