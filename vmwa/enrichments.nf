@@ -27,24 +27,24 @@ files = file(params.files)
 // Read list of dirs
 FILES = Channel.fromPath(files).
   splitCsv(sep: "\t").
-  map{row -> tuple(row[0], file(row[1]), file(row[2]), file(row[3]))}
+  map{row -> tuple(row[0], file(row[1]), file(row[2]), file(row[3]))}.
+  into{FILES_GO; FILES_KO; FILES_OG}
 
 
 process go_enrichments{
+  label 'r'
   publishDir "${params.outdir}/GO/", mode: 'rellink'
-  makForks = 20
-  module 'R/3.5.1server'
 
   input:
-  set spec, file(lmm), file(closest), file(annots) from FILES
+  set spec, file(lmm), file(closest), file(annots) from FILES_GO
 
   output:
-  file "enrichments/*"
+  file "*.enrichments.txt"
 
   """
   Rscript ~/micropopgen/src/HMVAR/inst/bin/annotation_enrichments.r \
     $lmm \
-    enrichments/ \
+    ./ \
     --suffix ${params.suffix} \
     --closest $closest \
     --annotations $annots \
@@ -57,3 +57,68 @@ process go_enrichments{
     --method gsea
   """
 }
+
+process ko_enrichments{
+  label 'r'
+  publishDir "${params.outdir}/KO/", mode: 'rellink'
+
+  input:
+  set spec, file(lmm), file(closest), file(annots) from FILES_KO
+
+  output:
+  file "*.enrichments.txt"
+
+  """
+  Rscript ~/micropopgen/src/HMVAR/inst/bin/annotation_enrichments.r \
+    $lmm \
+    ./ \
+    --suffix ${params.suffix} \
+    --closest $closest \
+    --annotations $annots \
+    --dist_thres ${params.dist_thres} \
+    --min_size ${params.count_thres} \
+    --annot_column KEGG_KOs \
+    --score_column ${params.score_column} \
+    --gene_score min \
+    --alternative less \
+    --method gsea
+  """
+}
+
+process og_enrichments{
+  label 'r'
+  publishDir "${params.outdir}/OG/", mode: 'rellink'
+
+  input:
+  set spec, file(lmm), file(closest), file(annots) from FILES_OG
+
+  output:
+  file "*.enrichments.txt"
+
+  """
+  Rscript ~/micropopgen/src/HMVAR/inst/bin/annotation_enrichments.r \
+    $lmm \
+    ./ \
+    --suffix ${params.suffix} \
+    --closest $closest \
+    --annotations $annots \
+    --dist_thres ${params.dist_thres} \
+    --min_size ${params.count_thres} \
+    --annot_column OGs \
+    --score_column ${params.score_column} \
+    --gene_score min \
+    --alternative less \
+    --method gsea
+  """
+}
+
+// example nextflow.config
+/*
+process {
+  executor = slurm
+  maxForks = 40
+  label: r{
+    module = 'R/3.5.1server'
+  }
+}
+*/
