@@ -18,7 +18,7 @@ params.files = ''
 params.dist_thres = 500
 params.count_thres = 3
 params.outdir = 'enrichments/'
-params.annot_column = 'GO_terms'
+params.suffix = '_lmm.results.txt'
 params.score_column = 'p_lrt.lmmpcs'
 
 // Process
@@ -30,8 +30,8 @@ FILES = Channel.fromPath(files).
   map{row -> tuple(row[0], file(row[1]), file(row[2]), file(row[3]))}
 
 
-process genome_enrichments{
-  publishDir params.outdir, mode: 'rellink'
+process go_enrichments{
+  publishDir "${params.outdir}/GO/", mode: 'rellink'
   makForks = 20
   module 'R/3.5.1server'
 
@@ -44,12 +44,16 @@ process genome_enrichments{
   """
   Rscript ~/micropopgen/src/HMVAR/inst/bin/annotation_enrichments.r \
     $lmm \
-    enrichments/ 
+    enrichments/
+    --suffix ${params.suffix}
     --closest $closest \
     --annotations $annots \
     --dist_thres ${params.dist_thres} \
-    --count_thres ${params.count_thres} \
-    --annot_column ${params.annot_column}
-    --score_column ${params.score_column}
+    --min_size ${params.count_thres} \
+    --annot_column ${params.annot_column} \
+    --score_column ${params.score_column} \
+    --gene_score min \
+    --alternative less \
+    --method gsea
   """
 }
