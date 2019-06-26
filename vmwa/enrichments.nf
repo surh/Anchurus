@@ -18,6 +18,8 @@ params.files = ''
 params.dist_thres = 500
 params.count_thres = 3
 params.outdir = 'enrichments/'
+params.suffix = '_lmm.results.txt'
+params.score_column = 'p_lrt.lmmpcs'
 
 // Process
 files = file(params.files)
@@ -25,27 +27,98 @@ files = file(params.files)
 // Read list of dirs
 FILES = Channel.fromPath(files).
   splitCsv(sep: "\t").
-  map{row -> tuple(row[0], file(row[1]), file(row[2]), file(row[3]))}
+  map{row -> tuple(row[0], file(row[1]), file(row[2]), file(row[3]))}.
+  into{FILES_GO; FILES_KO; FILES_OG}
 
 
-process genome_enrichments{
-  publishDir params.outdir, mode: 'copy'
-  makForks = 4
+process go_enrichments{
+  label 'r'
+  publishDir "${params.outdir}/GO/", mode: 'rellink'
 
   input:
-  set spec, file(lmm), file(closest), file(annots) from FILES
+  set spec, file(lmm), file(closest), file(annots) from FILES_GO
 
   output:
-  file "enrichments/*"
+  file "*.enrichments.txt"
 
   """
-  Rscript ~/micropopgen/src/HMVAR/inst/scripts/metawas_enrichments.r \
+  Rscript ~/micropopgen/src/HMVAR/inst/bin/annotation_enrichments.r \
     $lmm \
-    $closest \
-    $annots \
+    ./ \
+    --suffix ${params.suffix} \
+    --closest $closest \
+    --annotations $annots \
     --dist_thres ${params.dist_thres} \
-    --count_thres ${params.count_thres} \
-    --outdir enrichments/ \
-    --prefix $spec
+    --min_size ${params.count_thres} \
+    --annot_column GO_terms \
+    --score_column ${params.score_column} \
+    --gene_score min \
+    --alternative less \
+    --method gsea
   """
 }
+
+process ko_enrichments{
+  label 'r'
+  publishDir "${params.outdir}/KO/", mode: 'rellink'
+
+  input:
+  set spec, file(lmm), file(closest), file(annots) from FILES_KO
+
+  output:
+  file "*.enrichments.txt"
+
+  """
+  Rscript ~/micropopgen/src/HMVAR/inst/bin/annotation_enrichments.r \
+    $lmm \
+    ./ \
+    --suffix ${params.suffix} \
+    --closest $closest \
+    --annotations $annots \
+    --dist_thres ${params.dist_thres} \
+    --min_size ${params.count_thres} \
+    --annot_column KEGG_KOs \
+    --score_column ${params.score_column} \
+    --gene_score min \
+    --alternative less \
+    --method gsea
+  """
+}
+
+process og_enrichments{
+  label 'r'
+  publishDir "${params.outdir}/OG/", mode: 'rellink'
+
+  input:
+  set spec, file(lmm), file(closest), file(annots) from FILES_OG
+
+  output:
+  file "*.enrichments.txt"
+
+  """
+  Rscript ~/micropopgen/src/HMVAR/inst/bin/annotation_enrichments.r \
+    $lmm \
+    ./ \
+    --suffix ${params.suffix} \
+    --closest $closest \
+    --annotations $annots \
+    --dist_thres ${params.dist_thres} \
+    --min_size ${params.count_thres} \
+    --annot_column OGs \
+    --score_column ${params.score_column} \
+    --gene_score min \
+    --alternative less \
+    --method gsea
+  """
+}
+
+// example nextflow.config
+/*
+process {
+  executor = "slurm"
+  maxForks = 40
+  label: r{
+    module = 'R/3.5.1server'
+  }
+}
+*/
