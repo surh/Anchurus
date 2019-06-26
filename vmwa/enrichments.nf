@@ -44,8 +44,8 @@ process go_enrichments{
   """
   Rscript ~/micropopgen/src/HMVAR/inst/bin/annotation_enrichments.r \
     $lmm \
-    enrichments/
-    --suffix ${params.suffix}
+    enrichments/ \
+    --suffix ${params.suffix} \
     --closest $closest \
     --annotations $annots \
     --dist_thres ${params.dist_thres} \
