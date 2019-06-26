@@ -115,7 +115,7 @@ process og_enrichments{
 // example nextflow.config
 /*
 process {
-  executor = slurm
+  executor = "slurm"
   maxForks = 40
   label: r{
     module = 'R/3.5.1server'
