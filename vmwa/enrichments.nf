@@ -50,7 +50,7 @@ process go_enrichments{
     --annotations $annots \
     --dist_thres ${params.dist_thres} \
     --min_size ${params.count_thres} \
-    --annot_column ${params.annot_column} \
+    --annot_column GO_terms \
     --score_column ${params.score_column} \
     --gene_score min \
     --alternative less \
