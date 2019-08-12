@@ -205,8 +205,8 @@ if __name__ == "__main__":
     for sample in samples:
         print("== Processing sample {}".format(sample))
         sample_file_base = args.indir + "/" + sample
-        read1 = sample_file_base + "_read1.fastq.bz2"
-        read2 = sample_file_base + "_read2.fastq.bz2"
+        read1 = sample_file_base + "_read1.fastq.gz"
+        read2 = sample_file_base + "_read2.fastq.gz"
 
         # We need to check if the read files exist
         if not os.path.isfile(read1):
