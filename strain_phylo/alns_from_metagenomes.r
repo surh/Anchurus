@@ -59,11 +59,15 @@ for(midas_dir in args$midas_dir){
   
   if(ncol(Dat$midas$freq) > 2){
     # At least two samples for analysis
-    Res <- Dat$info %>%
+    
+    # For each gene, extract MSA
+    Res <- Dat$midas$info %>%
       # head(1000) %>%
       split(.$gene_id) %>%
       map(function(i, freq, depth, map, depth_thres, freq_thres, min_cov,
                    genome_feats, missing_as, genome_fasta){
+        
+        # Get gene information
         genome_feats <- genome_feats %>%
           filter(gene_id == unique(i$gene_id))
         gene <- genome_feats$gene_id
@@ -72,6 +76,7 @@ for(midas_dir in args$midas_dir){
         gene_ref_id <- genome_feats$scaffold_id
         gene_strand <- genome_feats$strand
         
+        # Get SNVs from gene
         f <- Dat$freq %>% dplyr::filter(site_id %in% i$site_id)
         d <- Dat$depth %>% dplyr::filter(site_id %in% i$site_id)
         
@@ -121,10 +126,10 @@ for(midas_dir in args$midas_dir){
         # seqinr::write.fasta(aln$seq, aln$nam, file.out = outfile)
         
         return(list(Coverage = gene_cov, aln=aln$seq))
-      }, freq=Dat$freq, depth=Dat$depth, map=map,
-      depth_thres=depth_thres, freq_thres=freq_thres, min_cov=min_cov,
-      genome_feats=genome_feats, missing_as=missing_as,
-      genome_fasta=genome_fasta)
+      }, freq=Dat$midas$freq, depth=Dat$midas$depth, map=map,
+      depth_thres=args$depth_thres, freq_thres=args$freq_thres, min_cov=args$min_cov,
+      genome_feats=Dat$genome_feats, missing_as=args$missing_as,
+      genome_fasta=Dat$genome_fasta)
     
   }else{
     Res <- NULL
