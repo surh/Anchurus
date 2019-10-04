@@ -45,9 +45,6 @@ map <- read_tsv(args$map_file,
                 col_types = cols(.default = col_character())) %>%
   select(sample = ID, Group)
 
-
-map
-
 for(midas_dir in args$midas_dir){
   midas_dir <- args$midas_dir[1]
   spec <- basename(midas_dir)
@@ -62,7 +59,8 @@ for(midas_dir in args$midas_dir){
     
     # For each gene, extract MSA
     Res <- Dat$midas$info %>%
-      # head(1000) %>%
+      head(30000) %>%  ##!! JUST FOR TESTING
+      # head(1000) %>%  ##!! JUST FOR TESTING
       split(.$gene_id) %>%
       map(function(i, freq, depth, map, depth_thres, freq_thres, min_cov,
                    genome_feats, missing_as, genome_fasta){
@@ -77,20 +75,24 @@ for(midas_dir in args$midas_dir){
         gene_strand <- genome_feats$strand
         
         # Get SNVs from gene
-        f <- Dat$freq %>% dplyr::filter(site_id %in% i$site_id)
-        d <- Dat$depth %>% dplyr::filter(site_id %in% i$site_id)
+        f <- freq %>% dplyr::filter(site_id %in% i$site_id)
+        d <- depth %>% dplyr::filter(site_id %in% i$site_id)
         
         # Calculate coverage and discard samples with uncovered gene
-        gene_cov <- colSums((d %>% select(-site_id)) > depth_thres) / nrow(i)
+        # gene_cov if the proportion of SNVs in a gene covered per sample
+        gene_cov <- colSums((d %>% select(-site_id)) >= depth_thres) / nrow(i)
         if(sum(gene_cov >= min_cov) < min_cov*length(gene_cov)){
+          # If less than min_cov of genes have gene_cog >= min_cov, then discard that gene.
           gene_cov <- tibble(gene = gene, sample = names(gene_cov), coverage = gene_cov)
           return(list(Coverage = gene_cov, aln = NULL))
         }
+        
+        # Select samples that have at least min_cov coverage of gene
         d <- d %>% select(site_id, names(which(gene_cov >= min_cov)))
         f <- f %>% select(site_id, names(which(gene_cov >= min_cov)))
         gene_cov <- tibble(gene = gene, sample = names(gene_cov), coverage = gene_cov)
         
-        # Match
+        # Match freq and depth
         d <- d %>% tidyr::gather(key = "sample", value = "depth",
                                  -site_id)
         f <- f %>% tidyr::gather(key = "sample", value = "freq",
@@ -102,11 +104,7 @@ for(midas_dir in args$midas_dir){
         dat <- dat %>% dplyr::left_join(map, by = "sample")
         dat <- dat %>% dplyr::left_join(i, by = "site_id")
         
-        # p1 <- ggplot(dat, aes(x = Group, y = freq)) +
-        #   facet_wrap(~site_id, scales = "free_y") +
-        #   geom_point(position = position_jitter(width = 0.3))
-        # p1
-        
+        # Extract sequence fragment
         gene_seq <- HMVAR:::get_sequence_fragment(genome_fasta,
                                                   ref_id = gene_ref_id,
                                                   start = gene_start,
@@ -120,10 +118,6 @@ for(midas_dir in args$midas_dir){
                             missing_as = missing_as,
                             strand = gene_strand,
                             keep_last_codon = TRUE)
-        # outfile <- paste0(gene, ".aln")
-        # outfile <- file.path(outdir, outfile)
-        # seqinr::translate(aln$seq$SRS143876)
-        # seqinr::write.fasta(aln$seq, aln$nam, file.out = outfile)
         
         return(list(Coverage = gene_cov, aln=aln$seq))
       }, freq=Dat$midas$freq, depth=Dat$midas$depth, map=map,
@@ -131,43 +125,35 @@ for(midas_dir in args$midas_dir){
       genome_feats=Dat$genome_feats, missing_as=args$missing_as,
       genome_fasta=Dat$genome_fasta)
     
+    # Produce and write coverage table
+    cov <- Res %>%
+      map_dfr(~ .$Coverage) %>%
+      spread(sample, coverage)
+    filename <- file.path(args$outdir, paste0(spec, ".gene_coverage.txt"))
+    readr::write_tsv(cov, path = filename)
+    
+    # Select genes covered at least min_cov in at least min_cov of the samples
+    genes <- cov$gene
+    cov <- cov %>%
+      select(-gene) %>%
+      as.matrix
+    row.names(cov) <- genes
+    cov <- cov[ rowSums(cov >= args$min_cov) >= (ncol(cov) * args$min_cov), ]
+    cov <- cov[ , colSums(cov >= args$min_cov) >= (nrow(cov) * args$min_cov) ]
+    
+    # Write selected alignments
+    n_seqs <- row.names(cov) %>%
+      purrr::map(function(gene, Res, samples, outdir){
+        aln <- Res[[gene]]$aln
+        aln <- aln[intersect(names(aln), samples)]
+        filename <- file.path(outdir, paste0(gene, ".aln.fasta"))
+        seqinr::write.fasta(sequences = aln, names = names(aln), file.out = filename)
+        return(length(aln))
+      }, Res = Res, samples = colnames(cov), outdir = args$outdir)
+    
   }else{
+    cat("No samples for", spec, "\n")
     Res <- NULL
   }
-  
-  
 }
 
-
-# 
-# cov <- Res %>%
-#   map_dfr(~ .$Coverage) %>%
-#   spread(sample, coverage)
-# genes <- cov$gene
-# cov <- cov %>%
-#   select(-gene) %>%
-#   as.matrix
-# row.names(cov) <- genes
-# cov <- cov[ rowSums(cov >= min_cov) >= (ncol(cov) * min_cov), ]
-# cov <- cov[ , colSums(cov >= min_cov) >= (nrow(cov) * min_cov) ]
-# 
-# map %>%
-#   filter(sample %in% colnames(cov)) %>%
-#   select(Group) %>%
-#   table
-# 
-# 
-# Alns <- Res[row.names(cov)] %>%
-#   map(function(l, samples){
-#     aln <- l$aln
-#     aln <- aln[intersect(names(aln), samples)]
-#     return(aln)
-#   }, samples = colnames(cov))
-# 
-# dir.create(outdir)
-# names(Alns) %>%
-#   map(function(gene, Alns, outdir="./"){
-#     # cat(gene, "\n")
-#     outfile <- paste0(gene, ".aln")
-#     outfile <- file.path(outdir, outfile)
-#     
