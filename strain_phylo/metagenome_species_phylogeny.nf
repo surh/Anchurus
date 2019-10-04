@@ -23,6 +23,7 @@ params.genomes_dir = ""
 params.map_file = "map.txt"
 params.min_cov = 0.8
 params.outdir = "output/"
+params.fasttree_threads = 8
 
 
 map = file(params.map_file)
@@ -76,9 +77,10 @@ process concatenate_alignments{
 
 process filter_alignment{
   label 'py3'
+  publishDir "${params.outdir}/filtered_alns/", mode: 'rellink'
 
   input:
-  set spec, file(cat_aln) from cat_alns
+  set spec, file(cat_aln) from CAT_ALNS
 
   output:
   set spec, file("${spec}.concatenated_filtered.aln.fasta") into FILTERED_ALNS
@@ -87,5 +89,25 @@ process filter_alignment{
   ${workflow.projectDir}/filter_alignment.py \
     --input $cat_aln \
     --output ${spec}.concatenated_filtered.aln.fasta
+  """
+}
+
+process filter_alignment{
+  label 'fasttree'
+  cpus params.fasttree_threads
+  publishDir "${params.outdir}/trees/", mode: 'rellink'
+
+  input:
+  set spec, file(aln) from FILTERED_ALNS
+
+  output:
+  set spec, file("${spec}.tre") into TREES
+
+
+  """
+  export OMP_NUM_THREADS=${params.fasttree_threads}
+  FastTree \
+    -nt $aln \
+    > ${spec}.tre
   """
 }
