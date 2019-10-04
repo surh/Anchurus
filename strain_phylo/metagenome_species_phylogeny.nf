@@ -61,12 +61,16 @@ process alns_from_metagenomes{
   """
 }
 
-process concat{
+process concatenate_alns{
+  label 'py3'
+
   input:
-  set spec, file("test/") from CORE_ALNS
+  set spec, file("alns/") from CORE_ALNS
 
   """
-  ll test/
+  ${workflow.projectDir}/concatenate_alignments.py \
+    --indir alns \
+    --output ${spec}.concatenated.aln.fasta
   """
 }
 
