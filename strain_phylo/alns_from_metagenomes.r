@@ -227,6 +227,10 @@ for(midas_dir in args$midas_dir){
 
     row.names(cov) <- genes
     cov <- cov[ rowSums(cov >= args$min_cov) >= (ncol(cov) * args$min_cov), drop = FALSE ]
+    cat("=============\n")
+    cat("dim(cov)", dim(cov), "\n")
+    cat(class(cov), "\n")
+    cat("=============\n\n")
     cov <- cov[ , colSums(cov >= args$min_cov) >= (nrow(cov) * args$min_cov), drop = FALSE ]
 
     # Write selected alignments
