@@ -45,7 +45,7 @@ process alns_from_metagenomes{
 
   output:
   file "output/*.gene_coverage.txt" into COVS
-  file "output/*.aln.fasta" optional true into SINGLE_ALNS
+  set "$midas_dir", file("output/*.aln.fasta") optional true into CORE_ALNS
 
   """
   ${workflow.projectDir}/alns_from_metagenomes.r \
@@ -54,5 +54,38 @@ process alns_from_metagenomes{
     --min_cov ${params.min_cov} \
     --map_file $map \
     --outdir output/
+  """
+}
+
+process concatenate_alignments{
+  label 'py3'
+  publishDir "${params.outdir}/cat_alns/", mode: 'rellink'
+
+  input:
+  set spec, file("alns/*.aln.fasta") from CORE_ALNS
+
+  output:
+  set spec, file("${spec}.concatenated.aln.fasta") into CAT_ALNS
+
+  """
+  ${workflow.projectDir}/concatenate_alignments.py \
+    --indir alns \
+    --output ${spec}.concatenated.aln.fasta
+  """
+}
+
+process filter_alignment{
+  label 'py3'
+
+  input:
+  set spec, file(cat_aln) from cat_alns
+
+  output:
+  set spec, file("${spec}.concatenated_filtered.aln.fasta") into FILTERED_ALNS
+
+  """
+  ${workflow.projectDir}/filter_alignment.py \
+    --input $cat_aln \
+    --output ${spec}.concatenated_filtered.aln.fasta
   """
 }
