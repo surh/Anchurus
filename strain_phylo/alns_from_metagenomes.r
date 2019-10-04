@@ -1,3 +1,78 @@
+#!/usr/bin/env Rscript
+
+# (C) Copyright 2019 Sur Herrera Paredes
+# 
+# This file is part of HMVAR.
+# 
+# HMVAR is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# HMVAR is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with HMVAR.  If not, see <http://www.gnu.org/licenses/>.
+
+library(argparser)
+
+#################### FUNCTIONS ##################
+process_arguments <- function(){
+  p <- arg_parser(paste("produce alignments from metagenomes"))
+  
+  # Positional arguments
+  p <- add_argument(p, "midas_dir",
+                    help = paste("Directory with merged MIDAS SNVs."),
+                    type = "character")
+  
+  p <- add_argument(p, "genomes_dir",
+                    type = "character",
+                    help = paste("Path to directory containing genome directories.",
+                                 "Must have one subdirectory per species, and the",
+                                 "species name must match the midas_dir species name."))
+  
+  
+  # Optional arguments
+  p <- add_argument(p, "--min_cov",
+                     help = paste("Minumum coverage required. Must be a proportion",
+                                  "between 0 and 1. For any given samples only genes",
+                                  "that have at least <min_cov> of their snps sequenced",
+                                  "are considered. Further, only genes that are detected",
+                                  "at that coverage in at least <min_cov> of the samples",
+                                  "are considered. Finally, only samples when at least",
+                                  "<min_cov> of the genes are covered above the threshold",
+                                  "are kept."),
+                     type = "numeric",
+                     default = 0.8)
+  p <- add_argument(p, "--map_file",
+                    help = paste("Name of file with map. Must have ID and Group columns"),
+                    default = "map.txt",
+                    type = "character")
+  p <- add_argument(p, "--outdir",
+                    help = paste("Directory for output"),
+                    default = "output/",
+                    type = "character")
+                     
+  # Read arguments
+  cat("Processing arguments...\n")
+  args <- parse_args(p)
+  
+  # Process arguments
+  if(args$min_cov < 0 || args$min_cov > 1){
+    stop("ERROR: --min_cov must be in [0,1]", call. = TRUE)
+  }
+  # Adding parameters that user cannot modify.
+  args$depth_thres <- 1
+  args$freq_thres <- 1
+  args$keep_last_codon <- TRUE
+  args$missing_as <- "gap"
+  
+  return(args)
+}
+
 # Read data
 read_data <- function(spec, midas_dir, genomes_dir){
   genome_fasta <- seqinr::read.fasta(file.path(genomes_dir, spec, 'genome.fna.gz'))
@@ -20,14 +95,9 @@ read_data <- function(spec, midas_dir, genomes_dir){
               genome_feats = genome_feats,
               midas = Dat))
 }
+##################################
 
-
-setwd("/home/sur/micropopgen/exp/2019/today")
-library(tidyverse)
-library(HMVAR)
-
-
-
+args <- process_arguments()
 args <- list(depth_thres = 1,
              freq_thres =  0.5,
              min_cov =  0.8,
@@ -38,15 +108,25 @@ args <- list(depth_thres = 1,
              midas_dir = "midas/merged.snps/Veillonella_parvula_57794/",
              missing_as = 'gap')
 
+# Load rest of libraries
+library(tidyverse)
+library(HMVAR)
+library(seqinr)
+
+# Create ouput dir
 if(!dir.exists(args$outdir)){
   dir.create(args$outdir)
 }
+
+# Read map
 map <- read_tsv(args$map_file,
                 col_types = cols(.default = col_character())) %>%
   select(sample = ID, Group)
 
+# Process midas_dir
+# Eventually a directory of midas dirs can be passed.
 for(midas_dir in args$midas_dir){
-  midas_dir <- args$midas_dir[1]
+  # midas_dir <- args$midas_dir[1]
   spec <- basename(midas_dir)
   cat(spec, "\n")
   
