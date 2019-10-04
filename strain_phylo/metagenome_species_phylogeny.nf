@@ -46,7 +46,7 @@ process alns_from_metagenomes{
   file map
 
   output:
-  file "output/${spec}.gene_coverage.txt" into COVS
+  file "output/${spec}.gene_coverage.txt" optional true into COVS
   set spec, file("output/*aln.fasta") optional true into CORE_ALNS
 
   script:
