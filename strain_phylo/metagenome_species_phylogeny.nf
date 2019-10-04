@@ -62,7 +62,7 @@ process alns_from_metagenomes{
 }
 
 process concatenate_alns{
-  label 'py3'
+  // label 'py3'
 
   input:
   set spec, file("test/") from CORE_ALNS
