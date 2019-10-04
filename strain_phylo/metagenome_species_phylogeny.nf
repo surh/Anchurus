@@ -62,13 +62,15 @@ process alns_from_metagenomes{
 }
 
 process concatenate_alns{
-  // label 'py3'
+  label 'py3'
 
   input:
-  set spec, file("test/") from CORE_ALNS
+  set spec, file("alns/") from CORE_ALNS
 
   """
-  ls -la test/
+  ${workflow.projectDir}/concatenate_alignments.py \
+    --indir alns \
+    --output ${spec}.concatenated.aln.fasta
   """
 }
 
@@ -133,12 +135,16 @@ process{
   maxForks = 100
   withLabel: 'r'{
     module = 'R/3.5.1server'
+    memory = '5G'
+    time  = '12h'
   }
   withLabel: 'py3'{
+    module = 'anaconda'
     conda = '/opt/modules/pkgs/anaconda/3.6/envs/fraserconda'
   }
   withLabel: 'fasttree'{
     module = 'FastTree/2.1.10'
+    time = '12h'
   }
 }
 executor{
