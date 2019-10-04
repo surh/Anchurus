@@ -95,8 +95,12 @@ def filter_alignment_file(infile, outfile, gap_prop=0.99,
     filtered = filter_alignment(aln=aln, gap_prop=gap_prop,
                                 remove_singletons=remove_singletons,
                                 alphabet=alphabet)
-    print("\twriting")
-    AlignIO.write(filtered, outfile, output_format)
+
+    if(filtered.get_alignment_length() < 1):
+        print("\tNo positions remained after filtering.")
+    else:
+        print("\twriting")
+        AlignIO.write(filtered, outfile, output_format)
 
     return(outfile)
 
