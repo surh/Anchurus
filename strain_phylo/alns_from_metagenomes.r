@@ -139,10 +139,10 @@ for(midas_dir in args$midas_dir){
     # At least two samples for analysis
     
     # For each gene, extract MSA
-    cat("\nExtracting MSAs...\n")
+    cat("\tExtracting MSAs...\n")
     Res <- Dat$midas$info %>%
       # head(30000) %>%  ##!! JUST FOR TESTING
-      # head(1000) %>%  ##!! JUST FOR TESTING
+      # head(10000) %>%  ##!! JUST FOR TESTING
       split(.$gene_id) %>%
       map(function(i, freq, depth, map, depth_thres, freq_thres, min_cov,
                    genome_feats, missing_as, genome_fasta){
