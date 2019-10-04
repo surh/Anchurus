@@ -68,9 +68,7 @@ process concatenate_alns{
   set spec, file("test/") from CORE_ALNS
 
   """
-  ${workflow.projectDir}/concatenate_alignments.py \
-    --indir alns \
-    --output ${spec}.concatenated.aln.fasta
+  ls -la test/
   """
 }
 
