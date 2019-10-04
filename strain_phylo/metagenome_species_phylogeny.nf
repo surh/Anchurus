@@ -92,7 +92,7 @@ process filter_alignment{
   """
 }
 
-process filter_alignment{
+process fasttree{
   label 'fasttree'
   cpus params.fasttree_threads
   publishDir "${params.outdir}/trees/", mode: 'rellink'
