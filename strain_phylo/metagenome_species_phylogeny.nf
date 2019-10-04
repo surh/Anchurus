@@ -111,3 +111,25 @@ process filter_alignment{
     > ${spec}.tre
   """
 }
+
+
+// Example nextflow config
+/*
+process{
+  maxForks = 100
+  withLabel: 'r'{
+    module = 'R/3.5.1server'
+  }
+  withLabel: 'py3'{
+    conda = '/opt/modules/pkgs/anaconda/3.6/envs/fraserconda'
+  }
+  withLabel: 'fasttree'{
+    module = 'FastTree/2.1.10'
+  }
+}
+executor{
+  name = 'slurm'
+  submitRateLimit = '1 sec'
+  queueSize = 500
+}
+*/
