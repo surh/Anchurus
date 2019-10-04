@@ -98,15 +98,15 @@ read_data <- function(spec, midas_dir, genomes_dir){
 ##################################
 
 args <- process_arguments()
-args <- list(depth_thres = 1,
-             freq_thres =  0.5,
-             min_cov =  0.8,
-             keep_last_codon = TRUE,
-             outdir = 'output/',
-             genomes_dir = "/home/sur/micropopgen/data/genomes/midas_db_v1.2/hmp.subsite/",
-             map_file = "midas/map.txt",
-             midas_dir = "midas/merged.snps/Veillonella_parvula_57794/",
-             missing_as = 'gap')
+# args <- list(depth_thres = 1,
+#              freq_thres =  0.5,
+#              min_cov =  0.8,
+#              keep_last_codon = TRUE,
+#              outdir = 'output/',
+#              genomes_dir = "/home/sur/micropopgen/data/genomes/midas_db_v1.2/hmp.subsite/",
+#              map_file = "midas/map.txt",
+#              midas_dir = "midas/merged.snps/Veillonella_parvula_57794/",
+#              missing_as = 'gap')
 
 # Load rest of libraries
 library(tidyverse)
@@ -131,6 +131,7 @@ for(midas_dir in args$midas_dir){
   cat(spec, "\n")
   
   # Read data
+  cat("\tReading data...\n")
   Dat <- read_data(spec = spec, midas_dir = midas_dir, genomes_dir = args$genomes_dir)
   # map %>% filter(sample %in% colnames(Dat$midas$freq)) %>% select(Group) %>% table
   
@@ -138,8 +139,9 @@ for(midas_dir in args$midas_dir){
     # At least two samples for analysis
     
     # For each gene, extract MSA
+    cat("\nExtracting MSAs...\n")
     Res <- Dat$midas$info %>%
-      head(30000) %>%  ##!! JUST FOR TESTING
+      # head(30000) %>%  ##!! JUST FOR TESTING
       # head(1000) %>%  ##!! JUST FOR TESTING
       split(.$gene_id) %>%
       map(function(i, freq, depth, map, depth_thres, freq_thres, min_cov,
@@ -206,6 +208,7 @@ for(midas_dir in args$midas_dir){
       genome_fasta=Dat$genome_fasta)
     
     # Produce and write coverage table
+    cat("\tProducing gene coverage table...\n")
     cov <- Res %>%
       map_dfr(~ .$Coverage) %>%
       spread(sample, coverage)
@@ -213,6 +216,7 @@ for(midas_dir in args$midas_dir){
     readr::write_tsv(cov, path = filename)
     
     # Select genes covered at least min_cov in at least min_cov of the samples
+    cat("\tSelecting genes...\n")
     genes <- cov$gene
     cov <- cov %>%
       select(-gene) %>%
@@ -222,6 +226,7 @@ for(midas_dir in args$midas_dir){
     cov <- cov[ , colSums(cov >= args$min_cov) >= (nrow(cov) * args$min_cov) ]
     
     # Write selected alignments
+    cat("\tWriting alns...\n")
     n_seqs <- row.names(cov) %>%
       purrr::map(function(gene, Res, samples, outdir){
         aln <- Res[[gene]]$aln
