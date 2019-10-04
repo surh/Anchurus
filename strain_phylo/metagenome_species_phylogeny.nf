@@ -83,7 +83,7 @@ process filter_alignment{
   publishDir "${params.outdir}/filtered_alns/", mode: 'rellink'
 
   input:
-  set spec, file(cat_aln) from CAT_ALNS
+  set spec, file(cat_aln) optional true from CAT_ALNS
 
   output:
   set spec, file("${spec}.concatenated_filtered.aln.fasta") into FILTERED_ALNS
