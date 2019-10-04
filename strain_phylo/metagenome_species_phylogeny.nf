@@ -36,9 +36,9 @@ process alns_from_metagenomes{
     pattern: "output/${spec}.gene_coverage.txt",
     saveAs: {"${spec}.gene_coverage.txt"},
     mode: 'rellink'
-  publishDir "${params.outdir}/gene_alns/",
-    pattern: "output/*aln.fasta",
-    mode: 'rellink'
+  // publishDir "${params.outdir}/gene_alns/",
+  //   pattern: "output/*aln.fasta",
+  //   mode: 'rellink'
 
   input:
   file midas_dir from INDIRS
