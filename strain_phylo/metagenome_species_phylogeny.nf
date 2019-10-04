@@ -68,7 +68,7 @@ process concatenate_alns{
   set spec, file("test/") from CORE_ALNS
 
   """
-  ls -la
+  ls -la test/
   """
 }
 
