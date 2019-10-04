@@ -61,59 +61,68 @@ process alns_from_metagenomes{
   """
 }
 
-process concatenate_alignments{
-  label 'py3'
-  publishDir "${params.outdir}/cat_alns/", mode: 'rellink'
-
+process concat{
   input:
-  set spec, file("alns/") from CORE_ALNS
-
-  output:
-  set spec, file("${spec}.concatenated.aln.fasta") into CAT_ALNS
+  set spec, file("test/") from CORE_ALNS
 
   """
-  ${workflow.projectDir}/concatenate_alignments.py \
-    --indir alns \
-    --output ${spec}.concatenated.aln.fasta
+  ll test/
   """
 }
 
-process filter_alignment{
-  label 'py3'
-  publishDir "${params.outdir}/filtered_alns/", mode: 'rellink'
+// process concatenate_alignments{
+//   label 'py3'
+//   publishDir "${params.outdir}/cat_alns/", mode: 'rellink'
+//
+//   input:
+//   set spec, file("alns/") from CORE_ALNS
+//
+//   output:
+//   set spec, file("${spec}.concatenated.aln.fasta") into CAT_ALNS
+//
+//   """
+//   ${workflow.projectDir}/concatenate_alignments.py \
+//     --indir alns \
+//     --output ${spec}.concatenated.aln.fasta
+//   """
+// }
 
-  input:
-  set spec, file(cat_aln) from CAT_ALNS
-
-  output:
-  set spec, file("${spec}.concatenated_filtered.aln.fasta") into FILTERED_ALNS
-
-  """
-  ${workflow.projectDir}/filter_alignment.py \
-    --input $cat_aln \
-    --output ${spec}.concatenated_filtered.aln.fasta
-  """
-}
-
-process fasttree{
-  label 'fasttree'
-  cpus params.fasttree_threads
-  publishDir "${params.outdir}/trees/", mode: 'rellink'
-
-  input:
-  set spec, file(aln) from FILTERED_ALNS
-
-  output:
-  set spec, file("${spec}.tre") into TREES
-
-
-  """
-  export OMP_NUM_THREADS=${params.fasttree_threads}
-  FastTree \
-    -nt $aln \
-    > ${spec}.tre
-  """
-}
+// process filter_alignment{
+//   label 'py3'
+//   publishDir "${params.outdir}/filtered_alns/", mode: 'rellink'
+//
+//   input:
+//   set spec, file(cat_aln) from CAT_ALNS
+//
+//   output:
+//   set spec, file("${spec}.concatenated_filtered.aln.fasta") into FILTERED_ALNS
+//
+//   """
+//   ${workflow.projectDir}/filter_alignment.py \
+//     --input $cat_aln \
+//     --output ${spec}.concatenated_filtered.aln.fasta
+//   """
+// }
+//
+// process fasttree{
+//   label 'fasttree'
+//   cpus params.fasttree_threads
+//   publishDir "${params.outdir}/trees/", mode: 'rellink'
+//
+//   input:
+//   set spec, file(aln) from FILTERED_ALNS
+//
+//   output:
+//   set spec, file("${spec}.tre") into TREES
+//
+//
+//   """
+//   export OMP_NUM_THREADS=${params.fasttree_threads}
+//   FastTree \
+//     -nt $aln \
+//     > ${spec}.tre
+//   """
+// }
 
 
 // Example nextflow config
