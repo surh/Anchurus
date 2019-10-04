@@ -78,23 +78,6 @@ process concatenate_alns{
   """
 }
 
-// process concatenate_alignments{
-//   label 'py3'
-//   publishDir "${params.outdir}/cat_alns/", mode: 'rellink'
-//
-//   input:
-//   set spec, file("alns/") from CORE_ALNS
-//
-//   output:
-//   set spec, file("${spec}.concatenated.aln.fasta") into CAT_ALNS
-//
-//   """
-//   ${workflow.projectDir}/concatenate_alignments.py \
-//     --indir alns \
-//     --output ${spec}.concatenated.aln.fasta
-//   """
-// }
-
 process filter_alignment{
   label 'py3'
   publishDir "${params.outdir}/filtered_alns/", mode: 'rellink'
