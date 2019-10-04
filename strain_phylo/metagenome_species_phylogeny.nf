@@ -33,7 +33,8 @@ INDIRS = Channel.fromPath("${params.indir}/*", type: 'dir')
 process alns_from_metagenomes{
   label 'r'
   publishDir "${params.outdir}/gene_coverages/",
-    pattern: "output/*gene_coverage.txt",
+    pattern: "output/${spec}.gene_coverage.txt",
+    saveAs: {"${spec}.gene_coverage.txt"},
     mode: 'rellink'
   publishDir "${params.outdir}/gene_alns/",
     pattern: "output/*aln.fasta",
@@ -45,9 +46,11 @@ process alns_from_metagenomes{
   file map
 
   output:
-  file "output/*.gene_coverage.txt" into COVS
-  set "$midas_dir", file("output/*.aln.fasta") optional true into CORE_ALNS
+  file "output/${spec}.gene_coverage.txt" into COVS
+  set spec, file("output/*aln.fasta") into CORE_ALNS
 
+  script:
+  spec = midas_dir.fileName
   """
   ${workflow.projectDir}/alns_from_metagenomes.r \
     $midas_dir \
@@ -63,7 +66,7 @@ process concatenate_alignments{
   publishDir "${params.outdir}/cat_alns/", mode: 'rellink'
 
   input:
-  set spec, file("alns/*.aln.fasta") from CORE_ALNS
+  set spec, file("alns/") from CORE_ALNS
 
   output:
   set spec, file("${spec}.concatenated.aln.fasta") into CAT_ALNS
