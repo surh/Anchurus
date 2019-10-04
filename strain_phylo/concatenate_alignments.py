@@ -14,6 +14,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# NOTE: Do not modify directly. Modify version in micropopgen.
+
 import argparse
 import os
 # import align_markers as am
