@@ -18,6 +18,7 @@ import sutilspy
 import os
 import argparse
 
+
 def process_arguments():
     # Read arguments
     parser_format = argparse.ArgumentDefaultsHelpFormatter
@@ -71,6 +72,11 @@ def process_arguments():
     parser.add_argument("--time",
                         help="If method is slurm, amount of time to reserve",
                         type=str, default="4:00:00")
+    parser.add_argument("--compression", help=("Compression format of fastq "
+                                               "files."),
+                        type=str,
+                        default='bz2',
+                        choices=['bz2', 'gz'])
 
     # Read arguments
     print("Reading arguments")
@@ -79,6 +85,13 @@ def process_arguments():
     # Process arguments
     if args.queue == 'all':
         args.queue = 'hbfraser,owners,hns,normal,bigmem'
+
+    if args.compression == 'bz2':
+        args.compression = '.bz2'
+    elif args.compression == 'gz':
+        args.compression = '.gz'
+    else:
+        raise ValueError("--compression value is not valid")
 
     return args
 
@@ -115,8 +128,8 @@ if __name__ == "__main__":
     for sample in samples:
         print("== Processing sample {}".format(sample))
         sample_file_base = args.indir + "/" + sample
-        read1 = sample_file_base + "_read1.fastq.bz2"
-        read2 = sample_file_base + "_read2.fastq.bz2"
+        read1 = sample_file_base + "_read1.fastq" + args.compression
+        read2 = sample_file_base + "_read2.fastq" + args.compression
 
         if not os.path.isfile(read1):
             raise FileNotFoundError("File {} not found".format(read1))
@@ -140,16 +153,16 @@ if __name__ == "__main__":
 
         submission_file = args.submissions_dir + "/midas.species." + sample + ".bash"
 
-        with open(submission_file,'w') as fh:
+        with open(submission_file, 'w') as fh:
             if args.method == 'qsub':
-                #memory = "16000mb"
+                # memory = "16000mb"
                 nodes = "nodes=1:ppn=8"
-                sutilspy.io.write_qsub_submission(fh = fh, commands = commands,
-                                                  name = job_name,
-                                                  memory = args.memory,
-                                                  logfile = logfile,
-                                                  errorfile = errorfile,
-                                                  nodes = nodes)
+                sutilspy.io.write_qsub_submission(fh=fh, commands=commands,
+                                                  name=job_name,
+                                                  memory=args.memory,
+                                                  logfile=logfile,
+                                                  errorfile=errorfile,
+                                                  nodes=nodes)
             elif args.method == 'slurm':
                 # memory = "16G"
                 nodes = "1"
@@ -171,10 +184,10 @@ if __name__ == "__main__":
 
         # Submit submission file
         if args.method == 'qsub':
-            #print(submission_file)
+            # print(submission_file)
             sutilspy.io.qsub_submissions([submission_file],args.logdir)
         elif args.method == 'slurm':
-            #print(submission_file)
+            # print(submission_file)
             sutilspy.io.sbatch_submissions([submission_file], args.logdir)
         elif args.method == 'bash':
             sutilspy.io.run_command(submission_file)
