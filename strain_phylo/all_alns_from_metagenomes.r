@@ -97,7 +97,7 @@ read_data <- function(spec, midas_dir, genomes_dir){
 }
 ##################################
 
-# args <- process_arguments()
+args <- process_arguments()
 # setwd("/home/sur/micropopgen/exp/2019/today4")
 # args <- list(depth_thres = 1,
 #              freq_thres =  1,
