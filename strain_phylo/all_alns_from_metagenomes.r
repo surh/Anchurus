@@ -98,16 +98,16 @@ read_data <- function(spec, midas_dir, genomes_dir){
 ##################################
 
 # args <- process_arguments()
-setwd("/home/sur/micropopgen/exp/2019/today4")
-args <- list(depth_thres = 1,
-             freq_thres =  1,
-             min_cov =  0.8,
-             keep_last_codon = TRUE,
-             outdir = 'output/',
-             genomes_dir = "/home/sur/micropopgen/data/genomes/midas_db_v1.2/hmp.subsite/",
-             map_file = "midas/map.txt",
-             midas_dir = "midas/merged.snps/Veillonella_parvula_57794/",
-             missing_as = 'gap')
+# setwd("/home/sur/micropopgen/exp/2019/today4")
+# args <- list(depth_thres = 1,
+#              freq_thres =  1,
+#              min_cov =  0.8,
+#              keep_last_codon = TRUE,
+#              outdir = 'output/',
+#              genomes_dir = "/home/sur/micropopgen/data/genomes/midas_db_v1.2/hmp.subsite/",
+#              map_file = "midas/map.txt",
+#              midas_dir = "midas/merged.snps/Veillonella_parvula_57794/",
+#              missing_as = 'gap')
 
 # Load rest of libraries
 library(tidyverse)
