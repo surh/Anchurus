@@ -37,26 +37,27 @@ INDIRS = Channel.fromPath("${params.midas_dir}/*", type: 'dir')
 process alns_from_metagenomes{
   label 'r'
   publishDir "${params.outdir}/gene_alns/",
-    pattern: "$spec",
+    pattern: "output/",
+    saveAs: {"$spec"},
     mode: 'rellink'
 
   input:
-  set spec, file("midas"), file(map_file) from INDIRS
+  set spec, file(midas_dir), file(map_file) from INDIRS
   file genomes_dir
 
   output:
-  file "$spec" into ALNDIR
+  file "output/" into ALNDIR
 
   when:
   map_file.exists()
 
   """
   ${workflow.projectDir}/all_alns_from_metagenomes.r \
-    midas/ \
-    $genomes_dir \
+    $midas_dir \
+    $genomes_di \
     --min_cov ${params.min_cov} \
     --map_file $map_file \
-    --outdir $spec \
+    --outdir output/ \
     --type single
   """
 }
