@@ -41,11 +41,14 @@ process alns_from_metagenomes{
     mode: 'rellink'
 
   input:
-  set spec, file(spec_dir), file(map_file) from INDIRS.filter{it[1].exists()}
+  set spec, file(spec_dir), file(map_file) from INDIRS
   file genomes_dir
 
   output:
   file "$spec" into ALNDIR
+
+  when:
+  -f map_file
 
   """
   ${workflow.projectDir}/all_alns_from_metagenomes.r \
