@@ -48,7 +48,7 @@ process alns_from_metagenomes{
   file "$spec" into ALNDIR
 
   when:
-  -f map_file
+  map_file.exists()
 
   """
   ${workflow.projectDir}/all_alns_from_metagenomes.r \
