@@ -54,7 +54,7 @@ process alns_from_metagenomes{
   """
   ${workflow.projectDir}/all_alns_from_metagenomes.r \
     $midas_dir \
-    $genomes_di \
+    $genomes_dir \
     --min_cov ${params.min_cov} \
     --map_file $map_file \
     --outdir output/ \
