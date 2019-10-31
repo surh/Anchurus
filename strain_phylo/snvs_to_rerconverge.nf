@@ -41,7 +41,7 @@ process alns_from_metagenomes{
     mode: 'rellink'
 
   input:
-  set spec, file(spec_dir), file(map_file) from INDIRS
+  set spec, file("midas"), file(map_file) from INDIRS
   file genomes_dir
 
   output:
@@ -52,7 +52,7 @@ process alns_from_metagenomes{
 
   """
   ${workflow.projectDir}/all_alns_from_metagenomes.r \
-    $spec_dir \
+    midas/ \
     $genomes_dir \
     --min_cov ${params.min_cov} \
     --map_file $map_file \
