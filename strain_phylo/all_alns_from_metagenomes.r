@@ -55,6 +55,12 @@ process_arguments <- function(){
                     help = paste("Directory for output"),
                     default = "output/",
                     type = "character")
+  p <- add_argument(p, "--type",
+                    help = paste("Either a single directory that contains SNV files for",
+                                 "one species ('single'), or a directory that contains",
+                                 "multiple species sub-directories ('multi')."),
+                    default = "single",
+                    type = "character")
 
   # Read arguments
   cat("Processing arguments...\n")
@@ -64,16 +70,31 @@ process_arguments <- function(){
   if(args$min_cov < 0 || args$min_cov > 1){
     stop("ERROR: --min_cov must be in [0,1]", call. = TRUE)
   }
+  if(args$type == 'multi'){
+    cat("\tReading multiple input directories\n")
+    args$midas_dir <- list.dirs(args$midas_dir, recursive = FALSE)
+  }
   # Adding parameters that user cannot modify.
   args$depth_thres <- 1
   args$freq_thres <- 1
   args$keep_last_codon <- TRUE
   args$missing_as <- "gap"
+  
 
   return(args)
 }
 
-# Read data
+
+#' Read data
+#'
+#' @param spec 
+#' @param midas_dir 
+#' @param genomes_dir 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 read_data <- function(spec, midas_dir, genomes_dir){
   genome_fasta <- seqinr::read.fasta(file.path(genomes_dir, spec, 'genome.fna.gz'))
   genome_feats <- readr::read_tsv(file.path(genomes_dir, spec, 'genome.features.gz'),
