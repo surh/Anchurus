@@ -37,7 +37,7 @@ INDIRS = Channel.fromPath("${params.midas_dir}/*", type: 'dir')
 process alns_from_metagenomes{
   label 'r'
   publishDir "${params.outdir}/gene_alns/",
-    pattern: "output/",
+    pattern: "output",
     saveAs: {"$spec"},
     mode: 'rellink'
 
@@ -46,7 +46,7 @@ process alns_from_metagenomes{
   file genomes_dir
 
   output:
-  file "output/" into ALNDIR
+  file "output" into ALNDIR
 
   when:
   map_file.exists()
