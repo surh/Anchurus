@@ -38,7 +38,7 @@ process alns_from_metagenomes{
   label 'r'
   publishDir "${params.outdir}/gene_alns/",
     pattern: "output",
-    saveAs: {"$spec"},
+    saveAs: {"${spec}/"},
     mode: 'rellink'
 
   input:
