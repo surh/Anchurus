@@ -44,7 +44,7 @@ process_arguments <- function(){
   #                    type = "character",
   #                    default = "single")
   p <- add_argument(p, "--map_file",
-                    help = paste("Path to file with map. Should have 'ID' and 'group'",
+                    help = paste("Path to file with map. Should have 'ID' and 'Group'",
                                  "columns."),
                     type = "character",
                     default = "map.txt")
