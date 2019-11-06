@@ -43,7 +43,7 @@ def process_arguments():
     required.add_argument("--cov_file",
                           help=("A tab-delimited file having gene coverage "
                                 "per strain."),
-                          required=True, type='str')
+                          required=True, type=str)
     required.add_argument("--master_tree",
                           help=("Path to master species tree."),
                           required=True, type=str)
