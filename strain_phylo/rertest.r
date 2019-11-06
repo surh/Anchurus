@@ -253,9 +253,9 @@ for(specdir in args$indir){
   # Process map (probably need to change variable name for multi dir).
   map <- map[ Trees$masterTree$tip.label ]
   if(is.na(args$focal_phenotype)){
-    args$focal_phenotype <- map[1]""
+    args$focal_phenotype <- map[1]
   }
-  map <- 1*(map == args$foca_phenotype)
+  map <- 1*(map == args$focal_phenotype)
   
   op <- par()
   # Calculate RERs
