@@ -236,10 +236,9 @@ master_tre <- ape::read.tree(args$master_tree)
 map <- read_tsv(args$map_file)
 map <- setNames(map$Group, map$ID)
 
-
 # Prepare output dir
 if(!dir.exists(args$outdir)){
-  dir.create(outdir)
+  dir.create(args$outdir)
 }
 
 for(specdir in args$indir){
