@@ -255,7 +255,8 @@ for(specfile in args$trees){
   
   # Read trees
   Trees <- readTrees(specfile, masterTree = master_tre)
-  filename <- file.path(args$oudir, paste(c(args$spec, "Trees.dat"), collapse = "."))
+  filename <- file.path(args$outdir, paste(c(args$spec, "Trees.dat"), collapse = "."))
+  cat("\twriting ", filename, "\n")
   save(Trees, file = filename)
   
   # Process map (probably need to change variable name for multi dir).
@@ -268,7 +269,8 @@ for(specfile in args$trees){
   op <- par()
   # Calculate RERs
   rerw <- getAllResiduals(Trees, transform = args$transform, weighted = args$weight, scale = args$scale, plot = FALSE)
-  filename <- file.path(args$oudir, paste(c(args$spec, "rerw.dat"), collapse = "."))
+  filename <- file.path(args$outdir, paste(c(args$spec, "rerw.dat"), collapse = "."))
+  cat("\twriting ", filename, "\n")
   save(rerw, file = filename)
   
   # Prepare binary tree
@@ -285,7 +287,8 @@ for(specfile in args$trees){
   cor.res <- correlateWithBinaryPhenotype(RERmat = rerw, charP = phenv, min.sp = args$min.sp, min.pos = args$min.pos)
   # cor.res <- getAllCor(rerw, phenv, 5, 2, method = "k", weighted=TRUE)
   cor.res <- cor.res[ order(cor.res$P), ]
-  filename <- file.path(args$oudir, paste(c(args$spec, "cors.txt"), collapse = "."))
+  filename <- file.path(args$outdir, paste(c(args$spec, "cors.txt"), collapse = "."))
+  cat("\twriting ", filename, "\n")
   write_tsv(cor.res, path = filename)
 }
 
