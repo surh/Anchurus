@@ -24,11 +24,12 @@ process_arguments <- function(){
   p <- arg_parser(paste("Code that runs RERconverge test on a binary phenotype"))
   
   # Positional arguments
-  p <- add_argument(p, "indir",
-                    help = paste("Directory containing one all trees from a given species",
-                                 "or a list of subdirectories (one per species) with each",
-                                 "one containing all tree species of the corresponding",
-                                 "species. CURRENTLY ONLY FIRST OPTION AVAILABLE."),
+  p <- add_argument(p, "trees",
+                    help = paste("Table file containing all trees from a given species",
+                                 "or a directory containing multiple files (one per",
+                                 "species) with eachcone containing all tree species",
+                                 "of the corresponding species. CURRENTLY ONLY FIRST",
+                                 "OPTION AVAILABLE."),
                     type = "character")
   p <- add_argument(p, "master_tree",
                     help = paste("Path to master phylogenetic tree file. Must include",
@@ -59,7 +60,12 @@ process_arguments <- function(){
                                  "<--map_file>."),
                     default = NULL,
                     type = "character")
-                     
+  p <- add_argument(p, "--spec",
+                    help = paste("Species name. If passed it will be used to construct",
+                                 "filenames."),
+                    type = "character",
+                    default = NULL)
+  
   # Read arguments
   cat("Processing arguments...\n")
   args <- parse_args(p)
@@ -68,6 +74,9 @@ process_arguments <- function(){
   # if(!(args$type %in% c('single', 'multi'))){
   #   stop("ERROR: --type must be 'single' or 'multi'", call. = TRUE)
   # }
+  if(is.na(args$spec)){
+    args$spec <- NULL
+  }
   
   # Set other arguments
   args$scale <- TRUE
@@ -241,13 +250,12 @@ if(!dir.exists(args$outdir)){
   dir.create(args$outdir)
 }
 
-for(specdir in args$indir){
-  spec <- basename(specdir)
-  cat(spec, "\n")
+for(specfile in args$trees){
+  cat(basename(specfile), "\n")
   
   # Read trees
-  Trees <- readTrees(tree_tab_file, masterTree = master_tre)
-  filename <- file.path(args$oudir, "Trees.dat")
+  Trees <- readTrees(specfile, masterTree = master_tre)
+  filename <- file.path(args$oudir, paste(c(args$spec, "Trees.dat"), collapse = "."))
   save(Trees, file = filename)
   
   # Process map (probably need to change variable name for multi dir).
@@ -260,7 +268,7 @@ for(specdir in args$indir){
   op <- par()
   # Calculate RERs
   rerw <- getAllResiduals(Trees, transform = args$transform, weighted = args$weight, scale = args$scale, plot = FALSE)
-  filename <- file.path(args$oudir, "rerw.dat")
+  filename <- file.path(args$oudir, paste(c(args$spec, "rerw.dat"), collapse = "."))
   save(rerw, file = filename)
   
   # Prepare binary tree
@@ -277,7 +285,7 @@ for(specdir in args$indir){
   cor.res <- correlateWithBinaryPhenotype(RERmat = rerw, charP = phenv, min.sp = args$min.sp, min.pos = args$min.pos)
   # cor.res <- getAllCor(rerw, phenv, 5, 2, method = "k", weighted=TRUE)
   cor.res <- cor.res[ order(cor.res$P), ]
-  filename <- file.path(args$oudir, "cors.txt")
+  filename <- file.path(args$oudir, paste(c(args$spec, "cors.txt"), collapse = "."))
   write_tsv(cor.res, path = filename)
 }
 
