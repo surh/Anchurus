@@ -233,7 +233,7 @@ library(RERconverge)
 # Read simple data
 master_tre <- ape::read.tree(args$master_tree)
 
-map <- read_tsv(map_file)
+map <- read_tsv(args$map_file)
 map <- setNames(map$Group, map$ID)
 map <- map[ Trees$masterTree$tip.label ]
 if(is.na(args$focal_phenotype)){
