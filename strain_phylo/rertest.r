@@ -235,11 +235,7 @@ master_tre <- ape::read.tree(args$master_tree)
 
 map <- read_tsv(args$map_file)
 map <- setNames(map$Group, map$ID)
-map <- map[ Trees$masterTree$tip.label ]
-if(is.na(args$focal_phenotype)){
-  args$focal_phenotype <- map[1]""
-}
-map <- 1*(map == args$foca_phenotype)
+
 
 # Prepare output dir
 if(!dir.exists(args$outdir)){
@@ -254,6 +250,13 @@ for(specdir in args$indir){
   Trees <- readTrees(tree_tab_file, masterTree = master_tre)
   filename <- file.path(args$oudir, "Trees.dat")
   save(Trees, file = filename)
+  
+  # Process map (probably need to change variable name for multi dir).
+  map <- map[ Trees$masterTree$tip.label ]
+  if(is.na(args$focal_phenotype)){
+    args$focal_phenotype <- map[1]""
+  }
+  map <- 1*(map == args$foca_phenotype)
   
   op <- par()
   # Calculate RERs
