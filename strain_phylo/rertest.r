@@ -73,6 +73,10 @@ process_arguments <- function(){
   args$scale <- TRUE
   args$weight <- TRUE
   args$type <- "single"
+  args$transform <- 'sqrt'
+  args$clade <- "all"
+  args$min.sp <- 5
+  args$min.pos <- 2
   
   return(args)
 }
@@ -222,45 +226,59 @@ library(tidyverse)
 library(RERconverge)
 
 
-tree_dir <- "output/gene_trees/"
-tree_tab_file <- "trees_tab.txt"
-map_file <- "../../../../data/gathered_results/2019a.gut/map.txt"
+# tree_dir <- "output/gene_trees/"
+# tree_tab_file <- "trees_tab.txt"
+# map_file <- "../../../../data/gathered_results/2019a.gut/map.txt"
 
+# Read simple data
+master_tre <- ape::read.tree(args$master_tree)
 
-# Read trees
-master_tre <- read.tree("Bacteroides_ovatus_58035.concatenated.aln.fasta.tre")
-Trees <- readTrees(tree_tab_file, masterTree = master_tre)
-# Trees <- readTrees(tree_tab_file)
-# save(Trees, file = "Trees_allg_nomaster.dat")
-
-# Read map
 map <- read_tsv(map_file)
 map <- setNames(map$Group, map$ID)
 map <- map[ Trees$masterTree$tip.label ]
-map <- 1*(map == "USA")
+if(is.na(args$focal_phenotype)){
+  args$focal_phenotype <- map[1]""
+}
+map <- 1*(map == args$foca_phenotype)
 
-# Calculate RERs
-rerw <- getAllResiduals(Trees, transform = "sqrt", weighted = TRUE, scale = TRUE, plot = TRUE)
-par(mfrow=c(1,1))
-# save(rerw, file = "rerw_allg_weight_scale_nomaster.dat")
+# Prepare output dir
+if(!dir.exists(args$outdir)){
+  dir.create(outdir)
+}
 
-# Prepare binary tree
-bintre <- foreground2Tree(foreground = names(map)[map == 1],
-                          treesObj = Trees,
-                          plotTree = TRUE,
-                          clade = "all",
-                          weighted = TRUE)
-par(mfrow=c(1,1))
+for(specdir in args$indir){
+  spec <- basename(specdir)
+  cat(spec, "\n")
+  
+  # Read trees
+  Trees <- readTrees(tree_tab_file, masterTree = master_tre)
+  filename <- file.path(args$oudir, "Trees.dat")
+  save(Trees, file = filename)
+  
+  op <- par()
+  # Calculate RERs
+  rerw <- getAllResiduals(Trees, transform = args$transform, weighted = args$weight, scale = args$scale, plot = FALSE)
+  filename <- file.path(args$oudir, "rerw.dat")
+  save(rerw, file = filename)
+  
+  # Prepare binary tree
+  bintre <- foreground2Tree(foreground = names(map)[map == 1],
+                            treesObj = Trees,
+                            plotTree = FALSE,
+                            clade = args$clade,
+                            weighted = TRUE)
+  
+  # Prepare phenotypes
+  phenv <- tree2Paths(tree = bintre, treesObj = Trees)
+  
+  # Calculate correlatiob between phenotypes and rers
+  cor.res <- correlateWithBinaryPhenotype(RERmat = rerw, charP = phenv, min.sp = args$min.sp, min.pos = args$min.pos)
+  # cor.res <- getAllCor(rerw, phenv, 5, 2, method = "k", weighted=TRUE)
+  cor.res <- cor.res[ order(cor.res$P), ]
+  filename <- file.path(args$oudir, "cors.txt")
+  write_tsv(cor.res, path = filename)
+}
 
-# Prepare phenotypes
-phenv <- tree2Paths(tree = bintre, treesObj = Trees)
-
-# Calculate correlatiob between phenotypes and rers
-# cor.res <- correlateWithBinaryPhenotype(RERmat = rerw, charP = phenv, min.sp = 5, min.pos = 2)
-cor.res <- getAllCor(rerw, phenv, 5, 2, method = "k", weighted=TRUE)
-
-hist(cor.res$P)
-cor.res[order(cor.res$P),] %>% head(10)
 
 
 
