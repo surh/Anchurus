@@ -68,6 +68,8 @@ def process_arguments():
     args = parser.parse_args()
 
     # Processing goes here if needed
+    # Adding extra options
+    args.min_sp = 5
 
     return args
 
@@ -185,3 +187,15 @@ def baseml_all_genes(cov_file, aln_dir, tre_file, outdir="./output/",
         tre = TreeNode.read(io.StringIO(res.get('tree')))
         TreeNode.write(tre, file=os.path.join(outdir,
                                               "gene_trees", g + ".baseml.tre"))
+
+
+if __name__ == "__main__":
+    args = process_arguments()
+
+    baseml_all_genes(cov_file=args.cov_file,
+                     aln_dir=args.aln_dir,
+                     tre_file=args.master_tree,
+                     outdir=args.outdir,
+                     cov_thres=args.min_cov,
+                     n_threshold=args.min_sp,
+                     baseml_bin=args.baseml)
