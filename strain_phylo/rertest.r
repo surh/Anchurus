@@ -284,8 +284,9 @@ for(specfile in args$trees){
   phenv <- tree2Paths(tree = bintre, treesObj = Trees)
   
   # Calculate correlatiob between phenotypes and rers
-  cor.res <- correlateWithBinaryPhenotype(RERmat = rerw, charP = phenv, min.sp = args$min.sp, min.pos = args$min.pos)
-  # cor.res <- getAllCor(rerw, phenv, 5, 2, method = "k", weighted=TRUE)
+  # cor.res <- correlateWithBinaryPhenotype(RERmat = rerw, charP = phenv, min.sp = args$min.sp, min.pos = args$min.pos)
+  cor.res <- getAllCor(RERmat = rerw, charP = phenv, min.sp = args$min.sp,
+                       min.pos = args$min.pos, method = "k", weighted=TRUE)
   cor.res <- cor.res[ order(cor.res$P), ]
   filename <- file.path(args$outdir, paste(c(args$spec, "cors.txt"), collapse = "."))
   cat("\twriting ", filename, "\n")
