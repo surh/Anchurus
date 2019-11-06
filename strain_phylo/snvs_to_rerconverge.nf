@@ -36,6 +36,7 @@ INDIRS = Channel.fromPath("${params.midas_dir}/*", type: 'dir')
 
 process alns_from_metagenomes{
   label 'r'
+  tag "$spec"
   publishDir "${params.outdir}/gene_alns/",
     pattern: "output",
     saveAs: {"${spec}/"},
