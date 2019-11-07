@@ -58,11 +58,11 @@ process alns_from_metagenomes{
     mode: 'rellink'
 
   input:
-  set spec, file(midas_dir), file(map_file) from INDIRS
+  tuple val(spec), file(midas_dir), file(map_file) from INDIRS
   file genomes_dir
 
   output:
-  set spec, file("output") into MIDAS2ALNS
+  tuple val(spec), file("output") into MIDAS2ALNS
 
   when:
   map_file.exists()
@@ -87,12 +87,12 @@ process baseml{
     mode: 'rellink'
 
   input:
-  set spec, file("alns_dir") from ALNDIR.mix(MIDAS2ALNS)
+  tuple val(spec), file("alns_dir") from ALNDIR.mix(MIDAS2ALNS)
   path master_tree from "${workflow.launchDir}/${params.master_trees_dir}/${spec}.tre"
   path cov from "${workflow.launchDir}/${params.cov_dir}/${spec}.gene_coverage.txt"
 
   output:
-  set spec, file("output") into ALNS2BASEML
+  tuple val(spec), file("output") into ALNS2BASEML
 
   """
   ${workflow.projectDir}/baseml_all_genes.py
@@ -115,10 +115,10 @@ process trees2tab{
     mode: 'rellink'
 
   input:
-  set spec, file("trees") from ALNS2BASEML
+  tuple val(spec), file("trees") from ALNS2BASEML
 
   output:
-  set spec, file("trees_tab.txt")
+  tuple (spec), file("trees_tab.txt")
 
   """
   for f in trees/*.tre; \
