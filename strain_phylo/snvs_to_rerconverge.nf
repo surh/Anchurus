@@ -46,7 +46,7 @@ INDIRS = (params.midas_dir == ""
 // Create channel with gene level alignments
 ALNDIR = (params.alns_dir == ""
   ? Channel.empty()
-  : Channel.fromPath(params.alns_dir)
+  : Channel.fromPath("${params.alns_dir}/*", type: 'dir')
       .map{spec -> tuple(spec.fileName, file(spec))})
 
 MASTERTREE = Channel.fromPath("${params.master_trees_dir}/*.tre")
@@ -55,7 +55,7 @@ MASTERTREE = Channel.fromPath("${params.master_trees_dir}/*.tre")
 COV = Channel.fromPath("${params.cov_dir}/*.gene_coverage.txt")
   .map{filename -> tuple(filename.name.replace('.gene_coverage.txt', ''), file(filename))}
 
-MASTERTREE.subscribe{println it}
+// MASTERTREE.subscribe{println it}
 
 process alns_from_metagenomes{
   label 'r'
