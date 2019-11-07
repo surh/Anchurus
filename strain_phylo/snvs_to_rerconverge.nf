@@ -55,14 +55,6 @@ MASTERTREE = Channel.fromPath("${params.master_trees_dir}/*.tre")
 COV = Channel.fromPath("${params.cov_dir}/*.gene_coverage.txt")
   .map{filename -> tuple(filename.name.replace('.gene_coverage.txt', ''), file(filename))}
 
-println "=========="
-MASTERTREE.subscribe{println it}
-println "=========="
-ALNDIR.subscribe{println it}
-println "=========="
-COV.subscribe{println it}
-println "=========="
-
 process alns_from_metagenomes{
   label 'r'
   tag "$spec"
@@ -92,33 +84,42 @@ process alns_from_metagenomes{
   """
 }
 
-process baseml{
-  label 'baseml'
-  tag "$spec"
-  publishDir "${params.outdir}/gene_trees/",
-    pattern: "output",
-    saveAs: {"${spec}/"},
-    mode: 'rellink'
+println "=========="
+MASTERTREE.subscribe{println it}
+println "=========="
+ALNDIR.subscribe{println it}
+println "=========="
+COV.subscribe{println it}
+println "=========="
+// ALNDIR.mix(MIDAS2ALNS).join(MASTERTREE).join(COV)
 
-  input:
-  tuple spec, file("alns_dir"), file(master_tree), file(cov) from ALNDIR.mix(MIDAS2ALNS).join(MASTERTREE).join(COV)
-  // path master_tree from "${workflow.launchDir}/${params.master_trees_dir}/${spec}.tre"
-  // path cov from "${workflow.launchDir}/${params.cov_dir}/${spec}.gene_coverage.txt"
-
-  output:
-  tuple val(spec), file("output") into ALNS2BASEML
-
-  """
-  ${workflow.projectDir}/baseml_all_genes.py
-    --aln_dir alns_dir/ \
-    --cov_file $cov \
-    --master_tree $master_tree \
-    --outdir output/ \
-    --min_cov ${params.min_cov} \
-    --baseml baseml
-  """
-
-}
+// process baseml{
+//   label 'baseml'
+//   tag "$spec"
+//   publishDir "${params.outdir}/gene_trees/",
+//     pattern: "output",
+//     saveAs: {"${spec}/"},
+//     mode: 'rellink'
+//
+//   input:
+//   tuple spec, file("alns_dir"), file(master_tree), file(cov) from ALNDIR.mix(MIDAS2ALNS).join(MASTERTREE).join(COV)
+//   // path master_tree from "${workflow.launchDir}/${params.master_trees_dir}/${spec}.tre"
+//   // path cov from "${workflow.launchDir}/${params.cov_dir}/${spec}.gene_coverage.txt"
+//
+//   output:
+//   tuple val(spec), file("output") into ALNS2BASEML
+//
+//   """
+//   ${workflow.projectDir}/baseml_all_genes.py
+//     --aln_dir alns_dir/ \
+//     --cov_file $cov \
+//     --master_tree $master_tree \
+//     --outdir output/ \
+//     --min_cov ${params.min_cov} \
+//     --baseml baseml
+//   """
+//
+// }
 
 
 process trees2tab{
