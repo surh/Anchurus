@@ -114,7 +114,7 @@ process baseml{
   tuple val(spec), file("output") into ALNS2BASEML
 
   """
-  ${workflow.projectDir}/baseml_all_genes.py
+  ${workflow.projectDir}/baseml_all_genes.py \
     --aln_dir alns_dir/ \
     --cov_file $cov \
     --master_tree $master_tree \
