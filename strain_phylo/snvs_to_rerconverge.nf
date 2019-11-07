@@ -82,8 +82,8 @@ process baseml{
 
   input:
   set spec, file("alns_dir") from ALNDIR.mix(MIDAS2ALNS)
-  path "${spec}.tre" from "${params.master_trees_dir}/${spec}.tre"
-  path "${spec}.coverage.txt" from "${params.cov_dir}/${spec}.gene_coverage.txt"
+  path master_tree from "${workflow.launchDir}/${params.master_trees_dir}/${spec}.tre"
+  path cov from "${workflow.launchDir}/${params.cov_dir}/${spec}.gene_coverage.txt"
 
   output:
   set spec, file("output") into ALNS2BASEML
@@ -91,8 +91,8 @@ process baseml{
   """
   ${workflow.projectDir}/baseml_all_genes.py
     --aln_dir alns_dir/ \
-    --cov_file "${spec}.coverage.txt" \
-    --master_tree ${spec}.tre \
+    --cov_file $cov \
+    --master_tree $master_tree \
     --outdir output/ \
     --min_cov ${params.min_cov} \
     --baseml baseml
