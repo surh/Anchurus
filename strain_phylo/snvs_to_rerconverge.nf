@@ -47,7 +47,7 @@ INDIRS = (params.midas_dir == ""
 ALNDIR = (params.alns_dir == ""
   ? Channel.empty()
   : Channel.fromPath("${params.alns_dir}/*", type: 'dir')
-      .map{spec -> tuple(spec.fileName, file(spec))})
+      .map{spec -> tuple(spec.name, file(spec))})
 
 MASTERTREE = Channel.fromPath("${params.master_trees_dir}/*.tre")
   .map{filename -> tuple(filename.name.replace('.tre', ''), file(filename))}
