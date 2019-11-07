@@ -84,16 +84,20 @@ process alns_from_metagenomes{
   """
 }
 
-// println "=========="
-// MASTERTREE.subscribe{println it}
-// println "=========="
+println "=========="
+ALNDIR.mix(MIDAS2ALNS).subscribe{println it}
+println "=========="
+MASTERTREE.subscribe{println it}
+println "=========="
 // ALNDIR.subscribe{println it}
 // println "=========="
 // COV.subscribe{println it}
-println "=========="
-ALNDIR.mix(MIDAS2ALNS).join(COV).subscribe{println it}
+// println "=========="
+// ALNDIR.mix(MIDAS2ALNS).join(MASTERTREE).subscribe{println it}
 // ALNDIR.mix(MIDAS2ALNS).join(MASTERTREE).join(COV)
-println "=========="
+// println "=========="
+
+
 // process baseml{
 //   label 'baseml'
 //   tag "$spec"
