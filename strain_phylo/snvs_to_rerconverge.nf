@@ -121,6 +121,11 @@ process{
     module = 'FastTree/2.1.10'
     time = '12h'
   }
+  withLabel: 'baseml'{
+    module = "anaconda:paml/4.91"
+    conda = '/opt/modules/pkgs/anaconda/3.6/envs/fraserconda'
+    time = '48h'
+  }
 }
 executor{
   name = 'slurm'
