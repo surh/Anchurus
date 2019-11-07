@@ -92,60 +92,58 @@ process alns_from_metagenomes{
 // ALNDIR.subscribe{println it}
 // println "=========="
 // COV.subscribe{println it}
-println "=========="
-ALNDIR.mix(MIDAS2ALNS).join(MASTERTREE).subscribe{println it}
+// println "=========="
+// ALNDIR.mix(MIDAS2ALNS).join(MASTERTREE).subscribe{println it}
 // ALNDIR.mix(MIDAS2ALNS).join(MASTERTREE).join(COV)
-println "=========="
+// println "=========="
 
+process baseml{
+  label 'baseml'
+  tag "$spec"
+  publishDir "${params.outdir}/gene_trees/",
+    pattern: "output",
+    saveAs: {"${spec}/"},
+    mode: 'rellink'
 
-// process baseml{
-//   label 'baseml'
-//   tag "$spec"
-//   publishDir "${params.outdir}/gene_trees/",
-//     pattern: "output",
-//     saveAs: {"${spec}/"},
-//     mode: 'rellink'
-//
-//   input:
-//   tuple spec, file("alns_dir"), file(master_tree), file(cov) from ALNDIR.mix(MIDAS2ALNS).join(MASTERTREE).join(COV)
-//   // path master_tree from "${workflow.launchDir}/${params.master_trees_dir}/${spec}.tre"
-//   // path cov from "${workflow.launchDir}/${params.cov_dir}/${spec}.gene_coverage.txt"
-//
-//   output:
-//   tuple val(spec), file("output") into ALNS2BASEML
-//
-//   """
-//   ${workflow.projectDir}/baseml_all_genes.py
-//     --aln_dir alns_dir/ \
-//     --cov_file $cov \
-//     --master_tree $master_tree \
-//     --outdir output/ \
-//     --min_cov ${params.min_cov} \
-//     --baseml baseml
-//   """
-//
-// }
+  input:
+  tuple spec, file("alns_dir"), file(master_tree), file(cov) from ALNDIR.mix(MIDAS2ALNS).join(MASTERTREE).join(COV)
+  // path master_tree from "${workflow.launchDir}/${params.master_trees_dir}/${spec}.tre"
+  // path cov from "${workflow.launchDir}/${params.cov_dir}/${spec}.gene_coverage.txt"
 
+  output:
+  tuple val(spec), file("output") into ALNS2BASEML
 
-// process trees2tab{
-//   tag "$spec"
-//   publishDir "${params.outdir}/tree_tabs",
-//     pattern: 'trees_tab.txt',
-//     saveAs: {"${spec}.trees.txt"},
-//     mode: 'rellink'
-//
-//   input:
-//   tuple val(spec), file("trees") from ALNS2BASEML
-//
-//   output:
-//   tuple val(spec), file("trees_tab.txt")
-//
-//   """
-//   for f in trees/*.tre; \
-//     do echo "\$f\\t"`cat \$f`; \
-//     done | sed 's/\\.baseml\\.tre//' > trees_tab.txt
-//   """
-// }
+  """
+  ${workflow.projectDir}/baseml_all_genes.py
+    --aln_dir alns_dir/ \
+    --cov_file $cov \
+    --master_tree $master_tree \
+    --outdir output/ \
+    --min_cov ${params.min_cov} \
+    --baseml baseml
+  """
+
+}
+
+process trees2tab{
+  tag "$spec"
+  publishDir "${params.outdir}/tree_tabs",
+    pattern: 'trees_tab.txt',
+    saveAs: {"${spec}.trees.txt"},
+    mode: 'rellink'
+
+  input:
+  tuple val(spec), file("trees") from ALNS2BASEML
+
+  output:
+  tuple val(spec), file("trees_tab.txt")
+
+  """
+  for f in trees/*.tre; \
+    do echo "\$f\\t"`cat \$f`; \
+    done | sed 's/\\.baseml\\.tre//' > trees_tab.txt
+  """
+}
 
 // Example nextflow.config
 /*
