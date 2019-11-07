@@ -87,7 +87,7 @@ process alns_from_metagenomes{
 // println "=========="
 // ALNDIR.mix(MIDAS2ALNS).subscribe{println it}
 println "=========="
-MASTERTREE.jon(COV).subscribe{println it}
+MASTERTREE.join(COV).subscribe{println it}
 println "=========="
 // ALNDIR.subscribe{println it}
 // println "=========="
