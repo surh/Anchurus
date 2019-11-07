@@ -49,6 +49,12 @@ ALNDIR = (params.alns_dir == ""
   : Channel.fromPath(params.alns_dir)
       .map{spec -> tuple(spec.fileName, file(spec))})
 
+MASTERTREE = Channel.fromPath(params.master_trees_dir)
+  map{path -> tuple(path.fileName.replaceLast("\.tre", ''), file(path))}
+
+COV = Channel.fromPath(params.cov_dir)
+  map{path -> tuple(path.fileName.replaceLast("\.gene_coverage\.txt", ''), file(path))}
+
 process alns_from_metagenomes{
   label 'r'
   tag "$spec"
@@ -87,9 +93,9 @@ process baseml{
     mode: 'rellink'
 
   input:
-  tuple spec, file("alns_dir") from ALNDIR.mix(MIDAS2ALNS)
-  path master_tree from "${workflow.launchDir}/${params.master_trees_dir}/${spec}.tre"
-  path cov from "${workflow.launchDir}/${params.cov_dir}/${spec}.gene_coverage.txt"
+  tuple spec, file("alns_dir"), file(master_tree), file(cov) from ALNDIR.mix(MIDAS2ALNS).join(MASTERTREE).join(COV)
+  // path master_tree from "${workflow.launchDir}/${params.master_trees_dir}/${spec}.tre"
+  // path cov from "${workflow.launchDir}/${params.cov_dir}/${spec}.gene_coverage.txt"
 
   output:
   tuple val(spec), file("output") into ALNS2BASEML
