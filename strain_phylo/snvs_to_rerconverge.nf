@@ -127,7 +127,7 @@ process trees2tab{
   """
 }
 
-// Example nextflow config
+// Example nextflow.config
 /*
 process{
   maxForks = 100
