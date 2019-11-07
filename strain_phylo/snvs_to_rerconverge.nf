@@ -164,7 +164,7 @@ process{
     time = '12h'
   }
   withLabel: 'baseml'{
-    module = "anaconda:paml/4.91"
+    module = "anaconda:paml/4.9i"
     conda = '/opt/modules/pkgs/anaconda/3.6/envs/fraserconda'
     time = '48h'
   }
