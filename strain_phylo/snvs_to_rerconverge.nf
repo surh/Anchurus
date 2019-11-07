@@ -23,6 +23,9 @@
 params.midas_dir = ""
 params.genomes_dir = ""
 params.map_dir = ""
+params.alns_dir = ""
+params.master_trees_dir = ""
+params.cov_dir = ""
 params.min_cov = 0.8
 params.outdir = "output/"
 
@@ -33,6 +36,12 @@ INDIRS = Channel.fromPath("${params.midas_dir}/*", type: 'dir')
   .map{spec -> tuple(spec.fileName,
     file(spec),
     file("${map_dir}/${spec.fileName}.map.txt"))}
+
+// Create channel with gene level alignments
+ALNDIR = (params.alns_dir == ""
+  ? Channel.empty()
+  : Channel.fromPath(params.alns_dir)
+      .map{spec -> tuple(spec.fileName, file(spec))})
 
 process alns_from_metagenomes{
   label 'r'
@@ -47,7 +56,7 @@ process alns_from_metagenomes{
   file genomes_dir
 
   output:
-  file "output" into ALNDIR
+  set spec, file("output") into MIDAS2ALNS
 
   when:
   map_file.exists()
@@ -63,6 +72,36 @@ process alns_from_metagenomes{
   """
 }
 
+process baseml{
+  label 'baseml'
+  tag "$spec"
+  publishDir "${params.outdir}/gene_trees/",
+    pattern: "output",
+    saveAs: {"${spec}/"},
+    mode: 'rellink'
+
+  input:
+  set spec, file("alns_dir") from ALNDIR.mix(MIDAS2ALNS)
+  path "${spec}.tre" from "${params.master_trees_dir}/${spec}.tre"
+  path "${spec}.coverage.txt" from "${params.cov_dir}/${spec}.gene_coverage.txt"
+
+  output:
+  set spec, file("output") into ALNS2BASEML
+
+  """
+  ${workflow.projectDir}/baseml_all_genes.py
+    --aln_dir alns_dir/ \
+    --cov_file "${spec}.coverage.txt" \
+    --master_tree ${spec}.tre \
+    --outdir output/ \
+    --min_cov ${params.min_cov} \
+    --baseml baseml
+  """
+
+}
+
+
+// for f in *.tre; do echo "$f\t"`cat $f`; done | sed 's/\.baseml\.tre//' > ../../trees_tab.txt
 
 // Example nextflow config
 /*
