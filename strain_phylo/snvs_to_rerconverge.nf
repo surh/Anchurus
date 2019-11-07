@@ -118,7 +118,7 @@ process trees2tab{
   tuple val(spec), file("trees") from ALNS2BASEML
 
   output:
-  tuple (spec), file("trees_tab.txt")
+  tuple val(spec), file("trees_tab.txt")
 
   """
   for f in trees/*.tre; \
