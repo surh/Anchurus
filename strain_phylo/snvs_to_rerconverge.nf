@@ -49,10 +49,10 @@ ALNDIR = (params.alns_dir == ""
   : Channel.fromPath(params.alns_dir)
       .map{spec -> tuple(spec.fileName, file(spec))})
 
-MASTERTREE = Channel.fromPath(params.master_trees_dir)
+MASTERTREE = Channel.fromPath("${params.master_trees_dir}/*.tre")
   .map{filename -> tuple(filename.name.replace('.tre', ''), file(filename))}
 
-COV = Channel.fromPath(params.cov_dir)
+COV = Channel.fromPath("${params.cov_dir}/*.gene_coverage.txt")
   .map{filename -> tuple(filename.name.replace('.gene_coverage.txt', ''), file(filename))}
 
 MASTERTREE.subscribe{println it}
