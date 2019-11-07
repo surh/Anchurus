@@ -50,10 +50,10 @@ ALNDIR = (params.alns_dir == ""
       .map{spec -> tuple(spec.fileName, file(spec))})
 
 MASTERTREE = Channel.fromPath(params.master_trees_dir)
-  .map{filename -> tuple(filename.fileName.replace('.tre', ''), file(filename))}
+  .map{filename -> tuple(filename.name.replace('.tre', ''), file(filename))}
 
 COV = Channel.fromPath(params.cov_dir)
-  .map{filename -> tuple(filename.fileName.replace('.gene_coverage.txt', ''), file(filename))}
+  .map{filename -> tuple(filename.name.replace('.gene_coverage.txt', ''), file(filename))}
 
 process alns_from_metagenomes{
   label 'r'
