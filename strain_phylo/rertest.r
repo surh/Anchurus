@@ -287,7 +287,7 @@ for(specfile in args$trees){
   # cor.res <- correlateWithBinaryPhenotype(RERmat = rerw, charP = phenv, min.sp = args$min.sp, min.pos = args$min.pos)
   cor.res <- getAllCor(RERmat = rerw, charP = phenv, min.sp = args$min.sp,
                        min.pos = args$min.pos, method = "k", weighted=TRUE)
-  cor.res <- cor.res[ order(cor.res$P), ]
+  cor.res <- cor.res[ order(cor.res$P), ] %>% as_tibble(rownames = "gene_id")
   filename <- file.path(args$outdir, paste(c(args$spec, "cors.txt"), collapse = "."))
   cat("\twriting ", filename, "\n")
   write_tsv(cor.res, path = filename)
