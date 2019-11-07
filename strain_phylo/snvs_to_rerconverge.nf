@@ -122,25 +122,25 @@ println "=========="
 // }
 
 
-process trees2tab{
-  tag "$spec"
-  publishDir "${params.outdir}/tree_tabs",
-    pattern: 'trees_tab.txt',
-    saveAs: {"${spec}.trees.txt"},
-    mode: 'rellink'
-
-  input:
-  tuple val(spec), file("trees") from ALNS2BASEML
-
-  output:
-  tuple val(spec), file("trees_tab.txt")
-
-  """
-  for f in trees/*.tre; \
-    do echo "\$f\\t"`cat \$f`; \
-    done | sed 's/\\.baseml\\.tre//' > trees_tab.txt
-  """
-}
+// process trees2tab{
+//   tag "$spec"
+//   publishDir "${params.outdir}/tree_tabs",
+//     pattern: 'trees_tab.txt',
+//     saveAs: {"${spec}.trees.txt"},
+//     mode: 'rellink'
+//
+//   input:
+//   tuple val(spec), file("trees") from ALNS2BASEML
+//
+//   output:
+//   tuple val(spec), file("trees_tab.txt")
+//
+//   """
+//   for f in trees/*.tre; \
+//     do echo "\$f\\t"`cat \$f`; \
+//     done | sed 's/\\.baseml\\.tre//' > trees_tab.txt
+//   """
+// }
 
 // Example nextflow.config
 /*
