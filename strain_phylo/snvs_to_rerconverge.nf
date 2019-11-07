@@ -55,7 +55,13 @@ MASTERTREE = Channel.fromPath("${params.master_trees_dir}/*.tre")
 COV = Channel.fromPath("${params.cov_dir}/*.gene_coverage.txt")
   .map{filename -> tuple(filename.name.replace('.gene_coverage.txt', ''), file(filename))}
 
-// MASTERTREE.subscribe{println it}
+println "=========="
+MASTERTREE.subscribe{println it}
+println "=========="
+ALNDIR.subscribe{println it}
+println "=========="
+COV.subscribe{println it}
+println "=========="
 
 process alns_from_metagenomes{
   label 'r'
