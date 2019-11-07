@@ -87,7 +87,7 @@ process baseml{
     mode: 'rellink'
 
   input:
-  tuple val(spec), file("alns_dir") from ALNDIR.mix(MIDAS2ALNS)
+  tuple spec, file("alns_dir") from ALNDIR.mix(MIDAS2ALNS)
   path master_tree from "${workflow.launchDir}/${params.master_trees_dir}/${spec}.tre"
   path cov from "${workflow.launchDir}/${params.cov_dir}/${spec}.gene_coverage.txt"
 
