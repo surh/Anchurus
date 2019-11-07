@@ -32,10 +32,16 @@ params.outdir = "output/"
 
 map_dir = file(params.map_dir)
 genomes_dir = file(params.genomes_dir)
-INDIRS = Channel.fromPath("${params.midas_dir}/*", type: 'dir')
-  .map{spec -> tuple(spec.fileName,
-    file(spec),
-    file("${map_dir}/${spec.fileName}.map.txt"))}
+INDIRS = (params.midas_dir == ""
+  ? Channel.empty()
+  : Channel.fromPath("${params.midas_dir}/*", type: 'dir')
+    .map{spec -> tuple(spec.fileName,
+      file(spec),
+      file("${map_dir}/${spec.fileName}.map.txt"))})
+// INDIRS = Channel.fromPath("${params.midas_dir}/*", type: 'dir')
+//   .map{spec -> tuple(spec.fileName,
+//     file(spec),
+//     file("${map_dir}/${spec.fileName}.map.txt"))}
 
 // Create channel with gene level alignments
 ALNDIR = (params.alns_dir == ""
