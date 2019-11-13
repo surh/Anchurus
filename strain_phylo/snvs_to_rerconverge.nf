@@ -74,6 +74,7 @@ ALNDIR = (params.alns_dir == ""
 // Channel with master trees
 MASTERTREE = Channel.fromPath("${params.master_trees_dir}/*.tre")
   .map{filename -> tuple(filename.name.replace('.tre', ''), file(filename))}
+  .into{MT_BASEML; MT_RER}
 
 // Channel with gene coverages
 COV = Channel.fromPath("${params.cov_dir}/*.gene_coverage.txt")
@@ -124,7 +125,7 @@ process baseml{
     mode: 'rellink'
 
   input:
-  tuple spec, file("alns_dir"), file(master_tree), file(cov) from ALNDIR.mix(MIDAS2ALNS).join(MASTERTREE).join(COV)
+  tuple spec, file("alns_dir"), file(master_tree), file(cov) from ALNDIR.mix(MIDAS2ALNS).join(MT_BASEML).join(COV)
 
   output:
   tuple val(spec), file("output") into ALNS2BASEML
@@ -152,12 +153,40 @@ process trees2tab{
   tuple val(spec), file("trees") from GENETREESDIR.mix(ALNS2BASEML)
 
   output:
-  tuple val(spec), file("trees_tab.txt")
+  tuple val(spec), file("trees_tab.txt") into TREETABS
 
   """
   for f in trees/*.tre; \
     do echo "\$f\\t"`cat \$f`; \
     done | sed 's/\\.baseml\\.tre//' > trees_tab.txt
+  """
+}
+
+process rertest{
+  tag "$spec"
+  label 'r'
+  publishDir "${params.outdir}/rertest/",
+    pattern: "output",
+    saveAs: {"${spec}/"},
+    mode: 'rellink'
+
+  input:
+  tuple val(spec), file("trees_tab.txt"), file("master_tree.tre") from TREETABS.join(MT_RER)
+  path "map.txt" from "${map_dir}/${spec}.map.txt"
+
+  output:
+  tuple val(spec), file("${spec}.cors.txt") into RERCORS
+  tuple val(spec), file("${spec}.rerw.dat") into RERWS
+  tuple val(spec), file("${spec}.Trees.dat") into RERTREES
+  
+  """
+  ${workflow.projectDir}/rertest.r \
+    trees_tab.txt \
+    master_tree.tre \
+    --map_file map.txt \
+    --outdir output \
+    --focal_phenotype USA \
+    --spec Bacteroides_vulgatus_57955
   """
 }
 
@@ -182,7 +211,7 @@ process{
   withLabel: 'baseml'{
     module = "anaconda:paml/4.9i"
     conda = '/opt/modules/pkgs/anaconda/3.6/envs/fraserconda'
-    time = '48h'
+    time = '150h'
   }
 }
 executor{
