@@ -31,6 +31,9 @@ Filename mut match <species name>.map.txt
 --alns_dir (optional)
 Directory one directory per species containing all alignments for that
 species. Directories must match species name. Skips alns_from_metagenomes.
+--gene_trees_dir
+Directory with one directory per species containing all trees for that
+species. Directories must match species names.
 --master_trees_dir
 Directory with core phylogeny of each species. Files must be named
 <species name>.tre
@@ -43,11 +46,14 @@ Directory with gene coverage matrices per species. Files must be named
 params.midas_dir = ""
 params.genomes_dir = ""
 params.map_dir = ""
-params.alns_dir = ""
 params.master_trees_dir = ""
 params.cov_dir = ""
 params.min_cov = 0.8
 params.outdir = "output/"
+
+// Optional parameters
+params.alns_dir = ""
+params.gene_trees_dir = ""
 
 
 map_dir = file(params.map_dir)
@@ -65,11 +71,20 @@ ALNDIR = (params.alns_dir == ""
   : Channel.fromPath("${params.alns_dir}/*", type: 'dir')
       .map{spec -> tuple(spec.name, file(spec))})
 
+// Channel with master trees
 MASTERTREE = Channel.fromPath("${params.master_trees_dir}/*.tre")
   .map{filename -> tuple(filename.name.replace('.tre', ''), file(filename))}
 
+// Channel with gene coverages
 COV = Channel.fromPath("${params.cov_dir}/*.gene_coverage.txt")
   .map{filename -> tuple(filename.name.replace('.gene_coverage.txt', ''), file(filename))}
+
+// Channel with gene level trees
+// Create channel with gene level alignments
+GENETREESDIR = (params.gene_trees_dir == ""
+  ? Channel.empty()
+  : Channel.fromPath("${params.alns_dir}/*", type: 'dir')
+      .map{spec -> tuple(spec.name, file(spec))})
 
 process alns_from_metagenomes{
   label 'r'
@@ -134,7 +149,7 @@ process trees2tab{
     mode: 'rellink'
 
   input:
-  tuple val(spec), file("trees") from ALNS2BASEML
+  tuple val(spec), file("trees") from GENETREESDIR.mix(ALNS2BASEML)
 
   output:
   tuple val(spec), file("trees_tab.txt")
