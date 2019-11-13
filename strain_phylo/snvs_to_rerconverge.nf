@@ -19,17 +19,18 @@
 // First step is just to get the alignments.
 
 /*
---midas_dir
-MIDAS merge output. Must match species file
+--midas_dir (optional)
+MIDAS merge output. Must match species file. Starts pipeline from the
+beginning.
 --genomes_dir
 Representative genomes dir. One genome per species with name matching species
 fileName
 --map_dir
 Directory with one map per species. Should include only samples to keep.
 Filename mut match <species name>.map.txt
---alns_dir
+--alns_dir (optional)
 Directory one directory per species containing all alignments for that
-species. Directories must match species name.
+species. Directories must match species name. Skips alns_from_metagenomes.
 --master_trees_dir
 Directory with core phylogeny of each species. Files must be named
 <species name>.tre
@@ -37,9 +38,6 @@ Directory with core phylogeny of each species. Files must be named
 Directory with gene coverage matrices per species. Files must be named
 <species name>.gene_coverage.txt
 */
-
-
-
 
 // parameters
 params.midas_dir = ""
