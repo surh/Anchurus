@@ -18,6 +18,28 @@
 // RERconverge tests for a binary phenotype.
 // First step is just to get the alignments.
 
+/*
+--midas_dir
+MIDAS merge output. Must match species file
+--genomes_dir
+Representative genomes dir. One genome per species with name matching species
+fileName
+--map_dir
+Directory with one map per species. Should include only samples to keep.
+Filename mut match <species name>.map.txt
+--alns_dir
+Directory one directory per species containing all alignments for that
+species. Directories must match species name.
+--master_trees_dir
+Directory with core phylogeny of each species. Files must be named
+<species name>.tre
+--cov_dir
+Directory with gene coverage matrices per species. Files must be named
+<species name>.gene_coverage.txt
+*/
+
+
+
 
 // parameters
 params.midas_dir = ""
