@@ -38,10 +38,6 @@ INDIRS = (params.midas_dir == ""
     .map{spec -> tuple(spec.fileName,
       file(spec),
       file("${map_dir}/${spec.fileName}.map.txt"))})
-// INDIRS = Channel.fromPath("${params.midas_dir}/*", type: 'dir')
-//   .map{spec -> tuple(spec.fileName,
-//     file(spec),
-//     file("${map_dir}/${spec.fileName}.map.txt"))}
 
 // Create channel with gene level alignments
 ALNDIR = (params.alns_dir == ""
@@ -84,19 +80,6 @@ process alns_from_metagenomes{
   """
 }
 
-// println "=========="
-// ALNDIR.mix(MIDAS2ALNS).subscribe{println it}
-// println "=========="
-// MASTERTREE.join(COV).subscribe{println it}
-// println "=========="
-// ALNDIR.subscribe{println it}
-// println "=========="
-// COV.subscribe{println it}
-// println "=========="
-// ALNDIR.mix(MIDAS2ALNS).join(MASTERTREE).subscribe{println it}
-// ALNDIR.mix(MIDAS2ALNS).join(MASTERTREE).join(COV)
-// println "=========="
-
 process baseml{
   label 'baseml'
   tag "$spec"
@@ -107,8 +90,6 @@ process baseml{
 
   input:
   tuple spec, file("alns_dir"), file(master_tree), file(cov) from ALNDIR.mix(MIDAS2ALNS).join(MASTERTREE).join(COV)
-  // path master_tree from "${workflow.launchDir}/${params.master_trees_dir}/${spec}.tre"
-  // path cov from "${workflow.launchDir}/${params.cov_dir}/${spec}.gene_coverage.txt"
 
   output:
   tuple val(spec), file("output") into ALNS2BASEML
