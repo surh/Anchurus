@@ -47,21 +47,13 @@ INDIRS = (params.midas_dir == ""
 ALNDIR = (params.alns_dir == ""
   ? Channel.empty()
   : Channel.fromPath("${params.alns_dir}/*", type: 'dir')
-      .map{spec -> tuple(spec.fileName, file(spec))})
+      .map{spec -> tuple(spec.name, file(spec))})
 
 MASTERTREE = Channel.fromPath("${params.master_trees_dir}/*.tre")
   .map{filename -> tuple(filename.name.replace('.tre', ''), file(filename))}
 
 COV = Channel.fromPath("${params.cov_dir}/*.gene_coverage.txt")
   .map{filename -> tuple(filename.name.replace('.gene_coverage.txt', ''), file(filename))}
-
-println "=========="
-MASTERTREE.subscribe{println it}
-println "=========="
-ALNDIR.subscribe{println it}
-println "=========="
-COV.subscribe{println it}
-println "=========="
 
 process alns_from_metagenomes{
   label 'r'
@@ -92,6 +84,19 @@ process alns_from_metagenomes{
   """
 }
 
+// println "=========="
+// ALNDIR.mix(MIDAS2ALNS).subscribe{println it}
+// println "=========="
+// MASTERTREE.join(COV).subscribe{println it}
+// println "=========="
+// ALNDIR.subscribe{println it}
+// println "=========="
+// COV.subscribe{println it}
+// println "=========="
+// ALNDIR.mix(MIDAS2ALNS).join(MASTERTREE).subscribe{println it}
+// ALNDIR.mix(MIDAS2ALNS).join(MASTERTREE).join(COV)
+// println "=========="
+
 process baseml{
   label 'baseml'
   tag "$spec"
@@ -109,7 +114,7 @@ process baseml{
   tuple val(spec), file("output") into ALNS2BASEML
 
   """
-  ${workflow.projectDir}/baseml_all_genes.py
+  ${workflow.projectDir}/baseml_all_genes.py \
     --aln_dir alns_dir/ \
     --cov_file $cov \
     --master_tree $master_tree \
@@ -119,7 +124,6 @@ process baseml{
   """
 
 }
-
 
 process trees2tab{
   tag "$spec"
@@ -160,7 +164,7 @@ process{
     time = '12h'
   }
   withLabel: 'baseml'{
-    module = "anaconda:paml/4.91"
+    module = "anaconda:paml/4.9i"
     conda = '/opt/modules/pkgs/anaconda/3.6/envs/fraserconda'
     time = '48h'
   }
