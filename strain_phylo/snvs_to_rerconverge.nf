@@ -48,6 +48,7 @@ params.genomes_dir = ""
 params.map_dir = ""
 params.master_trees_dir = ""
 params.cov_dir = ""
+params.focal_phenotye = "USA"
 params.min_cov = 0.8
 params.outdir = "output/"
 
@@ -129,6 +130,7 @@ process baseml{
 
   input:
   tuple spec, file("alns_dir"), file(master_tree), file(cov) from ALNDIR.mix(MIDAS2ALNS).join(MT_BASEML).join(COV)
+  val pheno from params.foccal_phenotye
 
   output:
   tuple val(spec), file("output") into ALNS2BASEML
@@ -140,7 +142,8 @@ process baseml{
     --master_tree $master_tree \
     --outdir output/ \
     --min_cov ${params.min_cov} \
-    --baseml baseml
+    --baseml baseml \
+    --focal_phenotye $pheno
   """
 
 }
@@ -163,7 +166,7 @@ process trees2tab{
 
   """
   for f in trees/*.tre; \
-    do echo "\$f\\t"`cat \$f`; \
+    do echo -e `basename \$f`"\\t"`cat \$f`; \
     done | sed 's/\\.baseml\\.tre//' > trees_tab.txt
   """
 }
