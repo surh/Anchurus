@@ -162,33 +162,33 @@ process trees2tab{
   """
 }
 
-process rertest{
-  tag "$spec"
-  label 'r'
-  publishDir "${params.outdir}/rertest/",
-    pattern: "output",
-    saveAs: {"${spec}/"},
-    mode: 'rellink'
-
-  input:
-  tuple val(spec), file("trees_tab.txt"), file("master_tree.tre") from TREETABS.join(MT_RER)
-  path "map.txt" from "${map_dir}/${spec}.map.txt"
-
-  output:
-  tuple val(spec), file("${spec}.cors.txt") into RERCORS
-  tuple val(spec), file("${spec}.rerw.dat") into RERWS
-  tuple val(spec), file("${spec}.Trees.dat") into RERTREES
-  
-  """
-  ${workflow.projectDir}/rertest.r \
-    trees_tab.txt \
-    master_tree.tre \
-    --map_file map.txt \
-    --outdir output \
-    --focal_phenotype USA \
-    --spec Bacteroides_vulgatus_57955
-  """
-}
+// process rertest{
+//   tag "$spec"
+//   label 'r'
+//   publishDir "${params.outdir}/rertest/",
+//     pattern: "output",
+//     saveAs: {"${spec}/"},
+//     mode: 'rellink'
+//
+//   input:
+//   tuple val(spec), file("trees_tab.txt"), file("master_tree.tre") from TREETABS.join(MT_RER)
+//   path "map.txt" from "${map_dir}/${spec}.map.txt"
+//
+//   output:
+//   tuple val(spec), file("${spec}.cors.txt") into RERCORS
+//   tuple val(spec), file("${spec}.rerw.dat") into RERWS
+//   tuple val(spec), file("${spec}.Trees.dat") into RERTREES
+//
+//   """
+//   ${workflow.projectDir}/rertest.r \
+//     trees_tab.txt \
+//     master_tree.tre \
+//     --map_file map.txt \
+//     --outdir output \
+//     --focal_phenotype USA \
+//     --spec Bacteroides_vulgatus_57955
+//   """
+// }
 
 // Example nextflow.config
 /*
