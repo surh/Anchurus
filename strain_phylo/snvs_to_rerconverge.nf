@@ -130,7 +130,6 @@ process baseml{
 
   input:
   tuple spec, file("alns_dir"), file(master_tree), file(cov) from ALNDIR.mix(MIDAS2ALNS).join(MT_BASEML).join(COV)
-  val pheno from params.foccal_phenotye
 
   output:
   tuple val(spec), file("output") into ALNS2BASEML
@@ -142,8 +141,7 @@ process baseml{
     --master_tree $master_tree \
     --outdir output/ \
     --min_cov ${params.min_cov} \
-    --baseml baseml \
-    --focal_phenotye $pheno
+    --baseml baseml
   """
 
 }
@@ -184,6 +182,7 @@ process rertest{
     file("trees_tab.txt"),
     file("master_tree.tre"),
     file("map.txt") from TREETABS.join(MT_RER).join(SPECMAPS)
+  val pheno from params.focal_phenotye
 
   output:
   tuple val(spec), file("${spec}.cors.txt") into RERCORS
@@ -196,7 +195,7 @@ process rertest{
     master_tree.tre \
     --map_file map.txt \
     --outdir output \
-    --focal_phenotype USA \
+    --focal_phenotype $pheno \
     --spec Bacteroides_vulgatus_57955
   """
 }
