@@ -143,7 +143,7 @@ process baseml{
 }
 
 println "============="
-GENETREESDIR.subscribe(println it)
+GENETREESDIR.subscribe{println it}
 
 // process trees2tab{
 //   tag "$spec"
