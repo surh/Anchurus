@@ -87,6 +87,9 @@ GENETREESDIR = (params.gene_trees_dir == ""
   : Channel.fromPath("${params.gene_trees_dir}/*", type: 'dir')
       .map{spec -> tuple(spec.name, file(spec))})
 
+SPECMAPS = Channel.fromPath("${map_dir}/*")
+  .map{filename -> tuple(filename.name.replace('.map.txt', ''), file(filename))}
+
 process alns_from_metagenomes{
   label 'r'
   tag "$spec"
@@ -174,8 +177,10 @@ process rertest{
     mode: 'rellink'
 
   input:
-  tuple val(spec), file("trees_tab.txt"), file("master_tree.tre") from TREETABS.join(MT_RER)
-  path "map.txt" from "${map_dir}/${spec}.map.txt"
+  tuple val(spec),
+    file("trees_tab.txt"),
+    file("master_tree.tre"),
+    file("map.txt") from TREETABS.join(MT_RER).join(SPECMAPS)
 
   output:
   tuple val(spec), file("${spec}.cors.txt") into RERCORS
