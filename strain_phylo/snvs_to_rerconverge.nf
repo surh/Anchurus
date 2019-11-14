@@ -84,7 +84,7 @@ COV = Channel.fromPath("${params.cov_dir}/*.gene_coverage.txt")
 // Create channel with gene level alignments
 GENETREESDIR = (params.gene_trees_dir == ""
   ? Channel.empty()
-  : Channel.fromPath("${params.alns_dir}/*", type: 'dir')
+  : Channel.fromPath("${params.gene_trees_dir}/*", type: 'dir')
       .map{spec -> tuple(spec.name, file(spec))})
 
 process alns_from_metagenomes{
