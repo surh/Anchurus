@@ -142,25 +142,28 @@ process baseml{
 
 }
 
-process trees2tab{
-  tag "$spec"
-  publishDir "${params.outdir}/tree_tabs",
-    pattern: 'trees_tab.txt',
-    saveAs: {"${spec}.trees.txt"},
-    mode: 'rellink'
+println "============="
+GENETREESDIR.subscribe(println it)
 
-  input:
-  tuple val(spec), file("trees") from GENETREESDIR.mix(ALNS2BASEML)
-
-  output:
-  tuple val(spec), file("trees_tab.txt") into TREETABS
-
-  """
-  for f in trees/*.tre; \
-    do echo "\$f\\t"`cat \$f`; \
-    done | sed 's/\\.baseml\\.tre//' > trees_tab.txt
-  """
-}
+// process trees2tab{
+//   tag "$spec"
+//   publishDir "${params.outdir}/tree_tabs",
+//     pattern: 'trees_tab.txt',
+//     saveAs: {"${spec}.trees.txt"},
+//     mode: 'rellink'
+//
+//   input:
+//   tuple val(spec), file("trees") from GENETREESDIR.mix(ALNS2BASEML)
+//
+//   output:
+//   tuple val(spec), file("trees_tab.txt") into TREETABS
+//
+//   """
+//   for f in trees/*.tre; \
+//     do echo "\$f\\t"`cat \$f`; \
+//     done | sed 's/\\.baseml\\.tre//' > trees_tab.txt
+//   """
+// }
 
 // process rertest{
 //   tag "$spec"
