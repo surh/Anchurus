@@ -185,9 +185,9 @@ process rertest{
   val pheno from params.focal_phenotye
 
   output:
-  tuple val(spec), file("${spec}.cors.txt") into RERCORS
-  tuple val(spec), file("${spec}.rerw.dat") into RERWS
-  tuple val(spec), file("${spec}.Trees.dat") into RERTREES
+  tuple val(spec), file("output/${spec}.cors.txt") into RERCORS
+  tuple val(spec), file("output/${spec}.rerw.dat") into RERWS
+  tuple val(spec), file("output/${spec}.Trees.dat") into RERTREES
 
   """
   ${workflow.projectDir}/rertest.r \
