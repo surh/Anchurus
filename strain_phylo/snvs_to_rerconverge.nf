@@ -205,6 +205,7 @@ process rertest{
 process{
   maxForks = 100
   stageInMode = 'rellink'
+  errorStrategy = 'finish'
   withLabel: 'r'{
     module = 'R/3.6.1'
     memory = '5G'
