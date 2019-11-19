@@ -196,7 +196,7 @@ process rertest{
     --map_file map.txt \
     --outdir output \
     --focal_phenotype $pheno \
-    --spec Bacteroides_vulgatus_57955
+    --spec $spec
   """
 }
 
