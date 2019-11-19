@@ -407,21 +407,21 @@ getAllResiduals <- function(treesObj, cutoff=NULL, transform="sqrt", weighted=T,
 
 ##############################################
 
-# args <- process_arguments()
-args <- list(trees = "trees_tab.txt",
-             master_tree = "master_tree.tre",
-             map_file = "map.txt",
-             outdir = "output/",
-             focal_phenotype = "USA",
-             spec = "Bacteroides_ovatus_58035")
-# Set other arguments
-args$scale <- TRUE
-args$weight <- TRUE
-args$type <- "single"
-args$transform <- 'sqrt'
-args$clade <- "all"
-args$min.sp <- 5
-args$min.pos <- 2
+args <- process_arguments()
+# args <- list(trees = "trees_tab.txt",
+#              master_tree = "master_tree.tre",
+#              map_file = "map.txt",
+#              outdir = "output/",
+#              focal_phenotype = "USA",
+#              spec = "Bacteroides_ovatus_58035")
+# # Set other arguments
+# args$scale <- TRUE
+# args$weight <- TRUE
+# args$type <- "single"
+# args$transform <- 'sqrt'
+# args$clade <- "all"
+# args$min.sp <- 5
+# args$min.pos <- 2
 
 library(tidyverse)
 library(RERconverge)
@@ -442,12 +442,11 @@ for(specfile in args$trees){
   cat(basename(specfile), "\n")
   
   # Read trees
-  # Trees <- readTrees(specfile, masterTree = master_tre)
-  # filename <- file.path(args$outdir, paste(c(args$spec, "Trees.dat"), collapse = "."))
-  # cat("\twriting ", filename, "\n")
-  # save(Trees, file = filename)
-  filename <- "output/Bacteroides_vulgatus_57955.Trees.dat"
-  load(file = filename)
+  Trees <- readTrees(specfile, masterTree = master_tre)
+  filename <- file.path(args$outdir, paste(c(args$spec, "Trees.dat"), collapse = "."))
+  cat("\twriting ", filename, "\n")
+  save(Trees, file = filename)
+  # load(file = filename)
   
   # Process map (probably need to change variable name for multi dir).
   map <- map[ Trees$masterTree$tip.label ]
