@@ -307,6 +307,7 @@ delta_from_tree <- function(tree_file, trait, seed = NA, nperm = 100, plot = NA,
   # tree_file <- "a/b/c"
   spec_name <- str_split(basename(tree_file), pattern = '[.]')[[1]]
   spec_name <- paste(spec_name[1:(length(spec_name) - 1)], collapse = ".")
+  cat(spec_name, "\n")
   
   tre <- read.tree(tree_file)
   trait <- trait[ tre$tip.label ]
