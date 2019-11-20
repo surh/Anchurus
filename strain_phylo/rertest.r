@@ -227,17 +227,204 @@ getAllCor <- function(RERmat, charP, method="auto",min.sp=10, min.pos=2,
   corout$p.adj=p.adjust(corout$P, method="BH")
   corout
 }
+
+getAllResiduals <- function(treesObj, cutoff=NULL, transform="sqrt", weighted=T,
+                            useSpecies=NULL,  min.sp=10, scale=T, 
+                            doOnly=NULL, maxT=NULL, scaleForPproj=F, mean.trim=0.05, plot=T){
+  
+  # treesObj <- Trees
+  # cutoff <- NULL
+  # transform <- args$transform
+  # weighted <- args$weight
+  # useSpecies <- NULL
+  # min.sp <- 10 
+  # scale <- args$scale
+  # doOnly <- NULL
+  # maxT <- NULL
+  # scaleForPproj <- FALSE
+  # mean.trim <- 0.05
+  # plot <- FALSE
+  # 
+  
+  if(is.null(cutoff)){
+    cutoff=quantile(treesObj$paths, 0.05, na.rm=T)
+    message(paste("cutoff is set to", cutoff))
+  }
+  if (weighted){
+    weights=RERconverge:::computeWeightsAllVar(treesObj$paths, transform=transform, plot=plot)
+    residfunc=RERconverge:::fastLmResidMatWeighted
+  }else{
+    residfunc=fastLmResidMat
+  }
+  # residfunc=naresid
+  
+  if (is.null(useSpecies)){
+    useSpecies=treesObj$masterTree$tip.label
+    #mappedEdges=trees$mappedEdges
+  }
+  if(is.null(maxT)){
+    maxT=treesObj$numTrees
+  }
+  if(transform!="none"){
+    transform=match.arg(transform,c("sqrt", "log"))
+    transform=get(transform)
+  }else{
+    transform=NULL
+  }
+  
+  
+  
+  #cm is the names of species that are included in useSpecies and the master tree
+  cm=intersect(treesObj$masterTree$tip.label, useSpecies)
+  sp.miss = setdiff(treesObj$masterTree$tip.label, useSpecies)
+  if (length(sp.miss) > 0) {
+    message(paste0("Species from master tree not present in useSpecies: ", paste(sp.miss,
+                                                                                 collapse = ",")))
+  }
+  
+  rr=matrix(nrow=nrow(treesObj$paths), ncol=ncol(treesObj$paths))
+  
+  #maximum number of present species
+  maxn=rowSums(treesObj$report[,cm])
+  
+  if(is.null(doOnly)){
+    doOnly=1
+  }else{
+    maxT=1
+  }
+  skipped=double(nrow(rr))
+  skipped[]=0
+  
+  for (i in doOnly:(doOnly+maxT-1)){
+    
+    if(sum(!is.na(rr[i,]))==0&&!skipped[i]==1){
+      
+      
+      #get the ith tree
+      tree1=treesObj$trees[[i]]
+      
+      #get the common species, prune and unroot
+      both=intersect(tree1$tip.label, cm)
+      if(length(both)<min.sp){
+        next
+      }
+      tree1=unroot(pruneTree(tree1,both))
+      
+      #do the same for the refTree
+      
+      
+      #find all the genes that contain all of the species in tree1
+      allreport=treesObj$report[,both]
+      ss=rowSums(allreport)
+      iiboth=which(ss==length(both)) #this needs to be >1
+      if (length(iiboth) < 2) {
+        message(paste("Skipping i =",i,"(no other genes with same species set)"))
+        next
+      }
+      
+      nb=length(both)
+      ai=which(maxn[iiboth]==nb)
+      
+      
+      message(paste("i=", i))
+      
+      
+      if(T){
+        
+        ee=RERconverge:::edgeIndexRelativeMaster(tree1, treesObj$masterTree)
+        
+        ii= treesObj$matIndex[ee[, c(2,1)]]
+        
+        allbranch=treesObj$paths[iiboth,ii]
+        if (is.null(dim(allbranch))) {
+          message(paste("Issue with gettiing paths for genes with same species as tree",i))
+          return(list("iiboth"=iiboth,"ii"=ii))
+        }
+        
+        if(weighted){
+          allbranchw=weights[iiboth,ii]
+        }
+        if(scaleForPproj){
+          nv=apply(scaleMatMean(allbranch), 2, mean, na.rm=T, trim=mean.trim)
+        }else{
+          nv=apply(allbranch, 2, mean, na.rm=T, trim=mean.trim)
+        }
+        
+        iibad=which(allbranch<cutoff)
+        #don't scale
+        #allbranch=scaleMat(allbranch)
+        if(!is.null(transform)){
+          nv=transform(nv)
+          allbranch=transform(allbranch)
+        }
+        allbranch[iibad]=NA
+        
+        
+        
+        # cat("\thello...\n")
+        if(!scale){
+          if(!weighted){
+            proj=residfunc(allbranch[ai, ,drop=F], model.matrix(~1+nv))
+            
+          }else{
+            
+            proj=residfunc(allbranch[ai, ,drop=F], model.matrix(~1+nv), allbranchw[ai, ,drop=F])
+            
+          }
+        }else{
+          if(!weighted){
+            proj=residfunc(allbranch[, ,drop=F], model.matrix(~1+nv))
+          }else{
+            # proj=residfunc(allbranch[, ,drop=F], model.matrix(~1+nv),allbranchw)
+            
+            proj <- tryCatch(residfunc(allbranch[, ,drop=F], model.matrix(~1+nv),allbranchw),
+                             error = function(e){
+                               cat("\tskipping...\n")
+                             })
+            if(is.null(proj)){
+              next
+            }
+          }
+          proj=scale(proj, center = F)[ai, , drop=F]
+          
+        }
+        
+        
+        #we have the projection
+        
+        
+        
+        rr[iiboth[ai],ii]=proj
+        
+      }
+      
+    }}
+  message("Naming rows and columns of RER matrix")
+  rownames(rr)=names(treesObj$trees)
+  colnames(rr)=namePathsWSpecies(treesObj$masterTree)
+  rr
+}
+
 ##############################################
 
 args <- process_arguments()
+# args <- list(trees = "trees_tab.txt",
+#              master_tree = "master_tree.tre",
+#              map_file = "map.txt",
+#              outdir = "output/",
+#              focal_phenotype = "USA",
+#              spec = "Bacteroides_ovatus_58035")
+# # Set other arguments
+# args$scale <- TRUE
+# args$weight <- TRUE
+# args$type <- "single"
+# args$transform <- 'sqrt'
+# args$clade <- "all"
+# args$min.sp <- 5
+# args$min.pos <- 2
 
 library(tidyverse)
 library(RERconverge)
-
-
-# tree_dir <- "output/gene_trees/"
-# tree_tab_file <- "trees_tab.txt"
-# map_file <- "../../../../data/gathered_results/2019a.gut/map.txt"
 
 # Read simple data
 master_tre <- ape::read.tree(args$master_tree)
@@ -251,6 +438,7 @@ if(!dir.exists(args$outdir)){
 }
 
 for(specfile in args$trees){
+  specfile <- args$trees[1]
   cat(basename(specfile), "\n")
   
   # Read trees
@@ -258,6 +446,7 @@ for(specfile in args$trees){
   filename <- file.path(args$outdir, paste(c(args$spec, "Trees.dat"), collapse = "."))
   cat("\twriting ", filename, "\n")
   save(Trees, file = filename)
+  # load(file = filename)
   
   # Process map (probably need to change variable name for multi dir).
   map <- map[ Trees$masterTree$tip.label ]

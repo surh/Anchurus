@@ -18,16 +18,43 @@
 // RERconverge tests for a binary phenotype.
 // First step is just to get the alignments.
 
+/*
+--midas_dir (optional)
+MIDAS merge output. Must match species file. Starts pipeline from the
+beginning.
+--genomes_dir
+Representative genomes dir. One genome per species with name matching species
+fileName
+--map_dir
+Directory with one map per species. Should include only samples to keep.
+Filename mut match <species name>.map.txt
+--alns_dir (optional)
+Directory one directory per species containing all alignments for that
+species. Directories must match species name. Skips alns_from_metagenomes.
+--gene_trees_dir
+Directory with one directory per species containing all trees for that
+species. Directories must match species names.
+--master_trees_dir
+Directory with core phylogeny of each species. Files must be named
+<species name>.tre
+--cov_dir
+Directory with gene coverage matrices per species. Files must be named
+<species name>.gene_coverage.txt
+*/
 
 // parameters
 params.midas_dir = ""
 params.genomes_dir = ""
 params.map_dir = ""
-params.alns_dir = ""
 params.master_trees_dir = ""
 params.cov_dir = ""
+params.focal_phenotye = "USA"
 params.min_cov = 0.8
 params.outdir = "output/"
+
+// Optional parameters
+params.alns_dir = ""
+params.gene_trees_dir = ""
 
 
 map_dir = file(params.map_dir)
@@ -38,10 +65,6 @@ INDIRS = (params.midas_dir == ""
     .map{spec -> tuple(spec.fileName,
       file(spec),
       file("${map_dir}/${spec.fileName}.map.txt"))})
-// INDIRS = Channel.fromPath("${params.midas_dir}/*", type: 'dir')
-//   .map{spec -> tuple(spec.fileName,
-//     file(spec),
-//     file("${map_dir}/${spec.fileName}.map.txt"))}
 
 // Create channel with gene level alignments
 ALNDIR = (params.alns_dir == ""
@@ -49,11 +72,24 @@ ALNDIR = (params.alns_dir == ""
   : Channel.fromPath("${params.alns_dir}/*", type: 'dir')
       .map{spec -> tuple(spec.name, file(spec))})
 
+// Channel with master trees
 MASTERTREE = Channel.fromPath("${params.master_trees_dir}/*.tre")
   .map{filename -> tuple(filename.name.replace('.tre', ''), file(filename))}
+  .into{MT_BASEML; MT_RER}
 
+// Channel with gene coverages
 COV = Channel.fromPath("${params.cov_dir}/*.gene_coverage.txt")
   .map{filename -> tuple(filename.name.replace('.gene_coverage.txt', ''), file(filename))}
+
+// Channel with gene level trees
+// Create channel with gene level alignments
+GENETREESDIR = (params.gene_trees_dir == ""
+  ? Channel.empty()
+  : Channel.fromPath("${params.gene_trees_dir}/*", type: 'dir')
+      .map{spec -> tuple(spec.name, file(spec))})
+
+SPECMAPS = Channel.fromPath("${map_dir}/*")
+  .map{filename -> tuple(filename.name.replace('.map.txt', ''), file(filename))}
 
 process alns_from_metagenomes{
   label 'r'
@@ -84,19 +120,6 @@ process alns_from_metagenomes{
   """
 }
 
-// println "=========="
-// ALNDIR.mix(MIDAS2ALNS).subscribe{println it}
-// println "=========="
-// MASTERTREE.join(COV).subscribe{println it}
-// println "=========="
-// ALNDIR.subscribe{println it}
-// println "=========="
-// COV.subscribe{println it}
-// println "=========="
-// ALNDIR.mix(MIDAS2ALNS).join(MASTERTREE).subscribe{println it}
-// ALNDIR.mix(MIDAS2ALNS).join(MASTERTREE).join(COV)
-// println "=========="
-
 process baseml{
   label 'baseml'
   tag "$spec"
@@ -106,9 +129,7 @@ process baseml{
     mode: 'rellink'
 
   input:
-  tuple spec, file("alns_dir"), file(master_tree), file(cov) from ALNDIR.mix(MIDAS2ALNS).join(MASTERTREE).join(COV)
-  // path master_tree from "${workflow.launchDir}/${params.master_trees_dir}/${spec}.tre"
-  // path cov from "${workflow.launchDir}/${params.cov_dir}/${spec}.gene_coverage.txt"
+  tuple spec, file("alns_dir"), file(master_tree), file(cov) from ALNDIR.mix(MIDAS2ALNS).join(MT_BASEML).join(COV)
 
   output:
   tuple val(spec), file("output") into ALNS2BASEML
@@ -125,6 +146,9 @@ process baseml{
 
 }
 
+// println "============="
+// GENETREESDIR.subscribe{println it}
+
 process trees2tab{
   tag "$spec"
   publishDir "${params.outdir}/tree_tabs",
@@ -133,15 +157,46 @@ process trees2tab{
     mode: 'rellink'
 
   input:
-  tuple val(spec), file("trees") from ALNS2BASEML
+  tuple val(spec), file("trees") from GENETREESDIR.mix(ALNS2BASEML)
 
   output:
-  tuple val(spec), file("trees_tab.txt")
+  tuple val(spec), file("trees_tab.txt") into TREETABS
 
   """
   for f in trees/*.tre; \
-    do echo "\$f\\t"`cat \$f`; \
+    do echo -e `basename \$f`"\\t"`cat \$f`; \
     done | sed 's/\\.baseml\\.tre//' > trees_tab.txt
+  """
+}
+
+process rertest{
+  tag "$spec"
+  label 'r'
+  publishDir "${params.outdir}/rertest/",
+    pattern: "output",
+    saveAs: {"${spec}/"},
+    mode: 'rellink'
+
+  input:
+  tuple val(spec),
+    file("trees_tab.txt"),
+    file("master_tree.tre"),
+    file("map.txt") from TREETABS.join(MT_RER).join(SPECMAPS)
+  val pheno from params.focal_phenotye
+
+  output:
+  tuple val(spec), file("output/${spec}.cors.txt") into RERCORS
+  tuple val(spec), file("output/${spec}.rerw.dat") into RERWS
+  tuple val(spec), file("output/${spec}.Trees.dat") into RERTREES
+
+  """
+  ${workflow.projectDir}/rertest.r \
+    trees_tab.txt \
+    master_tree.tre \
+    --map_file map.txt \
+    --outdir output \
+    --focal_phenotype $pheno \
+    --spec $spec
   """
 }
 
@@ -150,6 +205,7 @@ process trees2tab{
 process{
   maxForks = 100
   stageInMode = 'rellink'
+  errorStrategy = 'finish'
   withLabel: 'r'{
     module = 'R/3.6.1'
     memory = '5G'
@@ -166,7 +222,7 @@ process{
   withLabel: 'baseml'{
     module = "anaconda:paml/4.9i"
     conda = '/opt/modules/pkgs/anaconda/3.6/envs/fraserconda'
-    time = '48h'
+    time = '150h'
   }
 }
 executor{
