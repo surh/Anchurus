@@ -336,16 +336,17 @@ delta_from_tree <- function(tree_file, trait, seed = NA, nperm = 100, plot = NA,
     p1 <- tibble(delta = delta.perms) %>%
       ggplot(aes(x = delta)) +
       geom_histogram(bins = 20) +
-      geom_vline(xintercept = tre.delta,
-                 col = "red", size = 2) +
       AMOR::theme_blackbox()
+    if(!is.na(tre.delta)){
+      p1 <- p1 + 
+        geom_vline(xintercept = tre.delta,
+                   col = "red", size = 2)
+    }
     ggsave(plot, p1, width = 6, height = 4)
   }
   
-  
-  
-  
   # Get result
+  cat("\tGathering results")
   Res <- tibble(name = spec_name,
                 delta = tre.delta,
                 pval = sum(delta.perms >= tre.delta) / sum(!is.na(delta.perms)),
@@ -354,13 +355,13 @@ delta_from_tree <- function(tree_file, trait, seed = NA, nperm = 100, plot = NA,
                 nperms = nperm,
                 succ_perms = sum(!is.na(delta.perms)),
                 seed = seed,
-                mean_delta = mean(delta.perms),
-                sd_delta = sd(delta.perms),
-                median_delta = median(delta.perms),
-                Q1 = quantile(delta.perms, 0.25),
-                Q3 = quantile(delta.perms, 0.75),
-                ci_bottom = quantile(delta.perms, 0.025),
-                ci_top = quantile(delta.perms, 0.975))
+                mean_delta = mean(delta.perms, na.rm = TRUE),
+                sd_delta = sd(delta.perms, na.rm = TRUE),
+                median_delta = median(delta.perms, na.rm = TRUE),
+                Q1 = quantile(delta.perms, 0.25, na.rm = TRUE),
+                Q3 = quantile(delta.perms, 0.75, na.rm = TRUE),
+                ci_bottom = quantile(delta.perms, 0.025, na.rm = TRUE),
+                ci_top = quantile(delta.perms, 0.975, na.rm = TRUE))
   
   return(Res)
 }
