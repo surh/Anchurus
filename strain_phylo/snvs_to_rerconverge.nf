@@ -124,7 +124,7 @@ process baseml{
   label 'baseml'
   tag "$spec"
   publishDir "${params.outdir}/gene_trees/",
-    pattern: "output",
+    pattern: "output/gene_trees",
     saveAs: {"${spec}/"},
     mode: 'rellink'
 
@@ -132,7 +132,7 @@ process baseml{
   tuple spec, file("alns_dir"), file(master_tree), file(cov) from ALNDIR.mix(MIDAS2ALNS).join(MT_BASEML).join(COV)
 
   output:
-  tuple val(spec), file("output") into ALNS2BASEML
+  tuple val(spec), file("output/gene_trees/") into ALNS2BASEML
 
   """
   ${workflow.projectDir}/baseml_all_genes.py \
