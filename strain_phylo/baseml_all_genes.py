@@ -186,6 +186,9 @@ def baseml_all_genes(cov_file, aln_dir, tre_file, outdir="./output/",
         # Skip if alignment does not exist
         if not os.path.isfile(aln_file):
             continue
+        # Skip if output tree file already exists
+        if resume and os.path.isfile(gene_tree_file):
+            continue
 
         # Find samples to keep
         to_keep = set(c.index[c >= cov_thres])
