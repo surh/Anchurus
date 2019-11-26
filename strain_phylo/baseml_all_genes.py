@@ -144,15 +144,32 @@ def run_baseml(aln_file, tre_file, outdir="output/",
 
 
 def baseml_all_genes(cov_file, aln_dir, tre_file, outdir="./output/",
-                     cov_thres=0.8, n_threshold=5, baseml_bin="baseml"):
+                     cov_thres=0.8, n_threshold=5, baseml_bin="baseml",
+                     resume=False):
     """Run baseml on all genes with only samples above
     certain coverage threshold."""
 
     # Prepare output directory structure
-    os.mkdir(outdir)
-    os.mkdir(os.path.join(outdir, "gene_alns"))
-    os.mkdir(os.path.join(outdir, "baseml"))
-    os.mkdir(os.path.join(outdir, "gene_trees"))
+    gene_alns_dir = os.path.join(outdir, "gene_alns")
+    baseml_dir = os.path.join(outdir, "baseml")
+    gene_trees_dir = os.path.join(outdir, "gene_trees")
+    if resume:
+        # If option resume is true, check first if output dirs exist.
+        if not os.path.isdir(outdir):
+            os.mkdir(outdir)
+        if not os.path.isdir(gene_alns_dir):
+            os.mkdir(gene_alns_dir)
+        if not os.path.isdir(baseml_dir):
+            os.mkdir(baseml_dir)
+        if not os.path.isdir(gene_trees_dir):
+            os.mkdir(gene_trees_dir)
+    else:
+        # If option resume is false, it will exit with an error if
+        # output files already exist.
+        os.mkdir(outdir)
+        os.mkdir(gene_alns_dir)
+        os.mkdir(baseml_dir)
+        os.mkdir(gene_trees_dir)
 
     # Read coverage information
     covs = pd.read_csv(cov_file, sep="\t", dtype={'gene': np.character})
