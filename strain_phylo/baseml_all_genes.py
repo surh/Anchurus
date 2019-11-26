@@ -228,4 +228,5 @@ if __name__ == "__main__":
                      outdir=args.outdir,
                      cov_thres=args.min_cov,
                      n_threshold=args.min_sp,
-                     baseml_bin=args.baseml)
+                     baseml_bin=args.baseml,
+                     resume=args.resume)
