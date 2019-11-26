@@ -177,7 +177,11 @@ def baseml_all_genes(cov_file, aln_dir, tre_file, outdir="./output/",
 
     # Run baseml on every gene
     for g, c in covs.iterrows():
+        # Create file names
         aln_file = os.path.join(aln_dir, g + '.aln.fasta')
+        subset_aln_file = os.path.join(outdir, "gene_alns", g + '.aln.fasta')
+        gene_baseml_dir = os.path.join(outdir, "baseml", g)
+        gene_tree_file = os.path.join(gene_trees_dir, g + ".baseml.tre")
 
         # Skip if alignment does not exist
         if not os.path.isfile(aln_file):
@@ -186,7 +190,6 @@ def baseml_all_genes(cov_file, aln_dir, tre_file, outdir="./output/",
         # Find samples to keep
         to_keep = set(c.index[c >= cov_thres])
         # print(g, len(to_keep))
-        subset_aln_file = os.path.join(outdir, "gene_alns", g + '.aln.fasta')
         n_samples = subset_aln(infile=aln_file,
                                outfile=subset_aln_file,
                                to_keep=to_keep)
@@ -194,15 +197,14 @@ def baseml_all_genes(cov_file, aln_dir, tre_file, outdir="./output/",
         if n_samples < n_threshold:
             continue
 
-        gene_baseml_dir = os.path.join(outdir, "baseml", g)
+        # Run baseml
         os.mkdir(gene_baseml_dir)
         res = run_baseml(aln_file=subset_aln_file, tre_file=tre_file,
                          outdir=gene_baseml_dir,
                          baseml_bin=baseml_bin)
 
         tre = TreeNode.read(io.StringIO(res.get('tree')))
-        TreeNode.write(tre, file=os.path.join(outdir,
-                                              "gene_trees", g + ".baseml.tre"))
+        TreeNode.write(tre, file=gene_tree_file)
 
 
 if __name__ == "__main__":
