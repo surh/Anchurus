@@ -62,6 +62,15 @@ def process_arguments():
                         help=("Path to baseml executable."),
                         default='baseml',
                         type=str)
+    parser.add_argument("--resume",
+                        help=("Flag that indicates if this is resuming an "
+                              "stopped run. If passed, the script will "
+                              "assume that genes for which there is already "
+                              "an existing output tree file are already "
+                              "done and it will skip them. Otherwise, the "
+                              "scprit will re-run baseml on every gene."),
+                        default=False,
+                        action="store_true")
 
     # Read arguments
     print("Reading arguments")
