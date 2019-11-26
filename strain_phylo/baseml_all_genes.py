@@ -194,10 +194,10 @@ def baseml_all_genes(cov_file, aln_dir, tre_file, outdir="./output/",
         if n_samples < n_threshold:
             continue
 
-        baseml_dir = os.path.join(outdir, "baseml", g)
-        os.mkdir(baseml_dir)
+        gene_baseml_dir = os.path.join(outdir, "baseml", g)
+        os.mkdir(gene_baseml_dir)
         res = run_baseml(aln_file=subset_aln_file, tre_file=tre_file,
-                         outdir=baseml_dir,
+                         outdir=gene_baseml_dir,
                          baseml_bin=baseml_bin)
 
         tre = TreeNode.read(io.StringIO(res.get('tree')))
