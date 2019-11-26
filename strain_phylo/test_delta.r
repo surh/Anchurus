@@ -412,7 +412,8 @@ if(args$type == "single"){
                     tasks = args$njobs,
                     workingDir = "workdir/",
                     clean = FALSE,
-                    extraBashLines = "module load R/3.6.1")
+                    extraBashLines = "module load R/3.6.1",
+                    time = "100:00:00")
   filename <- file.path(args$output, "delta_test.txt")
   write_tsv(Res %>% bind_rows(), filename)
 }else{
