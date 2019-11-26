@@ -48,7 +48,7 @@ params.genomes_dir = ""
 params.map_dir = ""
 params.master_trees_dir = ""
 params.cov_dir = ""
-params.focal_phenotye = "USA"
+params.focal_phenotype = "USA"
 params.min_cov = 0.8
 params.outdir = "output/"
 
@@ -182,7 +182,7 @@ process rertest{
     file("trees_tab.txt"),
     file("master_tree.tre"),
     file("map.txt") from TREETABS.join(MT_RER).join(SPECMAPS)
-  val pheno from params.focal_phenotye
+  val pheno from params.focal_phenotype
 
   output:
   path "output"
