@@ -156,6 +156,8 @@ def baseml_aln(aln_file, tre_file, baseml_dir,
                outfile, baseml_bin='baseml'):
     """Single gene aln baseml"""
 
+    # is this redundant with run_baseml?
+
     # aln_file = os.path.join(aln_dir, g + '.aln.fasta')
     # subset_aln_file = os.path.join(outdir, "gene_alns",
     #                                prefix + '.aln.fasta')
