@@ -153,11 +153,12 @@ def run_baseml(aln_file, tre_file, outdir="output/",
 
 
 def baseml_gene(aln_file, tre_file, baseml_dir,
-                outfile, baseml_bin='baseml'):
+                outdir, to_keep=[],
+                baseml_bin='baseml'):
     """Single gene aln baseml"""
 
     # aln_file = os.path.join(aln_dir, g + '.aln.fasta')
-    # subset_aln_file = os.path.join(outdir, "gene_alns", g + '.aln.fasta')
+    subset_aln_file = os.path.join(outdir, "gene_alns", g + '.aln.fasta')
     # gene_baseml_dir = os.path.join(outdir, "baseml", g)
     # gene_tree_file = os.path.join(gene_trees_dir, g + ".baseml.tre")
 
@@ -171,11 +172,12 @@ def baseml_gene(aln_file, tre_file, baseml_dir,
     # Find samples to keep
     to_keep = set(c.index[c >= cov_thres])
     # print(g, len(to_keep))
-    n_samples = subset_aln(infile=aln_file,
-                           outfile=subset_aln_file,
-                           to_keep=to_keep)
+    if(len(to_keep) > 0):
+        n_samples = subset_aln(infile=aln_file,
+                               outfile=subset_aln_file,
+                               to_keep=to_keep)
 
-    if n_samples < n_threshold:
+    if n_samples > 0 n_samples < n_threshold:
         continue
 
     # Run baseml
