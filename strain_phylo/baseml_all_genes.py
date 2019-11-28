@@ -152,7 +152,8 @@ def run_baseml(aln_file, tre_file, outdir="output/",
     return(res)
 
 
-def baseml_gene(aln_file, tre_file, outdir="output/", baseml_bin='baseml'):
+def baseml_gene(aln_file, tre_file, baseml_dir,
+                outdir="output/", baseml_bin='baseml'):
     """Single gene aln baseml"""
 
 
