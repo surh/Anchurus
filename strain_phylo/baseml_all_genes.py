@@ -152,6 +152,12 @@ def run_baseml(aln_file, tre_file, outdir="output/",
     return(res)
 
 
+def baseml_gene(aln_file, tre_file, outdir="output/", baseml_bin='baseml'):
+    """Single gene aln baseml"""
+
+
+
+
 def baseml_all_genes(cov_file, aln_dir, tre_file, outdir="./output/",
                      cov_thres=0.8, n_threshold=5, baseml_bin="baseml",
                      resume=False):
