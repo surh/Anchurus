@@ -152,15 +152,16 @@ def run_baseml(aln_file, tre_file, outdir="output/",
     return(res)
 
 
-def baseml_gene(aln_file, tre_file, baseml_dir,
-                outdir, to_keep=[],
-                baseml_bin='baseml'):
+def baseml_aln(aln_file, tre_file, baseml_dir,
+               outfile, baseml_bin='baseml'):
     """Single gene aln baseml"""
 
     # aln_file = os.path.join(aln_dir, g + '.aln.fasta')
-    subset_aln_file = os.path.join(outdir, "gene_alns", g + '.aln.fasta')
+    # subset_aln_file = os.path.join(outdir, "gene_alns",
+    #                                prefix + '.aln.fasta')
     # gene_baseml_dir = os.path.join(outdir, "baseml", g)
-    # gene_tree_file = os.path.join(gene_trees_dir, g + ".baseml.tre")
+    # gene_tree_file = os.path.join(gene_trees_dir,
+    #                               prefix + ".baseml.tre")
 
     # Error if no alignment exists
     if not os.path.isfile(aln_file):
@@ -169,28 +170,17 @@ def baseml_gene(aln_file, tre_file, baseml_dir,
     if os.path.isfile(outfile):
         raise FileExistsError
 
-    # Find samples to keep
-    to_keep = set(c.index[c >= cov_thres])
-    # print(g, len(to_keep))
-    if(len(to_keep) > 0):
-        n_samples = subset_aln(infile=aln_file,
-                               outfile=subset_aln_file,
-                               to_keep=to_keep)
-
-    if n_samples > 0 n_samples < n_threshold:
-        continue
-
-    # Run baseml
-    os.mkdir(gene_baseml_dir)
-    res = run_baseml(aln_file=subset_aln_file, tre_file=tre_file,
-                     outdir=gene_baseml_dir,
+    # Run
+    os.mkdir(baseml_dir)
+    res = run_baseml(aln_file=aln_file,
+                     tre_file=tre_file,
+                     outdir=baseml_dir,
                      baseml_bin=baseml_bin)
 
     tre = TreeNode.read(io.StringIO(res.get('tree')))
-    TreeNode.write(tre, file=gene_tree_file)
+    TreeNode.write(tre, file=outfile)
 
-    return tre
-
+    return outfile
 
 
 def baseml_all_genes(cov_file, aln_dir, tre_file, outdir="./output/",
