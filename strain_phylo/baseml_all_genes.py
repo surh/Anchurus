@@ -233,7 +233,7 @@ def baseml_all_genes(cov_file, aln_dir, tre_file, outdir="./output/",
     #     subset_aln_file = os.path.join(outdir, "gene_alns", g + '.aln.fasta')
     #     gene_baseml_dir = os.path.join(outdir, "baseml", g)
     #     gene_tree_file = os.path.join(gene_trees_dir, g + ".baseml.tre")
-    # 
+    #
     #     # Skip if alignment does not exist
     #     if not os.path.isfile(aln_file):
     #         continue
