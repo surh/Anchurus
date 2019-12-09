@@ -298,7 +298,7 @@ def _baseml_iterate(covs, aln_dir, outdir, gene_trees_dir, tre_file,
             continue
 
         # Run baseml
-        if not os.paht.isdir(gene_baseml_dir):
+        if not os.path.isdir(gene_baseml_dir):
             os.mkdir(gene_baseml_dir)
         res = run_baseml(aln_file=subset_aln_file, tre_file=tre_file,
                          outdir=gene_baseml_dir,
