@@ -187,7 +187,7 @@ def baseml_aln(aln_file, tre_file, baseml_dir,
 
 def baseml_all_genes(cov_file, aln_dir, tre_file, outdir="./output/",
                      cov_thres=0.8, n_threshold=5, baseml_bin="baseml",
-                     resume=False):
+                     resume=False, cpus=1):
     """Run baseml on all genes with only samples above
     certain coverage threshold."""
 
@@ -217,16 +217,17 @@ def baseml_all_genes(cov_file, aln_dir, tre_file, outdir="./output/",
     covs = pd.read_csv(cov_file, sep="\t", dtype={'gene': np.character})
     covs = covs.set_index('gene')
 
-    # Run baseml on every gene
-    _baseml_iterate(covs=covs,
-                    aln_dir=aln_dir,
-                    outdir=outdir,
-                    gene_trees_dir=gene_trees_dir,
-                    tre_file=tre_file,
-                    cov_thres=cov_thres,
-                    n_threshold=n_threshold,
-                    resume=resume,
-                    baseml_bin=baseml_bin)
+    for c in np.split_array(covs, cpus):
+        # Run baseml on every gene
+        _baseml_iterate(covs=c,
+                        aln_dir=aln_dir,
+                        outdir=outdir,
+                        gene_trees_dir=gene_trees_dir,
+                        tre_file=tre_file,
+                        cov_thres=cov_thres,
+                        n_threshold=n_threshold,
+                        resume=resume,
+                        baseml_bin=baseml_bin)
     # for g, c in covs.iterrows():
     #     # Create file names
     #     aln_file = os.path.join(aln_dir, g + '.aln.fasta')
