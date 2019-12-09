@@ -217,7 +217,7 @@ def baseml_all_genes(cov_file, aln_dir, tre_file, outdir="./output/",
     covs = pd.read_csv(cov_file, sep="\t", dtype={'gene': np.character})
     covs = covs.set_index('gene')
 
-    for c in np.split_array(covs, cpus):
+    for c in np.array_split(covs, cpus):
         # Run baseml on every gene
         _baseml_iterate(covs=c,
                         aln_dir=aln_dir,
