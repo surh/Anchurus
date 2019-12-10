@@ -40,6 +40,11 @@ Directory with core phylogeny of each species. Files must be named
 --cov_dir
 Directory with gene coverage matrices per species. Files must be named
 <species name>.gene_coverage.txt
+--outdir
+Directory where to place output
+--baseml_threads
+Number of threads to split all baseml jobs. Each job uses just one thread.
+Default: 1.
 */
 
 // parameters
@@ -51,6 +56,7 @@ params.cov_dir = ""
 params.focal_phenotype = "USA"
 params.min_cov = 0.8
 params.outdir = "output/"
+params.basem_threads = 1
 
 // Optional parameters
 params.alns_dir = ""
@@ -123,6 +129,7 @@ process alns_from_metagenomes{
 process baseml{
   label 'baseml'
   tag "$spec"
+  cpus params.baseml_threads
   publishDir "${params.outdir}/gene_trees/",
     pattern: "output/gene_trees",
     saveAs: {"${spec}/"},
@@ -142,6 +149,7 @@ process baseml{
     --outdir output/ \
     --min_cov ${params.min_cov} \
     --baseml baseml
+    --cpus ${params.baseml_threads}
   """
 
 }
