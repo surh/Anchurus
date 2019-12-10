@@ -242,38 +242,6 @@ def baseml_all_genes(cov_file, aln_dir, tre_file, outdir="./output/",
                                 'n_threshold': n_threshold,
                                 'resume': resume,
                                 'baseml_bin': baseml_bin})
-        # for g, c in covs.iterrows():
-        #     # Create file names
-        #     aln_file = os.path.join(aln_dir, g + '.aln.fasta')
-        #     subset_aln_file = os.path.join(outdir, "gene_alns", g + '.aln.fasta')
-        #     gene_baseml_dir = os.path.join(outdir, "baseml", g)
-        #     gene_tree_file = os.path.join(gene_trees_dir, g + ".baseml.tre")
-        #
-        #     # Skip if alignment does not exist
-        #     if not os.path.isfile(aln_file):
-        #         continue
-        #     # Skip if output tree file already exists
-        #     if resume and os.path.isfile(gene_tree_file):
-        #         continue
-        #
-        #     # Find samples to keep
-        #     to_keep = set(c.index[c >= cov_thres])
-        #     # print(g, len(to_keep))
-        #     n_samples = subset_aln(infile=aln_file,
-        #                            outfile=subset_aln_file,
-        #                            to_keep=to_keep)
-        #
-        #     if n_samples < n_threshold:
-        #         continue
-        #
-        #     # Run baseml
-        #     os.mkdir(gene_baseml_dir)
-        #     res = run_baseml(aln_file=subset_aln_file, tre_file=tre_file,
-        #                      outdir=gene_baseml_dir,
-        #                      baseml_bin=baseml_bin)
-        #
-        #     tre = TreeNode.read(io.StringIO(res.get('tree')))
-        #     TreeNode.write(tre, file=gene_tree_file)
         p.close()
         print("Submitted {} processes".format(str(cpus)))
         p.join()
