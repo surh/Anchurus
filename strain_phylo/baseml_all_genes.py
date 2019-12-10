@@ -63,6 +63,11 @@ def process_arguments():
                         help=("Path to baseml executable."),
                         default='baseml',
                         type=str)
+    parser.add_argument("--cpus",
+                        help=("Number of cpus to spread genes. Uses python "
+                              "multiprocessing module."),
+                        default=1,
+                        type=int)
     parser.add_argument("--resume",
                         help=("Flag that indicates if this is resuming an "
                               "stopped run. If passed, the script will "
