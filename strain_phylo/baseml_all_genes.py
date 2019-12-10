@@ -159,13 +159,6 @@ def baseml_aln(aln_file, tre_file, baseml_dir,
 
     # is this redundant with run_baseml?
 
-    # aln_file = os.path.join(aln_dir, g + '.aln.fasta')
-    # subset_aln_file = os.path.join(outdir, "gene_alns",
-    #                                prefix + '.aln.fasta')
-    # gene_baseml_dir = os.path.join(outdir, "baseml", g)
-    # gene_tree_file = os.path.join(gene_trees_dir,
-    #                               prefix + ".baseml.tre")
-
     # Error if no alignment exists
     if not os.path.isfile(aln_file):
         raise FileNotFoundError
