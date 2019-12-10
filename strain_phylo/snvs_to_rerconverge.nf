@@ -150,6 +150,7 @@ process baseml{
     --min_cov ${params.min_cov} \
     --baseml baseml
     --cpus ${params.baseml_threads}
+    --resume
   """
 
 }
@@ -231,7 +232,7 @@ process{
   withLabel: 'baseml'{
     module = "anaconda:paml/4.9i"
     conda = '/opt/modules/pkgs/anaconda/3.6/envs/fraserconda'
-    time = '150h'
+    time = '200h'
   }
 }
 executor{
