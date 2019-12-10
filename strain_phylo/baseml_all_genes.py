@@ -301,4 +301,5 @@ if __name__ == "__main__":
                      cov_thres=args.min_cov,
                      n_threshold=args.min_sp,
                      baseml_bin=args.baseml,
-                     resume=args.resume)
+                     resume=args.resume,
+                     cpus=args.cpus)
