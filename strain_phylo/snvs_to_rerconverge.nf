@@ -82,6 +82,7 @@ ALNDIR = (params.alns_dir == ""
 MASTERTREE = Channel.fromPath("${params.master_trees_dir}/*.tre")
   .map{filename -> tuple(filename.name.replace('.tre', ''), file(filename))}
   .into{MT_BASEML; MT_RER}
+// MT_BASEML.subscribe{println it}
 
 // Channel with gene coverages
 COV = Channel.fromPath("${params.cov_dir}/*.gene_coverage.txt")
@@ -155,7 +156,7 @@ process baseml{
 
 }
 
-println "============="
+// println "============="
 // GENETREESDIR.mix(ALNS2BASEML).subscribe{println it}
 // GENETREESDIR.subscribe{println it}
 // TEST = GENETREESDIR.mix(ALNS2BASEML)
