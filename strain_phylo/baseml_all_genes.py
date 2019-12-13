@@ -24,6 +24,7 @@ import io
 import pandas as pd
 import numpy as np
 import argparse
+import multiprocessing as mp
 
 
 def process_arguments():
@@ -62,6 +63,20 @@ def process_arguments():
                         help=("Path to baseml executable."),
                         default='baseml',
                         type=str)
+    parser.add_argument("--cpus",
+                        help=("Number of cpus to spread genes. Uses python "
+                              "multiprocessing module."),
+                        default=1,
+                        type=int)
+    parser.add_argument("--resume",
+                        help=("Flag that indicates if this is resuming an "
+                              "stopped run. If passed, the script will "
+                              "assume that genes for which there is already "
+                              "an existing output tree file are already "
+                              "done and it will skip them. Otherwise, the "
+                              "scprit will re-run baseml on every gene."),
+                        default=False,
+                        action="store_true")
 
     # Read arguments
     print("Reading arguments")
@@ -143,34 +158,121 @@ def run_baseml(aln_file, tre_file, outdir="output/",
     return(res)
 
 
+def baseml_aln(aln_file, tre_file, baseml_dir,
+               outfile, baseml_bin='baseml'):
+    """Single gene aln baseml"""
+
+    # is this redundant with run_baseml?
+
+    # Error if no alignment exists
+    if not os.path.isfile(aln_file):
+        raise FileNotFoundError
+    # Error if output tree file already exists
+    if os.path.isfile(outfile):
+        raise FileExistsError
+
+    # Run
+    os.mkdir(baseml_dir)
+    res = run_baseml(aln_file=aln_file,
+                     tre_file=tre_file,
+                     outdir=baseml_dir,
+                     baseml_bin=baseml_bin)
+
+    tre = TreeNode.read(io.StringIO(res.get('tree')))
+    TreeNode.write(tre, file=outfile)
+
+    return outfile
+
+
 def baseml_all_genes(cov_file, aln_dir, tre_file, outdir="./output/",
-                     cov_thres=0.8, n_threshold=5, baseml_bin="baseml"):
+                     cov_thres=0.8, n_threshold=5, baseml_bin="baseml",
+                     resume=False, cpus=1):
     """Run baseml on all genes with only samples above
     certain coverage threshold."""
 
     # Prepare output directory structure
-    os.mkdir(outdir)
-    os.mkdir(os.path.join(outdir, "gene_alns"))
-    os.mkdir(os.path.join(outdir, "baseml"))
-    os.mkdir(os.path.join(outdir, "gene_trees"))
+    gene_alns_dir = os.path.join(outdir, "gene_alns")
+    baseml_dir = os.path.join(outdir, "baseml")
+    gene_trees_dir = os.path.join(outdir, "gene_trees")
+    if resume:
+        # If option resume is true, check first if output dirs exist.
+        if not os.path.isdir(outdir):
+            os.mkdir(outdir)
+        if not os.path.isdir(gene_alns_dir):
+            os.mkdir(gene_alns_dir)
+        if not os.path.isdir(baseml_dir):
+            os.mkdir(baseml_dir)
+        if not os.path.isdir(gene_trees_dir):
+            os.mkdir(gene_trees_dir)
+    else:
+        # If option resume is false, it will exit with an error if
+        # output files already exist.
+        os.mkdir(outdir)
+        os.mkdir(gene_alns_dir)
+        os.mkdir(baseml_dir)
+        os.mkdir(gene_trees_dir)
 
     # Read coverage information
     covs = pd.read_csv(cov_file, sep="\t", dtype={'gene': np.character})
     covs = covs.set_index('gene')
-    # covs.head()
+
+    # Parallelize with multiprocessing
+    with mp.Pool(cpus) as p:
+        # Split coverage file into the number of processes.
+        for c in np.array_split(covs, cpus):
+            # Run baseml on every gene on every chunk
+            # _baseml_iterate(covs=c,
+            #                 aln_dir=aln_dir,
+            #                 outdir=outdir,
+            #                 gene_trees_dir=gene_trees_dir,
+            #                 tre_file=tre_file,
+            #                 cov_thres=cov_thres,
+            #                 n_threshold=n_threshold,
+            #                 resume=resume,
+            #                 baseml_bin=baseml_bin)
+            p.apply_async(_baseml_iterate,
+                          kwds={'covs': c,
+                                'aln_dir': aln_dir,
+                                'outdir': outdir,
+                                'gene_trees_dir': gene_trees_dir,
+                                'tre_file': tre_file,
+                                'cov_thres': cov_thres,
+                                'n_threshold': n_threshold,
+                                'resume': resume,
+                                'baseml_bin': baseml_bin})
+        p.close()
+        print("Submitted {} processes".format(str(cpus)))
+        p.join()
+
+
+def _baseml_iterate(covs, aln_dir, outdir, gene_trees_dir, tre_file,
+                    cov_thres=0.8,
+                    n_threshold=5,
+                    resume=False,
+                    baseml_bin='baseml'):
+    """Takes a pandas data frame with gene coverages, and
+    runs baseml iteratively in all of the genes.
+
+    No checks are performed. Intended to be called indirectly."""
 
     # Run baseml on every gene
     for g, c in covs.iterrows():
+        # Create file names
         aln_file = os.path.join(aln_dir, g + '.aln.fasta')
+        subset_aln_file = os.path.join(outdir, "gene_alns", g + '.aln.fasta')
+        gene_baseml_dir = os.path.join(outdir, "baseml", g)
+        gene_tree_file = os.path.join(gene_trees_dir, g + ".baseml.tre")
 
         # Skip if alignment does not exist
         if not os.path.isfile(aln_file):
+            continue
+        # Skip if output tree file already exists
+        if resume and os.path.isfile(gene_tree_file):
             continue
 
         # Find samples to keep
         to_keep = set(c.index[c >= cov_thres])
         # print(g, len(to_keep))
-        subset_aln_file = os.path.join(outdir, "gene_alns", g + '.aln.fasta')
         n_samples = subset_aln(infile=aln_file,
                                outfile=subset_aln_file,
                                to_keep=to_keep)
@@ -178,15 +280,15 @@ def baseml_all_genes(cov_file, aln_dir, tre_file, outdir="./output/",
         if n_samples < n_threshold:
             continue
 
-        baseml_dir = os.path.join(outdir, "baseml", g)
-        os.mkdir(baseml_dir)
+        # Run baseml
+        if not os.path.isdir(gene_baseml_dir):
+            os.mkdir(gene_baseml_dir)
         res = run_baseml(aln_file=subset_aln_file, tre_file=tre_file,
-                         outdir=baseml_dir,
+                         outdir=gene_baseml_dir,
                          baseml_bin=baseml_bin)
 
         tre = TreeNode.read(io.StringIO(res.get('tree')))
-        TreeNode.write(tre, file=os.path.join(outdir,
-                                              "gene_trees", g + ".baseml.tre"))
+        TreeNode.write(tre, file=gene_tree_file)
 
 
 if __name__ == "__main__":
@@ -198,4 +300,6 @@ if __name__ == "__main__":
                      outdir=args.outdir,
                      cov_thres=args.min_cov,
                      n_threshold=args.min_sp,
-                     baseml_bin=args.baseml)
+                     baseml_bin=args.baseml,
+                     resume=args.resume,
+                     cpus=args.cpus)
