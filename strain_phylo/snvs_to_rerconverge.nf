@@ -155,8 +155,10 @@ process baseml{
 
 }
 
-// println "============="
+println "============="
+// GENETREESDIR.mix(ALNS2BASEML).subscribe{println it}
 // GENETREESDIR.subscribe{println it}
+// TEST = GENETREESDIR.mix(ALNS2BASEML)
 
 process trees2tab{
   tag "$spec"
@@ -167,6 +169,7 @@ process trees2tab{
 
   input:
   tuple val(spec), file("trees") from GENETREESDIR.mix(ALNS2BASEML)
+  // tuple val(spec), file("trees") from TEST
 
   output:
   tuple val(spec), file("trees_tab.txt") into TREETABS
