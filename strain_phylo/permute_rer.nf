@@ -28,8 +28,8 @@ params.maps_dirs = ''
 params.gene_trees_dir = ''
 
 // Process inputs
-maps_dir = file(params.maps_dir)
-gene_trees_dir = file(gene_trees_dir)
+maps_dir = file(params.maps_dirs)
+gene_trees_dir = file(params.gene_trees_dir)
 
 MAPS = Channel.fromPath("$maps_dir/*", type: 'file', maxDepth: 2)
 MAPS.subscribe{println it}
