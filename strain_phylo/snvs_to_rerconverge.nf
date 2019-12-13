@@ -40,6 +40,11 @@ Directory with core phylogeny of each species. Files must be named
 --cov_dir
 Directory with gene coverage matrices per species. Files must be named
 <species name>.gene_coverage.txt
+--outdir
+Directory where to place output
+--baseml_threads
+Number of threads to split all baseml jobs. Each job uses just one thread.
+Default: 1.
 */
 
 // parameters
@@ -51,6 +56,7 @@ params.cov_dir = ""
 params.focal_phenotype = "USA"
 params.min_cov = 0.8
 params.outdir = "output/"
+params.baseml_threads = 1
 
 // Optional parameters
 params.alns_dir = ""
@@ -76,6 +82,7 @@ ALNDIR = (params.alns_dir == ""
 MASTERTREE = Channel.fromPath("${params.master_trees_dir}/*.tre")
   .map{filename -> tuple(filename.name.replace('.tre', ''), file(filename))}
   .into{MT_BASEML; MT_RER}
+// MT_BASEML.subscribe{println it}
 
 // Channel with gene coverages
 COV = Channel.fromPath("${params.cov_dir}/*.gene_coverage.txt")
@@ -123,6 +130,7 @@ process alns_from_metagenomes{
 process baseml{
   label 'baseml'
   tag "$spec"
+  cpus params.baseml_threads
   publishDir "${params.outdir}/gene_trees/",
     pattern: "output/gene_trees",
     saveAs: {"${spec}/"},
@@ -142,12 +150,16 @@ process baseml{
     --outdir output/ \
     --min_cov ${params.min_cov} \
     --baseml baseml
+    --cpus ${params.baseml_threads}
+    --resume
   """
 
 }
 
 // println "============="
+// GENETREESDIR.mix(ALNS2BASEML).subscribe{println it}
 // GENETREESDIR.subscribe{println it}
+// TEST = GENETREESDIR.mix(ALNS2BASEML)
 
 process trees2tab{
   tag "$spec"
@@ -158,6 +170,7 @@ process trees2tab{
 
   input:
   tuple val(spec), file("trees") from GENETREESDIR.mix(ALNS2BASEML)
+  // tuple val(spec), file("trees") from TEST
 
   output:
   tuple val(spec), file("trees_tab.txt") into TREETABS
@@ -223,7 +236,7 @@ process{
   withLabel: 'baseml'{
     module = "anaconda:paml/4.9i"
     conda = '/opt/modules/pkgs/anaconda/3.6/envs/fraserconda'
-    time = '150h'
+    time = '200h'
   }
 }
 executor{
