@@ -56,7 +56,7 @@ params.cov_dir = ""
 params.focal_phenotype = "USA"
 params.min_cov = 0.8
 params.outdir = "output/"
-params.basem_threads = 1
+params.baseml_threads = 1
 
 // Optional parameters
 params.alns_dir = ""
