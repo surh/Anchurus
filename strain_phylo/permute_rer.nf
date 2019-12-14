@@ -19,20 +19,25 @@
 
 /* Options:
 --maps_dirs
---gene_trees_dir
+--tree_tabs_dir
 */
 
 
 // parameters
 params.maps_dirs = ''
-params.gene_trees_dir = ''
+params.tree_tabs_dir = ''
 
 // Process inputs
 maps_dir = file(params.maps_dirs)
-gene_trees_dir = file(params.gene_trees_dir)
+tree_tabs_dir = file(params.tree_tabs_dir)
 
 MAPS = Channel.fromPath("$maps_dir/**", type: 'file', maxDepth: 2)
   .map{map_file -> tuple(map_file.getParent().name,
     map_file.name.replaceAll("^map_","").replaceAll('\\.txt$', ""),
     file(map_file))}
-MAPS.subscribe{println it}
+// MAPS.subscribe{println it}
+
+TREETABS = Channel.fromPath("$tree_tabs_dir/*", type: 'file')
+  .map{trees_file -> tuple(trees_file.name.replaceAll('\\.trees\\.txt$',''),
+    file(trees_file))}
+TREETABS.subscribe{println it}
