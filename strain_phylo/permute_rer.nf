@@ -53,12 +53,12 @@ INPUTS = Channel.fromPath("$maps_dir/**", type: 'file', maxDepth: 2)
 // MAPS.join(TREETABS, remainder: true).filter{items -> items[1] != null}.subscribe{println it}
 
 process rertest{
-  tag "$spec"
+  tag "${spec}.perm_$nperm"
   label 'r'
-  // publishDir "${params.outdir}/rertest/",
-  //   pattern: "output",
-  //   saveAs: {"${spec}/"},
-  //   mode: 'rellink'
+  publishDir "${params.outdir}/rertest/${spec}/",
+    pattern: "perm_${nperm}.cors.txt",
+    // saveAs: {"${spec}/"},
+    mode: 'rellink'
 
   input:
   tuple val(spec),
@@ -70,9 +70,9 @@ process rertest{
 
   output:
   path "output"
-  tuple val(spec), file("output/${spec}.cors.txt") into RERCORS
-  tuple val(spec), file("output/${spec}.rerw.dat") into RERWS
-  tuple val(spec), file("output/${spec}.Trees.dat") into RERTREES
+  tuple val(spec), file("output/perm_${nperm}.cors.txt") into RERCORS
+  tuple val(spec), file("output/perm_${nperm}.rerw.dat") into RERWS
+  tuple val(spec), file("output/perm_${nperm}.Trees.dat") into RERTREES
 
   """
   ${workflow.projectDir}/rertest.r \
@@ -81,6 +81,6 @@ process rertest{
     --map_file map.txt \
     --outdir output \
     --focal_phenotype $pheno \
-    --spec $spec
+    --spec perm_$nperm
   """
 }
