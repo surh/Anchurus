@@ -26,17 +26,22 @@
 // parameters
 params.maps_dirs = ''
 params.tree_tabs_dir = ''
+params.master_trees_dir = ''
+params.outdir = 'output/'
+params.focal_phenotype = "USA"
 
 // Process inputs
 maps_dir = file(params.maps_dirs)
 tree_tabs_dir = file(params.tree_tabs_dir)
+master_trees_dir = file(params.master_trees_dir)
 
 INPUTS = Channel.fromPath("$maps_dir/**", type: 'file', maxDepth: 2)
   .map{map_file -> tuple(map_file.getParent().name,
     map_file.name.replaceAll("^map_","").replaceAll('\\.txt$', ""),
     file(map_file))}
   .map{spec, perm, map_file -> tuple(spec, perm, map_file,
-    file("$tree_tabs_dir/${spec}.trees.txt"))}
+    file("$tree_tabs_dir/${spec}.trees.txt"),
+    file("$master_trees_dir/${spec}.tre")}
 // INPUTS.subscribe{println it}
 
 // TREETABS = Channel.fromPath("$tree_tabs_dir/*", type: 'file')
@@ -46,3 +51,36 @@ INPUTS = Channel.fromPath("$maps_dir/**", type: 'file', maxDepth: 2)
 // There is no left join!!!
 // MAPS.join(TREETABS, remainder: true).subscribe{println it}
 // MAPS.join(TREETABS, remainder: true).filter{items -> items[1] != null}.subscribe{println it}
+
+process rertest{
+  tag "$spec"
+  label 'r'
+  // publishDir "${params.outdir}/rertest/",
+  //   pattern: "output",
+  //   saveAs: {"${spec}/"},
+  //   mode: 'rellink'
+
+  input:
+  tuple val(spec),
+    val(nperm),
+    file("map.txt"),
+    file("trees_tab.txt"),
+    file("master_tree.tre") from INPUTS
+  val pheno from params.focal_phenotype
+
+  output:
+  path "output"
+  tuple val(spec), file("output/${spec}.cors.txt") into RERCORS
+  tuple val(spec), file("output/${spec}.rerw.dat") into RERWS
+  tuple val(spec), file("output/${spec}.Trees.dat") into RERTREES
+
+  """
+  ${workflow.projectDir}/rertest.r \
+    trees_tab.txt \
+    master_tree.tre \
+    --map_file map.txt \
+    --outdir output \
+    --focal_phenotype $pheno \
+    --spec $spec
+  """
+}
