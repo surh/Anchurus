@@ -37,12 +37,12 @@ INPUTS = Channel.fromPath("$maps_dir/**", type: 'file', maxDepth: 2)
     file(map_file))}
   .map{spec, perm, map_file -> tuple(spec, perm, map_file,
     file("$tree_tabs_dir/${spec}.trees.txt"))}
-INPUTS.subscribe{println it}
+// INPUTS.subscribe{println it}
 
-TREETABS = Channel.fromPath("$tree_tabs_dir/*", type: 'file')
-  .map{trees_file -> tuple(trees_file.name.replaceAll('\\.trees\\.txt$',''),
-    file(trees_file))}
+// TREETABS = Channel.fromPath("$tree_tabs_dir/*", type: 'file')
+//   .map{trees_file -> tuple(trees_file.name.replaceAll('\\.trees\\.txt$',''),
+//     file(trees_file))}
 // TREETABS.subscribe{println it}
-
+// There is no left join!!!
 // MAPS.join(TREETABS, remainder: true).subscribe{println it}
 // MAPS.join(TREETABS, remainder: true).filter{items -> items[1] != null}.subscribe{println it}
