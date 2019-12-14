@@ -42,7 +42,7 @@ INPUTS = Channel.fromPath("$maps_dir/**", type: 'file', maxDepth: 2)
   .map{spec, perm, map_file -> tuple(spec, perm, map_file,
     file("$tree_tabs_dir/${spec}.trees.txt"),
     file("$master_trees_dir/${spec}.tre")}
-// INPUTS.subscribe{println it}
+INPUTS.subscribe{println it}
 
 // TREETABS = Channel.fromPath("$tree_tabs_dir/*", type: 'file')
 //   .map{trees_file -> tuple(trees_file.name.replaceAll('\\.trees\\.txt$',''),
@@ -52,38 +52,38 @@ INPUTS = Channel.fromPath("$maps_dir/**", type: 'file', maxDepth: 2)
 // MAPS.join(TREETABS, remainder: true).subscribe{println it}
 // MAPS.join(TREETABS, remainder: true).filter{items -> items[1] != null}.subscribe{println it}
 
-process rertest{
-  tag "${spec}.perm_$nperm"
-  label 'r'
-  publishDir "${params.outdir}/rertest/${spec}/",
-    pattern: "perm_${nperm}.cors.txt",
-    // saveAs: {"${spec}/"},
-    mode: 'rellink'
-
-  input:
-  tuple val(spec),
-    val(nperm),
-    file("map.txt"),
-    file("trees_tab.txt"),
-    file("master_tree.tre") from INPUTS
-  val pheno from params.focal_phenotype
-
-  output:
-  path "output"
-  tuple val(spec), file("output/perm_${nperm}.cors.txt") into RERCORS
-  tuple val(spec), file("output/perm_${nperm}.rerw.dat") into RERWS
-  tuple val(spec), file("output/perm_${nperm}.Trees.dat") into RERTREES
-
-  """
-  ${workflow.projectDir}/rertest.r \
-    trees_tab.txt \
-    master_tree.tre \
-    --map_file map.txt \
-    --outdir output \
-    --focal_phenotype $pheno \
-    --spec perm_$nperm
-  """
-}
+// process rertest{
+//   tag "${spec}.perm_$nperm"
+//   label 'r'
+//   publishDir "${params.outdir}/rertest/${spec}/",
+//     pattern: "perm_${nperm}.cors.txt",
+//     // saveAs: {"${spec}/"},
+//     mode: 'rellink'
+//
+//   input:
+//   tuple val(spec),
+//     val(nperm),
+//     file("map.txt"),
+//     file("trees_tab.txt"),
+//     file("master_tree.tre") from INPUTS
+//   val pheno from params.focal_phenotype
+//
+//   output:
+//   path "output"
+//   tuple val(spec), file("output/perm_${nperm}.cors.txt") into RERCORS
+//   tuple val(spec), file("output/perm_${nperm}.rerw.dat") into RERWS
+//   tuple val(spec), file("output/perm_${nperm}.Trees.dat") into RERTREES
+//
+//   """
+//   ${workflow.projectDir}/rertest.r \
+//     trees_tab.txt \
+//     master_tree.tre \
+//     --map_file map.txt \
+//     --outdir output \
+//     --focal_phenotype $pheno \
+//     --spec perm_$nperm
+//   """
+// }
 
 // Example nextflow.config
 /*
