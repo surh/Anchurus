@@ -40,9 +40,9 @@ INPUTS = Channel.fromPath("$maps_dir/**", type: 'file', maxDepth: 2)
     map_file.name.replaceAll("^map_","").replaceAll('\\.txt$', ""),
     file(map_file))}
   .map{spec, perm, map_file -> tuple(spec, perm, map_file,
-    file("$tree_tabs_dir/${spec}.trees.txt"),
-    file("$master_trees_dir/${spec}.tre")}
+    file("$tree_tabs_dir/${spec}.trees.txt")}
 INPUTS.subscribe{println it}
+// file("$master_trees_dir/${spec}.tre")
 
 // TREETABS = Channel.fromPath("$tree_tabs_dir/*", type: 'file')
 //   .map{trees_file -> tuple(trees_file.name.replaceAll('\\.trees\\.txt$',''),
