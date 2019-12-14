@@ -40,4 +40,6 @@ MAPS = Channel.fromPath("$maps_dir/**", type: 'file', maxDepth: 2)
 TREETABS = Channel.fromPath("$tree_tabs_dir/*", type: 'file')
   .map{trees_file -> tuple(trees_file.name.replaceAll('\\.trees\\.txt$',''),
     file(trees_file))}
-TREETABS.subscribe{println it}
+// TREETABS.subscribe{println it}
+
+MAPS.join(TREETABS).subscribe{println it}
