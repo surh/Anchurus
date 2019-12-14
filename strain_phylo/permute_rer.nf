@@ -34,8 +34,9 @@ tree_tabs_dir = file(params.tree_tabs_dir)
 INPUTS = Channel.fromPath("$maps_dir/**", type: 'file', maxDepth: 2)
   .map{map_file -> tuple(map_file.getParent().name,
     map_file.name.replaceAll("^map_","").replaceAll('\\.txt$', ""),
-    file(map_file))}.
-  .map{spec, perm, map_file <- tuple(spec, perm, map_file, file("$tree_tabs_dir/${spec}.trees.txt"))}
+    file(map_file))}
+  .map{spec, perm, map_file <- tuple(spec, perm, map_file,
+    file("$tree_tabs_dir/${spec}.trees.txt"))}
 INPUTS.subscribe{println it}
 
 TREETABS = Channel.fromPath("$tree_tabs_dir/*", type: 'file')
