@@ -32,7 +32,7 @@ maps_dir = file(params.maps_dirs)
 gene_trees_dir = file(params.gene_trees_dir)
 
 MAPS = Channel.fromPath("$maps_dir/**", type: 'file', maxDepth: 2)
-  .map{map_file -> tuple(map_file.getParent(),
-    map_file.name.replace('map_',''),
+  .map{map_file -> tuple(map_file.getParent().name,
+    map_file.name.replace('^map_','').replace('.txt$', ''),
     file(map_file))}
 MAPS.subscribe{println it}
