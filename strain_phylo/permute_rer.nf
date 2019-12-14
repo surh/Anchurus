@@ -42,4 +42,4 @@ TREETABS = Channel.fromPath("$tree_tabs_dir/*", type: 'file')
     file(trees_file))}
 // TREETABS.subscribe{println it}
 
-MAPS.join(TREETABS, remainder: true).subscribe{println it}
+MAPS.join(TREETABS, remainder: true).filter{items -> items[1] != null}.subscribe{println it}
