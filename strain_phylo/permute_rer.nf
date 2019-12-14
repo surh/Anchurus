@@ -31,16 +31,17 @@ params.tree_tabs_dir = ''
 maps_dir = file(params.maps_dirs)
 tree_tabs_dir = file(params.tree_tabs_dir)
 
-MAPS = Channel.fromPath("$maps_dir/**", type: 'file', maxDepth: 2)
-  .map{map_file -> tuple(map_file.getParent().name,
+INPUTS = Channel.fromPath("$maps_dir/**", type: 'file', maxDepth: 2)
+  .map{map_file -> filename = tuple(map_file.getParent().name,
+    filename,
     map_file.name.replaceAll("^map_","").replaceAll('\\.txt$', ""),
     file(map_file))}
-// MAPS.subscribe{println it}
+INPUTS.subscribe{println it}
 
 TREETABS = Channel.fromPath("$tree_tabs_dir/*", type: 'file')
   .map{trees_file -> tuple(trees_file.name.replaceAll('\\.trees\\.txt$',''),
     file(trees_file))}
 // TREETABS.subscribe{println it}
 
-MAPS.join(TREETABS, remainder: true).subscribe{println it}
+// MAPS.join(TREETABS, remainder: true).subscribe{println it}
 // MAPS.join(TREETABS, remainder: true).filter{items -> items[1] != null}.subscribe{println it}
