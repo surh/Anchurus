@@ -58,7 +58,7 @@ process rertest{
   label 'r'
   publishDir "${params.outdir}/rertest/${spec}/",
     pattern: "output/perm_${nperm}.cors.txt",
-    // saveAs: {"${spec}/"},
+    saveAs: {"perm_${nperm}.cors.txt"},
     mode: 'rellink'
 
   input:
