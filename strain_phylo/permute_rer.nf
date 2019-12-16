@@ -76,8 +76,9 @@ process rertest{
   tuple val(spec), file("output/perm_${nperm}.Trees.dat") into RERTREES
 
   """
+  head trees_tab.txt > test.txt
   ${workflow.projectDir}/rertest.r \
-    trees_tab.txt \
+    test.txt \
     master_tree.tre \
     --map_file map.txt \
     --outdir output \
