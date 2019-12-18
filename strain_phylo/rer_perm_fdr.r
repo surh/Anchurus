@@ -20,23 +20,26 @@
 # setwd("/cashew/users/sur/exp/fraserv/2019/today2")
 library(tidyverse)
 
-args <- list(permdir = "perm_res/rertest/Bacteroides_vulgatus_57955/",
-             res = "../2019-11-19.rertest/gut/rer/rer_output/rertest/Bacteroides_vulgatus_57955/Bacteroides_vulgatus_57955.cors.txt",
-             output = "Bacterioides_vulgatus_57955.rer.fdr.txt")
-# args <- list(permdir = opts[1],
-#              res = opts[2],
-#              output = opts[3])
+# args <- list(permdir = "perm_res/rertest/Bacteroides_vulgatus_57955/",
+#              res = "../2019-11-19.rertest/gut/rer/rer_output/rertest/Bacteroides_vulgatus_57955/Bacteroides_vulgatus_57955.cors.txt",
+#              output = "Bacterioides_vulgatus_57955.rer.fdr.txt")
+args <- list(permdir = opts[1],
+             res = opts[2],
+             output = opts[3])
 
 
 # Read data
+cat("Read original results...\n")
 Res <- read_tsv(args$res,
                 col_types = cols(gene_id = col_character()))
+cat("Read permutations...\n")
 Perms <- list.files(args$permdir, full.names = TRUE) %>%
   map(~read_tsv(., col_types = cols(gene_id = col_character()))$P) %>%
   bind_cols %>%
   bind_cols(orig = Res$P)
 
 # Calculate FDR
+cat("Calculating FDR...\n")
 Res$FDR <- NA
 for(i in 1:nrow(Res)){
   pval <- Res$P[i]
@@ -52,6 +55,7 @@ for(i in 1:nrow(Res)){
 # Res %>% print(n = 200)
 
 # Write output
+cat("Writing output...\n")
 write_tsv(Res, path = args$output)
 
 # Res[2880:2900, ]
