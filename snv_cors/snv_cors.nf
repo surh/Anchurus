@@ -22,7 +22,7 @@ params.min_snvs = 5000
 params.depth_thres = 1
 
 // Create channels
-maps_dir = file(params.map_dir)
+maps_dir = file(params.maps_dir)
 midas_dir = file(params.midas_dir)
 MAPS = Channel.fromPath("${maps_dir}/*")
   .map{map_file -> tuple(map_file.name.replaceAll('\\map\\.txt$', ""),
