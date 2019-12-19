@@ -48,3 +48,22 @@ process snv_cor{
     1
   """
 }
+
+// Example nextflow.config (for sherlock)
+/*
+process{
+  maxForks = 300
+  stageInMode = 'rellink'
+  errorStrategy = 'finish'
+  withLabel: 'r'{
+    module = 'R/3.5.1'
+    memory = '15G'
+    time  = '48h'
+  }
+}
+executor{
+  name = 'slurm'
+  submitRateLimit = '1 sec'
+  queueSize = 800
+}
+*/
