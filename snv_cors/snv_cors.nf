@@ -13,3 +13,38 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+// Params
+params.midas_dir = ''
+params.maps_dir = ''
+params.min_snvs = 5000
+params.depth_thres = 1
+
+// Create channels
+maps_dir = file(params.map_dir)
+midas_dir = file(params.midas_dir)
+MAPS = Channel.fromPath("${maps_dir}/*").
+  .map{map_file -> tuple(map_file.name.replaceAll('\\map\\.txt$', ""),
+    file(map_file))}
+MIDAS = Channel.fromPath("${midas_dir}/*", type: 'dir')
+  .map{snv_dir -> tuple(snv_dir.name, file(snv_dir))}
+
+process snv_cor{
+  label 'r'
+  tag "$spec"
+
+  input:
+  tuple val(spec), file("map.txt"), file("$spec") from MAPS.join(MIDAS)
+  val min_snvs from params.min_snvs
+  val depth_thres from params.depth_thres
+
+  """
+  stitch_file.r ${workflow.projectDir}/snv_cors.r \
+    $spec \
+    map.txt \
+    $depth_thres \
+    $min_snvs \
+    ./bigcor/
+    1
+  """
+}
