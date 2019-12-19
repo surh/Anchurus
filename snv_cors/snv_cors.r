@@ -108,7 +108,6 @@ args <- list(midas_dir = opts[1],
             bigcor_dir = opts[5],
             clean = opts[6])
 
-
 # Read data
 map <- read_tsv(args$map) %>%
   select(sample = ID, Group)
