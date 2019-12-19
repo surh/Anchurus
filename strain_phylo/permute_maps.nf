@@ -31,16 +31,16 @@ process permute_maps{
     tag "$spec"
     publishDir params.outdir,
         pattern: "output",
-        saveAs: {{"$spec"},
+        saveAs: {"$spec"},
         mode: 'rellink'
 
     input:
-    tuple val(spec), fle("map.txt") from inputs
+    tuple val(spec), file("map.txt") from MAPS
     val nperms from params.nperms
     val seed from params.seed
 
     output:
-    tuple $spec, file("output/") into PERMAPS
+    tuple spec, file("output/") into PERMAPS
 
     """
     ${workflow.projectDir}/permute_maps.r map.txt \
