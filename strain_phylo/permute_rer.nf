@@ -19,9 +19,20 @@
 
 /* Options:
 --maps_dirs
+A directory with permuted map directories. There must be one directory per
+species named after the species, and each species directory must contain
+all permuted maps from tha species. Permuted maps must be named map_<##>.txt.
 --tree_tabs_dir
+A directory with gene trees in tab format. Files must be named
+<species>.trees.txt
+--master_trees_dir
+A directory with master species trees. Files must be named <species>.tre
+--outdir
+Directory for output
+--focal_phenotype
+Phenotype group that will be converted to 1 for RER test, everything else
+will be 0.
 */
-
 
 // parameters
 params.maps_dirs = ''
@@ -43,7 +54,6 @@ INPUTS = Channel.fromPath("$maps_dir/**", type: 'file', maxDepth: 2)
     file("$tree_tabs_dir/${spec}.trees.txt"),
     file("$master_trees_dir/${spec}.tre"))}
 // INPUTS.subscribe{println it}
-
 
 // TREETABS = Channel.fromPath("$tree_tabs_dir/*", type: 'file')
 //   .map{trees_file -> tuple(trees_file.name.replaceAll('\\.trees\\.txt$',''),
