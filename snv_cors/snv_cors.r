@@ -95,12 +95,19 @@ contig_snv_cors <- function(Dat, contig, depth_thres = 1, snvs = "all"){
   return(Cors)
 }
 
-args <- list(midas_dir = "../../../../data/gathered_results/merged.snps/Actinomyces_dentalis_58667/",
-             map = "../../../../data/gathered_results/2019a.hmp.subsite/hmp.subsite_map.txt",
-             depth_thres = 1,
-             min_snvs = 5000,
-             bigcor_dir = "./bigcor",
-             clean = TRUE)
+# args <- list(midas_dir = "../../../../data/gathered_results/merged.snps/Actinomyces_dentalis_58667/",
+#              map = "../../../../data/gathered_results/2019a.hmp.subsite/hmp.subsite_map.txt",
+#              depth_thres = 1,
+#              min_snvs = 5000,
+#              bigcor_dir = "./bigcor",
+#              clean = TRUE)
+args <- list(midas_dir = opts[1],
+            map = opts[2],
+            depth_thres = opts[3],
+            min_snvs = opts[4],
+            bigcor_dir = opts[5],
+            clean = opts[6])
+
 
 # Read data
 map <- read_tsv(args$map) %>%
