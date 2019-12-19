@@ -55,7 +55,6 @@ INPUTS = Channel.fromPath("$maps_dir/**", type: 'file', maxDepth: 2)
     file("$master_trees_dir/${spec}.tre"))}
 // INPUTS.subscribe{println it}
 
-
 // TREETABS = Channel.fromPath("$tree_tabs_dir/*", type: 'file')
 //   .map{trees_file -> tuple(trees_file.name.replaceAll('\\.trees\\.txt$',''),
 //     file(trees_file))}
