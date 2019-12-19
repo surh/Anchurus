@@ -17,6 +17,7 @@
 // Params
 params.midas_dir = ''
 params.maps_dir = ''
+params.outdir = 'output'
 params.min_snvs = 5000
 params.depth_thres = 1
 
@@ -32,11 +33,18 @@ MIDAS = Channel.fromPath("${midas_dir}/*", type: 'dir')
 process snv_cor{
   label 'r'
   tag "$spec"
+  publishDir "${params.outdir}/${spec}",
+    mode: 'rellink'
 
   input:
   tuple val(spec), file("map.txt"), file("$spec") from MAPS.join(MIDAS)
   val min_snvs from params.min_snvs
   val depth_thres from params.depth_thres
+
+  output:
+  file "cors_all.txt.gz"
+  file "cors_synonymous.txt.gz"
+  file "cors_nonsynonymous.txt.gz"
 
   """
   stitch_file.r ${workflow.projectDir}/snv_cors.r \
