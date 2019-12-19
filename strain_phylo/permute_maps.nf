@@ -49,3 +49,22 @@ process permute_maps{
         --seed $seed
     """
 }
+
+// Example nextflow.config
+/*
+process{
+  maxForks = 100
+  stageInMode = 'rellink'
+  errorStrategy = 'finish'
+  withLabel: 'r'{
+    module = 'R/3.6.1'
+    memory = '1G'
+    time  = '1h'
+  }
+}
+executor{
+  name = 'slurm'
+  submitRateLimit = '1 sec'
+  queueSize = 500
+}
+*/
