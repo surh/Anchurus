@@ -24,7 +24,7 @@ params.depth_thres = 1
 // Create channels
 maps_dir = file(params.map_dir)
 midas_dir = file(params.midas_dir)
-MAPS = Channel.fromPath("${maps_dir}/*").
+MAPS = Channel.fromPath("${maps_dir}/*")
   .map{map_file -> tuple(map_file.name.replaceAll('\\map\\.txt$', ""),
     file(map_file))}
 MIDAS = Channel.fromPath("${midas_dir}/*", type: 'dir')
