@@ -63,6 +63,7 @@ process{
   maxForks = 300
   stageInMode = 'rellink'
   errorStrategy = 'finish'
+  queue = 'hbfraser,hns'
   withLabel: 'r'{
     module = 'R/3.5.1'
     memory = '15G'
