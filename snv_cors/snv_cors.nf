@@ -22,13 +22,15 @@ params.min_snvs = 5000
 params.depth_thres = 1
 
 // Create channels
-maps_dir = file(params.map_dir)
+maps_dir = file(params.maps_dir)
 midas_dir = file(params.midas_dir)
-MAPS = Channel.fromPath("${maps_dir}/*").
-  .map{map_file -> tuple(map_file.name.replaceAll('\\map\\.txt$', ""),
+MAPS = Channel.fromPath("${maps_dir}/*")
+  .map{map_file -> tuple(map_file.name.replaceAll('\\.map\\.txt$', ""),
     file(map_file))}
 MIDAS = Channel.fromPath("${midas_dir}/*", type: 'dir')
   .map{snv_dir -> tuple(snv_dir.name, file(snv_dir))}
+
+ // MAPS.join(MIDAS).subscribe{println it}
 
 process snv_cor{
   label 'r'
@@ -37,7 +39,7 @@ process snv_cor{
     mode: 'rellink'
 
   input:
-  tuple val(spec), file("map.txt"), file("$spec") from MAPS.join(MIDAS)
+  tuple val(spec), file("map.txt"), file(snv_dir) from MAPS.join(MIDAS)
   val min_snvs from params.min_snvs
   val depth_thres from params.depth_thres
 
@@ -48,7 +50,7 @@ process snv_cor{
 
   """
   stitch_file.r ${workflow.projectDir}/snv_cors.r \
-    $spec \
+    $snv_dir \
     map.txt \
     $depth_thres \
     $min_snvs \
