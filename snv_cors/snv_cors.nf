@@ -37,7 +37,7 @@ process snv_cor{
     mode: 'rellink'
 
   input:
-  tuple val(spec), file("map.txt"), file(snv_dir) from MAPS.join(MIDAS)
+  tuple val(spec), file("map.txt"), file("$spec") from MAPS.join(MIDAS)
   val min_snvs from params.min_snvs
   val depth_thres from params.depth_thres
 
@@ -48,7 +48,7 @@ process snv_cor{
 
   """
   stitch_file.r ${workflow.projectDir}/snv_cors.r \
-    $snv_dir \
+    $spec \
     map.txt \
     $depth_thres \
     $min_snvs \
