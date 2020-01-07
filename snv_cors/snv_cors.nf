@@ -39,7 +39,7 @@ process snv_cor{
     mode: 'rellink'
 
   input:
-  tuple val(spec), file("map.txt"), file(snv_dir) from MAPS.join(MIDAS)
+  tuple spec, file("map.txt"), file(snv_dir) from MAPS.join(MIDAS)
   val min_snvs from params.min_snvs
   val depth_thres from params.depth_thres
 
