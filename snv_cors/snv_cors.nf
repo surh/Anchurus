@@ -25,7 +25,7 @@ params.depth_thres = 1
 maps_dir = file(params.maps_dir)
 midas_dir = file(params.midas_dir)
 MAPS = Channel.fromPath("${maps_dir}/*")
-  .map{map_file -> tuple(map_file.name.replaceAll('\\map\\.txt$', ""),
+  .map{map_file -> tuple(map_file.name.replaceAll('\\.map\\.txt$', ""),
     file(map_file))}
 MIDAS = Channel.fromPath("${midas_dir}/*", type: 'dir')
   .map{snv_dir -> tuple(snv_dir.name, file(snv_dir))}
