@@ -30,34 +30,34 @@ MAPS = Channel.fromPath("${maps_dir}/*")
 MIDAS = Channel.fromPath("${midas_dir}/*", type: 'dir')
   .map{snv_dir -> tuple(snv_dir.name, file(snv_dir))}
 
- MAPS.join(MIDAS).subscribe{println it}
+ // MAPS.join(MIDAS).subscribe{println it}
 
-// process snv_cor{
-//   label 'r'
-//   tag "$spec"
-//   publishDir "${params.outdir}/${spec}",
-//     mode: 'rellink'
-//
-//   input:
-//   tuple val(spec), file("map.txt"), file("$spec") from MAPS.join(MIDAS)
-//   val min_snvs from params.min_snvs
-//   val depth_thres from params.depth_thres
-//
-//   output:
-//   file "cors_all.txt.gz"
-//   file "cors_synonymous.txt.gz"
-//   file "cors_nonsynonymous.txt.gz"
-//
-//   """
-//   stitch_file.r ${workflow.projectDir}/snv_cors.r \
-//     $spec \
-//     map.txt \
-//     $depth_thres \
-//     $min_snvs \
-//     ./bigcor/
-//     1
-//   """
-// }
+process snv_cor{
+  label 'r'
+  tag "$spec"
+  publishDir "${params.outdir}/${spec}",
+    mode: 'rellink'
+
+  input:
+  tuple val(spec), file("map.txt"), file(snv_dir) from MAPS.join(MIDAS)
+  val min_snvs from params.min_snvs
+  val depth_thres from params.depth_thres
+
+  output:
+  file "cors_all.txt.gz"
+  file "cors_synonymous.txt.gz"
+  file "cors_nonsynonymous.txt.gz"
+
+  """
+  stitch_file.r ${workflow.projectDir}/snv_cors.r \
+    $snv_dir \
+    map.txt \
+    $depth_thres \
+    $min_snvs \
+    ./bigcor/
+    1
+  """
+}
 
 // Example nextflow.config (for sherlock)
 /*
