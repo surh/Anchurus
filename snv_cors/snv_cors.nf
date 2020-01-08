@@ -55,7 +55,7 @@ process snv_cor{
     $depth_thres \
     $min_snvs \
     ./bigcor/ \
-    1
+    TRUE
   """
 }
 

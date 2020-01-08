@@ -121,10 +121,10 @@ contig_snv_cors <- function(Dat, contig, depth_thres = 1, snvs = "all"){
 #              clean = TRUE)
 args <- list(midas_dir = opts[1],
             map = opts[2],
-            depth_thres = opts[3],
-            min_snvs = opts[4],
+            depth_thres = as.numeric(opts[3]),
+            min_snvs = as.numeric(opts[4]),
             bigcor_dir = opts[5],
-            clean = opts[6])
+            clean = as.logical(opts[6]))
 
 # Read data
 map <- read_tsv(args$map) %>%
