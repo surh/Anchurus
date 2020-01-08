@@ -54,7 +54,7 @@ process snv_cor{
     map.txt \
     $depth_thres \
     $min_snvs \
-    ./bigcor/
+    ./bigcor/ \
     1
   """
 }
