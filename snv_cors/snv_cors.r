@@ -70,7 +70,6 @@ subset_midas <- function(Dat, contig = NULL, snvs=NULL){
   return(Res)
 }
 
-
 #' MIDAS abundance to matrix
 #' 
 #' Utility function converts data frame with
@@ -148,6 +147,134 @@ abun2mat <- function(tab){
 # 
 #   return(Cors)
 # }
+
+#' SNV frequency correlations within a contig
+#' 
+#' Calculates pairwise correlation between SNV frequencies
+#' for all pairs at a window.
+#'
+#' @param freqs A n x m numeric matrix of n snvs and m samples with
+#' allele frequencies inside.
+#' @param positions A n-length vector with the base pair position
+#' of each SNV in freqs.
+#' @param w_size Non-inclusive maximum distance for a pair of SNVs so
+#' that the correlation is calculated. If a SNV is at position x, then
+#' all SNVs in the window (x-w_size, x+w_size) will have their correlation
+#' calculated.
+#' @param circular Eventually handle circular contigs (e.g. bacterial
+#' chromosomes, plasmids etc.)
+#'
+#' @return A data frame with columns pos1, pos2, dist,
+#' r2 and n.
+#' @author Sur from Fraser Lab
+#' 
+#' @importFrom magrittr %>%
+contig_snv_cors <- function(freqs, positions, w_size = 10000, circular = FALSE){
+  
+  # Check params
+  if(!is.matrix(freqs)){
+    stop("ERROR: freqs must be a numeric matrix", call. = TRUE)
+  }
+  if(length(positions) != nrow(freqs)){
+    stop("ERROR: positions must have the same length as the number of rows in freqs", call. = TRUE)
+  }
+  
+  Res <- NULL
+  # Iterate over every
+  for(i in 1:nrow(freqs)){
+    if((i %% 500) == 0)
+      cat("\tSNV:",i, "\n")
+    
+    # Find incremental window
+    pos <- positions[i]
+    # min_pos <- max(0, pos - w_size)
+    max_pos <- pos + w_size
+    
+    # Determine indices of snvs to correlate
+    # w_snvs <- which(positions != pos & positions > min_pos & positions < max_pos)
+    w_snvs <- which(positions > pos & positions < max_pos)
+    
+    # Correlate current SNV with other SNVs in window
+    res <- NULL
+    for(j in w_snvs){
+      f1 <- freqs[i,]
+      f2 <- freqs[j,]
+      rho <- cor(f1, f2 , use = "pairwise.complete.obs")
+      res <- res %>%
+        dplyr::bind_rows(tibble::tibble(pos1 = positions[i],
+                                        pos2 = positions[j],
+                                        dist = abs(positions[i] - positions[j]),
+                                        r2 = rho^2,
+                                        n = sum(!is.na(f1) & !is.na(f2))))
+    }
+    
+    # Combine results. (Splitting this into res and Res increases speed)
+    Res <- Res %>%
+      dplyr::bind_rows(res)
+  }
+  
+  return(Res)
+}
+
+
+#' SNV frequency correlations for a contig
+#' 
+#' Takes all data from one contig and returns the pairwise
+#' correlation between SNVs at a maximum distance.
+#'
+#' @param Dat A list with data frame elements info, freq and depth
+#' corresponding to the output files of <midas_merge.py snvs>.
+#' @param contig A singe contig ID to keep. If NULL, SNVs from all
+#' contigs will be kept. If snvs is not NULL, only SNVs both in the
+#' contig and in snvs will be kept. Contig name is stored in the
+#' ref_id column of Dat$info.
+#' @param depth_thres Minimum number of reads for a site to be
+#' considered covered in a given sample.
+#' @param w_size Non-inclusive maximum distance for a pair of SNVs so
+#' that the correlation is calculated. If a SNV is at position x, then
+#' all SNVs in the window (x-w_size, x+w_size) will have their correlation
+#' calculated.
+#' @param snvs Either "all", "synonymous" or "non-synonymous".
+#'
+#' @return A data frame with columns pos1, pos2, dist,
+#' r2 and n.
+#' @export
+#' @author Sur from Fraser Lab
+#' 
+#' @importFrom magrittr %>%
+contig_snv_cors <- function(Dat, contig, depth_thres = 1, w_size = 10000, snvs = "all"){
+  
+  cat("Selecting contig", contig, "\n")
+  Dat.contig <- subset_midas(Dat, contig = contig)
+  
+  # Select subset of SNVs
+  if(snvs %in% c("synonymous", "non-synonymous")){
+    cat("Selecting", snvs,  "SNVs\n")
+    Dat.contig$info <- HMVAR::determine_snp_effect(Dat.contig$info)
+    selected <- (Dat.contig$info %>%
+                   dplyr::filter(!is.na(snp_effect)) %>%
+                   dplyr::filter(snp_effect == snvs) %>%
+                   dplyr::select(site_id))$site_id
+    Dat.contig <- subset_midas(Dat = Dat.contig,
+                               contig = NULL,
+                               snvs = selected)
+  }else if(snvs == "all"){
+    cat("Using all SNVs\n")
+  }else{
+    stop("ERROR: invalid snvs specification.", call. = TRUE)
+  }
+  
+  # Remove sites and samples not passing depth_thres
+  freq <- abun2mat(Dat.contig$freq)
+  depth <- abun2mat(Dat.contig$depth)
+  freq[ depth < depth_thres ] <- NA
+  freq <- freq[ ,colSums(is.na(freq)) < nrow(freq) - 1]
+  
+  # Calculate correlation
+  Res <- contig_snv_cors(freqs = freq, positions = Dat.contig$info$ref_pos, w_size = w_size)
+  
+  return(Res)
+}
 
 # args <- list(midas_dir = "../../../../data/gathered_results/merged.snps/Actinomyces_dentalis_58667/",
 #              map = "../../../../data/gathered_results/2019a.hmp.subsite/hmp.subsite_map.txt",
