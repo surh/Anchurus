@@ -281,13 +281,15 @@ contig_snv_cors <- function(Dat, contig, depth_thres = 1, w_size = 10000, snvs =
 #              depth_thres = 1,
 #              min_snvs = 5000,
 #              bigcor_dir = "./bigcor",
-#              clean = TRUE)
+#              clean = TRUE,
+#              w_size = 10000)
 args <- list(midas_dir = opts[1],
             map = opts[2],
             depth_thres = as.numeric(opts[3]),
             min_snvs = as.numeric(opts[4]),
             bigcor_dir = opts[5],
-            clean = as.logical(opts[6]))
+            clean = as.logical(opts[6]),
+            w_size = as.numeric(opts[7]))
 
 # Read data
 map <- read_tsv(args$map) %>%
@@ -305,6 +307,7 @@ dir.create(args$bigcor_dir)
 Cors <- contigs %>%
   map_dfr(~contig_snv_cors(Dat, contig = .,
                            depth_thres = args$depth_thres,
+                           w_size = args$w_size,
                            snvs = "all"),
           .id = "ref_id")
 # Cors
@@ -312,6 +315,7 @@ Cors <- contigs %>%
 Cors.s <- contigs %>%
   map_dfr(~contig_snv_cors(Dat, contig = .,
                            depth_thres = args$depth_thres,
+                           w_size = args$w_size,
                            snvs = "synonymous"),
           .id = "ref_id")
 # Cors.s
@@ -319,6 +323,7 @@ Cors.s <- contigs %>%
 Cors.ns <- contigs %>%
   map_dfr(~contig_snv_cors(Dat, contig = .,
                            depth_thres = args$depth_thres,
+                           w_size = args$w_size,
                            snvs = "non-synonymous"),
           .id = "ref_id")
 # Cors.ns
