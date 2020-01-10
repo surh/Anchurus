@@ -23,6 +23,29 @@ library(HMVAR)
 # library(hexbin)
 # library(propagate)
 
+#' Subset MIDAS
+#' 
+#' Takes SNV data imported from MIDAS and selects the
+#' and returns an object containing a subset of SNVs.
+#' 
+#' At least one of contig and snvs must be specified. In that case,
+#' the intersection of both is selected and returned.
+#'
+#' @param Dat A list with data frame elements info, freq and depth
+#' corresponding to the output files of <midas_merge.py snvs>.
+#' @param contig A singe contig ID to keep. If NULL, SNVs from all
+#' contigs will be kept. If snvs is not NULL, only SNVs both in the
+#' contig and in snvs will be kept. Contig name is stored in the
+#' ref_id column of Dat$info.
+#' @param snvs A character vector of SNV ids to keep. If NULL all
+#' SNVs of the given contig will be kept/
+#'
+#' @return A list with data frame elements info, freq and depth. Similar
+#' to the input (Dat)
+#' @export
+#' @author Sur from Fraser Lab
+#' 
+#' @importFrom magrittr %>%
 subset_midas <- function(Dat, contig = NULL, snvs=NULL){
   # contig <- unique(Dat$info$ref_id)[1]
 
@@ -47,6 +70,17 @@ subset_midas <- function(Dat, contig = NULL, snvs=NULL){
   return(Res)
 }
 
+
+#' MIDAS abundance to matrix
+#' 
+#' Utility function converts data frame with
+#' abundance data into numeric matrix
+#'
+#' @param tab A data frame with column site_id which will be converted
+#' to row  names, and one column per sample.
+#'
+#' @return A numeric matrix
+#' @author Sur from Fraser Lab
 abun2mat <- function(tab){
   site_ids <- tab$site_id
   res <- tab %>%
@@ -56,62 +90,64 @@ abun2mat <- function(tab){
   return(res)
 }
 
-contig_snv_cors <- function(Dat, contig, depth_thres = 1, snvs = "all"){
-  # contig <- unique(Dat$info$ref_id)[5]
-  # snvs <-"all"
-  # snvs <- "synonymous"
-
-  cat("Selecting contig", contig, "\n")
-  Dat.contig <- subset_midas(Dat, contig = contig)
-
-  if(snvs %in% c("synonymous", "non-synonymous")){
-    cat("Selecting", snvs,  "SNVs\n")
-    Dat.contig$info <- HMVAR::determine_snp_effect(Dat.contig$info)
-    selected <- (Dat.contig$info %>%
-      dplyr::filter(!is.na(snp_effect)) %>%
-      dplyr::filter(snp_effect == snvs) %>%
-      dplyr::select(site_id))$site_id
-    Dat.contig <- subset_midas(Dat = Dat.contig,
-                               contig = NULL,
-                               snvs = selected)
-  }else if(snvs == "all"){
-    cat("Using all SNVs\n")
-  }else{
-    stop("ERROR: invalid snvs specification.", call. = TRUE)
-  }
-
-  freq <- abun2mat(Dat.contig$freq)
-  depth <- abun2mat(Dat.contig$depth)
-  freq[ depth < depth_thres ] <- NA
-  freq <- freq[ ,colSums(is.na(freq)) < nrow(freq) - 1]
-
-  Cors <- propagate::bigcor(freq, size = min(2000, ncol(freq)),
-                            use = "pairwise.complete.obs")
-  colnames(Cors) <- colnames(freq)
-  row.names(Cors) <- colnames(freq)
-
-  # Cors[ matrix(c(1:ncol(freq),1:ncol(freq)), ncol = 2) ] <- NA
-  Cors[ which(upper.tri(Cors, diag = TRUE), arr.ind = TRUE) ] <- NA
-
-  Cors <- Cors[1:ncol(Cors), 1:ncol(Cors)] %>%
-    as.data.frame() %>%
-    tibble::rownames_to_column(var = "site1") %>%
-    tibble::as_tibble() %>%
-    tidyr::pivot_longer(-site1, values_to = "cor") %>%
-    dplyr::filter(!is.na(cor))
-
-  Pos <- Dat.contig$info %>%
-    select(site_id, ref_pos)
-  Cors <- Cors %>%
-    left_join(Pos, by = c("site1" = "site_id")) %>%
-    select(everything(), pos1 = ref_pos) %>%
-    left_join(Pos, by = c("name" = "site_id")) %>%
-    select(everything(), pos2 = ref_pos) %>%
-    mutate(dist = abs(pos1 - pos2),
-           r2 = cor^2)
-
-  return(Cors)
-}
+# Original function that used propagate::bigcor to try to attempt
+# all by all SNV correlations.
+# contig_snv_cors <- function(Dat, contig, depth_thres = 1, snvs = "all"){
+#   # contig <- unique(Dat$info$ref_id)[5]
+#   # snvs <-"all"
+#   # snvs <- "synonymous"
+# 
+#   cat("Selecting contig", contig, "\n")
+#   Dat.contig <- subset_midas(Dat, contig = contig)
+# 
+#   if(snvs %in% c("synonymous", "non-synonymous")){
+#     cat("Selecting", snvs,  "SNVs\n")
+#     Dat.contig$info <- HMVAR::determine_snp_effect(Dat.contig$info)
+#     selected <- (Dat.contig$info %>%
+#       dplyr::filter(!is.na(snp_effect)) %>%
+#       dplyr::filter(snp_effect == snvs) %>%
+#       dplyr::select(site_id))$site_id
+#     Dat.contig <- subset_midas(Dat = Dat.contig,
+#                                contig = NULL,
+#                                snvs = selected)
+#   }else if(snvs == "all"){
+#     cat("Using all SNVs\n")
+#   }else{
+#     stop("ERROR: invalid snvs specification.", call. = TRUE)
+#   }
+# 
+#   freq <- abun2mat(Dat.contig$freq)
+#   depth <- abun2mat(Dat.contig$depth)
+#   freq[ depth < depth_thres ] <- NA
+#   freq <- freq[ ,colSums(is.na(freq)) < nrow(freq) - 1]
+# 
+#   Cors <- propagate::bigcor(freq, size = min(2000, ncol(freq)),
+#                             use = "pairwise.complete.obs")
+#   colnames(Cors) <- colnames(freq)
+#   row.names(Cors) <- colnames(freq)
+# 
+#   # Cors[ matrix(c(1:ncol(freq),1:ncol(freq)), ncol = 2) ] <- NA
+#   Cors[ which(upper.tri(Cors, diag = TRUE), arr.ind = TRUE) ] <- NA
+# 
+#   Cors <- Cors[1:ncol(Cors), 1:ncol(Cors)] %>%
+#     as.data.frame() %>%
+#     tibble::rownames_to_column(var = "site1") %>%
+#     tibble::as_tibble() %>%
+#     tidyr::pivot_longer(-site1, values_to = "cor") %>%
+#     dplyr::filter(!is.na(cor))
+# 
+#   Pos <- Dat.contig$info %>%
+#     select(site_id, ref_pos)
+#   Cors <- Cors %>%
+#     left_join(Pos, by = c("site1" = "site_id")) %>%
+#     select(everything(), pos1 = ref_pos) %>%
+#     left_join(Pos, by = c("name" = "site_id")) %>%
+#     select(everything(), pos2 = ref_pos) %>%
+#     mutate(dist = abs(pos1 - pos2),
+#            r2 = cor^2)
+# 
+#   return(Cors)
+# }
 
 # args <- list(midas_dir = "../../../../data/gathered_results/merged.snps/Actinomyces_dentalis_58667/",
 #              map = "../../../../data/gathered_results/2019a.hmp.subsite/hmp.subsite_map.txt",
