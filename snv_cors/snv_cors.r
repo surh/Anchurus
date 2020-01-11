@@ -48,7 +48,7 @@ library(HMVAR)
 #' @importFrom magrittr %>%
 subset_midas <- function(Dat, contig = NULL, snvs=NULL){
   # contig <- unique(Dat$info$ref_id)[1]
-
+  
   if(!is.null(snvs) && !is.null(contig)){
     Res <- list(info = Dat$info %>%
                   dplyr::filter(site_id %in% snvs & ref_id == contig))
@@ -61,12 +61,12 @@ subset_midas <- function(Dat, contig = NULL, snvs=NULL){
   }else{
     stop("ERROR: At least one of snvs and contigs must not be NULL.", call. = TRUE)
   }
-
+  
   Res$freq <- Dat$freq %>%
     dplyr::filter(site_id %in% Res$info$site_id)
   Res$depth <- Dat$depth %>%
     dplyr::filter(site_id %in% Res$info$site_id)
-
+  
   return(Res)
 }
 
@@ -242,7 +242,7 @@ contig_snv_cors <- function(freqs, positions, w_size = 10000, circular = FALSE){
 #' @author Sur from Fraser Lab
 #' 
 #' @importFrom magrittr %>%
-contig_snv_cors <- function(Dat, contig, depth_thres = 1, w_size = 10000, snvs = "all"){
+snv_cors <- function(Dat, contig, depth_thres = 1, w_size = 10000, snvs = "all"){
   
   cat("Selecting contig", contig, "\n")
   Dat.contig <- subset_midas(Dat, contig = contig)
@@ -284,12 +284,12 @@ contig_snv_cors <- function(Dat, contig, depth_thres = 1, w_size = 10000, snvs =
 #              clean = TRUE,
 #              w_size = 10000)
 args <- list(midas_dir = opts[1],
-            map = opts[2],
-            depth_thres = as.numeric(opts[3]),
-            min_snvs = as.numeric(opts[4]),
-            bigcor_dir = opts[5],
-            clean = as.logical(opts[6]),
-            w_size = as.numeric(opts[7]))
+             map = opts[2],
+             depth_thres = as.numeric(opts[3]),
+             min_snvs = as.numeric(opts[4]),
+             bigcor_dir = opts[5],
+             clean = as.logical(opts[6]),
+             w_size = as.numeric(opts[7]))
 
 # Read data
 map <- read_tsv(args$map) %>%
@@ -305,26 +305,26 @@ contigs <- setNames(contigs, contigs)
 options(fftempdir = args$bigcor_dir)
 dir.create(args$bigcor_dir)
 Cors <- contigs %>%
-  map_dfr(~contig_snv_cors(Dat, contig = .,
-                           depth_thres = args$depth_thres,
-                           w_size = args$w_size,
-                           snvs = "all"),
+  map_dfr(~snv_cors(Dat, contig = .,
+                    depth_thres = args$depth_thres,
+                    w_size = args$w_size,
+                    snvs = "all"),
           .id = "ref_id")
 # Cors
 
 Cors.s <- contigs %>%
-  map_dfr(~contig_snv_cors(Dat, contig = .,
-                           depth_thres = args$depth_thres,
-                           w_size = args$w_size,
-                           snvs = "synonymous"),
+  map_dfr(~snv_cors(Dat, contig = .,
+                    depth_thres = args$depth_thres,
+                    w_size = args$w_size,
+                    snvs = "synonymous"),
           .id = "ref_id")
 # Cors.s
 
 Cors.ns <- contigs %>%
-  map_dfr(~contig_snv_cors(Dat, contig = .,
-                           depth_thres = args$depth_thres,
-                           w_size = args$w_size,
-                           snvs = "non-synonymous"),
+  map_dfr(~snv_cors(Dat, contig = .,
+                    depth_thres = args$depth_thres,
+                    w_size = args$w_size,
+                    snvs = "non-synonymous"),
           .id = "ref_id")
 # Cors.ns
 
