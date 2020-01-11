@@ -176,6 +176,8 @@ contig_snv_cors <- function(freqs, positions, w_size = 10000, circular = FALSE){
     stop("ERROR: freqs must be a numeric matrix", call. = TRUE)
   }
   if(length(positions) != nrow(freqs)){
+    cat("nrow(freqs) = ", nrow(freqs), "\n")
+    cat("length(positions) = ", length(positions), "\n")
     stop("ERROR: positions must have the same length as the number of rows in freqs", call. = TRUE)
   }
   
