@@ -84,8 +84,8 @@ abun2mat <- function(tab){
   site_ids <- tab$site_id
   res <- tab %>%
     dplyr::select(-site_id) %>%
-    t
-  colnames(res) <- site_ids
+    as.matrix
+  row.names(res) <- site_ids
   return(res)
 }
 
