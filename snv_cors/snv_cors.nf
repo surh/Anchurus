@@ -18,7 +18,8 @@
 params.midas_dir = ''
 params.maps_dir = ''
 params.outdir = 'output'
-params.min_snvs = 5000
+params.min_snvs = 0
+params.w_size = 10000
 params.depth_thres = 1
 
 // Create channels
@@ -42,6 +43,7 @@ process snv_cor{
   tuple val(spec), file("map.txt"), file(snv_dir) from MAPS.join(MIDAS)
   val min_snvs from params.min_snvs
   val depth_thres from params.depth_thres
+  val w_size from params.w_size
 
   output:
   file "cors_all.txt.gz"
@@ -54,7 +56,7 @@ process snv_cor{
     map.txt \
     $depth_thres \
     $min_snvs \
-    ./bigcor/ \
+    $w_size \
     TRUE
   """
 }
