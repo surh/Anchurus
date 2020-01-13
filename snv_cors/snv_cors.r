@@ -148,6 +148,76 @@ abun2mat <- function(tab){
 #   return(Cors)
 # }
 
+#' #' SNV frequency correlations within a contig
+#' #' 
+#' #' Calculates pairwise correlation between SNV frequencies
+#' #' for all pairs at a window.
+#' #'
+#' #' @param freqs A n x m numeric matrix of n snvs and m samples with
+#' #' allele frequencies inside.
+#' #' @param positions A n-length vector with the base pair position
+#' #' of each SNV in freqs.
+#' #' @param w_size Non-inclusive maximum distance for a pair of SNVs so
+#' #' that the correlation is calculated. If a SNV is at position x, then
+#' #' all SNVs in the window (x-w_size, x+w_size) will have their correlation
+#' #' calculated.
+#' #' @param circular Eventually handle circular contigs (e.g. bacterial
+#' #' chromosomes, plasmids etc.)
+#' #'
+#' #' @return A data frame with columns pos1, pos2, dist,
+#' #' r2 and n.
+#' #' @author Sur from Fraser Lab
+#' #' 
+#' #' @importFrom magrittr %>%
+#' contig_snv_cors <- function(freqs, positions, w_size = 10000, circular = FALSE){
+#'   
+#'   # Check params
+#'   if(!is.matrix(freqs)){
+#'     stop("ERROR: freqs must be a numeric matrix", call. = TRUE)
+#'   }
+#'   if(length(positions) != nrow(freqs)){
+#'     cat("nrow(freqs) = ", nrow(freqs), "\n")
+#'     cat("length(positions) = ", length(positions), "\n")
+#'     stop("ERROR: positions must have the same length as the number of rows in freqs", call. = TRUE)
+#'   }
+#'   
+#'   Res <- NULL
+#'   # Iterate over every
+#'   for(i in 1:nrow(freqs)){
+#'     if((i %% 500) == 0)
+#'       cat("\tSNV:",i, "\n")
+#'     
+#'     # Find incremental window
+#'     pos <- positions[i]
+#'     # min_pos <- max(0, pos - w_size)
+#'     max_pos <- pos + w_size
+#'     
+#'     # Determine indices of snvs to correlate
+#'     # w_snvs <- which(positions != pos & positions > min_pos & positions < max_pos)
+#'     w_snvs <- which(positions > pos & positions < max_pos)
+#'     
+#'     # Correlate current SNV with other SNVs in window
+#'     res <- NULL
+#'     for(j in w_snvs){
+#'       f1 <- freqs[i,]
+#'       f2 <- freqs[j,]
+#'       rho <- cor(f1, f2 , use = "pairwise.complete.obs")
+#'       res <- res %>%
+#'         dplyr::bind_rows(tibble::tibble(pos1 = positions[i],
+#'                                         pos2 = positions[j],
+#'                                         dist = abs(positions[i] - positions[j]),
+#'                                         r2 = rho^2,
+#'                                         n = sum(!is.na(f1) & !is.na(f2))))
+#'     }
+#'     
+#'     # Combine results. (Splitting this into res and Res increases speed)
+#'     Res <- Res %>%
+#'       dplyr::bind_rows(res)
+#'   }
+#'   
+#'   return(Res)
+#' }
+
 #' SNV frequency correlations within a contig
 #' 
 #' Calculates pairwise correlation between SNV frequencies
@@ -176,8 +246,6 @@ contig_snv_cors <- function(freqs, positions, w_size = 10000, circular = FALSE){
     stop("ERROR: freqs must be a numeric matrix", call. = TRUE)
   }
   if(length(positions) != nrow(freqs)){
-    cat("nrow(freqs) = ", nrow(freqs), "\n")
-    cat("length(positions) = ", length(positions), "\n")
     stop("ERROR: positions must have the same length as the number of rows in freqs", call. = TRUE)
   }
   
@@ -197,27 +265,15 @@ contig_snv_cors <- function(freqs, positions, w_size = 10000, circular = FALSE){
     w_snvs <- which(positions > pos & positions < max_pos)
     
     # Correlate current SNV with other SNVs in window
-    res <- NULL
-    for(j in w_snvs){
-      f1 <- freqs[i,]
-      f2 <- freqs[j,]
-      rho <- cor(f1, f2 , use = "pairwise.complete.obs")
-      res <- res %>%
-        dplyr::bind_rows(tibble::tibble(pos1 = positions[i],
-                                        pos2 = positions[j],
-                                        dist = abs(positions[i] - positions[j]),
-                                        r2 = rho^2,
-                                        n = sum(!is.na(f1) & !is.na(f2))))
-    }
-    
-    # Combine results. (Splitting this into res and Res increases speed)
-    Res <- Res %>%
-      dplyr::bind_rows(res)
+    rho <- cor(freqs[i,], t(freqs[w_snvs,,drop = FALSE]), use = "pairwise.complete.obs")
+    Res <- dplyr::bind_rows(Res,
+                            tibble::tibble(pos1 = positions[i],
+                                           pos2 = positions[w_snvs],
+                                           r2 = rho[1,]^2))
   }
   
   return(Res)
 }
-
 
 #' SNV frequency correlations for a contig
 #' 
