@@ -70,7 +70,7 @@ process{
   queue = 'hbfraser,hns'
   withLabel: 'r'{
     module = 'R/3.5.1'
-    memory = '15G'
+    memory = '4G'
     time  = '48h'
   }
 }
