@@ -215,7 +215,7 @@ args <- list(midas_dir = opts[1],
              map = opts[2],
              depth_thres = as.numeric(opts[3]),
              min_snvs = as.numeric(opts[4]),
-             w_size = opts[5],
+             w_size = as.numeric(opts[5]),
              clean = as.logical(opts[6]))
 
 # Read data
