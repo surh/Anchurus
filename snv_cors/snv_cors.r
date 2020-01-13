@@ -24,10 +24,10 @@ library(HMVAR)
 # library(propagate)
 
 #' Subset MIDAS
-#' 
+#'
 #' Takes SNV data imported from MIDAS and selects the
 #' and returns an object containing a subset of SNVs.
-#' 
+#'
 #' At least one of contig and snvs must be specified. In that case,
 #' the intersection of both is selected and returned.
 #'
@@ -44,11 +44,11 @@ library(HMVAR)
 #' to the input (Dat)
 #' @export
 #' @author Sur from Fraser Lab
-#' 
+#'
 #' @importFrom magrittr %>%
 subset_midas <- function(Dat, contig = NULL, snvs=NULL){
   # contig <- unique(Dat$info$ref_id)[1]
-  
+
   if(!is.null(snvs) && !is.null(contig)){
     Res <- list(info = Dat$info %>%
                   dplyr::filter(site_id %in% snvs & ref_id == contig))
@@ -61,17 +61,17 @@ subset_midas <- function(Dat, contig = NULL, snvs=NULL){
   }else{
     stop("ERROR: At least one of snvs and contigs must not be NULL.", call. = TRUE)
   }
-  
+
   Res$freq <- Dat$freq %>%
     dplyr::filter(site_id %in% Res$info$site_id)
   Res$depth <- Dat$depth %>%
     dplyr::filter(site_id %in% Res$info$site_id)
-  
+
   return(Res)
 }
 
 #' MIDAS abundance to matrix
-#' 
+#'
 #' Utility function converts data frame with
 #' abundance data into numeric matrix
 #'
@@ -89,137 +89,8 @@ abun2mat <- function(tab){
   return(res)
 }
 
-# Original function that used propagate::bigcor to try to attempt
-# all by all SNV correlations.
-# contig_snv_cors <- function(Dat, contig, depth_thres = 1, snvs = "all"){
-#   # contig <- unique(Dat$info$ref_id)[5]
-#   # snvs <-"all"
-#   # snvs <- "synonymous"
-# 
-#   cat("Selecting contig", contig, "\n")
-#   Dat.contig <- subset_midas(Dat, contig = contig)
-# 
-#   if(snvs %in% c("synonymous", "non-synonymous")){
-#     cat("Selecting", snvs,  "SNVs\n")
-#     Dat.contig$info <- HMVAR::determine_snp_effect(Dat.contig$info)
-#     selected <- (Dat.contig$info %>%
-#       dplyr::filter(!is.na(snp_effect)) %>%
-#       dplyr::filter(snp_effect == snvs) %>%
-#       dplyr::select(site_id))$site_id
-#     Dat.contig <- subset_midas(Dat = Dat.contig,
-#                                contig = NULL,
-#                                snvs = selected)
-#   }else if(snvs == "all"){
-#     cat("Using all SNVs\n")
-#   }else{
-#     stop("ERROR: invalid snvs specification.", call. = TRUE)
-#   }
-# 
-#   freq <- abun2mat(Dat.contig$freq)
-#   depth <- abun2mat(Dat.contig$depth)
-#   freq[ depth < depth_thres ] <- NA
-#   freq <- freq[ ,colSums(is.na(freq)) < nrow(freq) - 1]
-# 
-#   Cors <- propagate::bigcor(freq, size = min(2000, ncol(freq)),
-#                             use = "pairwise.complete.obs")
-#   colnames(Cors) <- colnames(freq)
-#   row.names(Cors) <- colnames(freq)
-# 
-#   # Cors[ matrix(c(1:ncol(freq),1:ncol(freq)), ncol = 2) ] <- NA
-#   Cors[ which(upper.tri(Cors, diag = TRUE), arr.ind = TRUE) ] <- NA
-# 
-#   Cors <- Cors[1:ncol(Cors), 1:ncol(Cors)] %>%
-#     as.data.frame() %>%
-#     tibble::rownames_to_column(var = "site1") %>%
-#     tibble::as_tibble() %>%
-#     tidyr::pivot_longer(-site1, values_to = "cor") %>%
-#     dplyr::filter(!is.na(cor))
-# 
-#   Pos <- Dat.contig$info %>%
-#     select(site_id, ref_pos)
-#   Cors <- Cors %>%
-#     left_join(Pos, by = c("site1" = "site_id")) %>%
-#     select(everything(), pos1 = ref_pos) %>%
-#     left_join(Pos, by = c("name" = "site_id")) %>%
-#     select(everything(), pos2 = ref_pos) %>%
-#     mutate(dist = abs(pos1 - pos2),
-#            r2 = cor^2)
-# 
-#   return(Cors)
-# }
-
-#' #' SNV frequency correlations within a contig
-#' #' 
-#' #' Calculates pairwise correlation between SNV frequencies
-#' #' for all pairs at a window.
-#' #'
-#' #' @param freqs A n x m numeric matrix of n snvs and m samples with
-#' #' allele frequencies inside.
-#' #' @param positions A n-length vector with the base pair position
-#' #' of each SNV in freqs.
-#' #' @param w_size Non-inclusive maximum distance for a pair of SNVs so
-#' #' that the correlation is calculated. If a SNV is at position x, then
-#' #' all SNVs in the window (x-w_size, x+w_size) will have their correlation
-#' #' calculated.
-#' #' @param circular Eventually handle circular contigs (e.g. bacterial
-#' #' chromosomes, plasmids etc.)
-#' #'
-#' #' @return A data frame with columns pos1, pos2, dist,
-#' #' r2 and n.
-#' #' @author Sur from Fraser Lab
-#' #' 
-#' #' @importFrom magrittr %>%
-#' contig_snv_cors <- function(freqs, positions, w_size = 10000, circular = FALSE){
-#'   
-#'   # Check params
-#'   if(!is.matrix(freqs)){
-#'     stop("ERROR: freqs must be a numeric matrix", call. = TRUE)
-#'   }
-#'   if(length(positions) != nrow(freqs)){
-#'     cat("nrow(freqs) = ", nrow(freqs), "\n")
-#'     cat("length(positions) = ", length(positions), "\n")
-#'     stop("ERROR: positions must have the same length as the number of rows in freqs", call. = TRUE)
-#'   }
-#'   
-#'   Res <- NULL
-#'   # Iterate over every
-#'   for(i in 1:nrow(freqs)){
-#'     if((i %% 500) == 0)
-#'       cat("\tSNV:",i, "\n")
-#'     
-#'     # Find incremental window
-#'     pos <- positions[i]
-#'     # min_pos <- max(0, pos - w_size)
-#'     max_pos <- pos + w_size
-#'     
-#'     # Determine indices of snvs to correlate
-#'     # w_snvs <- which(positions != pos & positions > min_pos & positions < max_pos)
-#'     w_snvs <- which(positions > pos & positions < max_pos)
-#'     
-#'     # Correlate current SNV with other SNVs in window
-#'     res <- NULL
-#'     for(j in w_snvs){
-#'       f1 <- freqs[i,]
-#'       f2 <- freqs[j,]
-#'       rho <- cor(f1, f2 , use = "pairwise.complete.obs")
-#'       res <- res %>%
-#'         dplyr::bind_rows(tibble::tibble(pos1 = positions[i],
-#'                                         pos2 = positions[j],
-#'                                         dist = abs(positions[i] - positions[j]),
-#'                                         r2 = rho^2,
-#'                                         n = sum(!is.na(f1) & !is.na(f2))))
-#'     }
-#'     
-#'     # Combine results. (Splitting this into res and Res increases speed)
-#'     Res <- Res %>%
-#'       dplyr::bind_rows(res)
-#'   }
-#'   
-#'   return(Res)
-#' }
-
 #' SNV frequency correlations within a contig
-#' 
+#'
 #' Calculates pairwise correlation between SNV frequencies
 #' for all pairs at a window.
 #'
@@ -237,10 +108,10 @@ abun2mat <- function(tab){
 #' @return A data frame with columns pos1, pos2, dist,
 #' r2 and n.
 #' @author Sur from Fraser Lab
-#' 
+#'
 #' @importFrom magrittr %>%
 contig_snv_cors <- function(freqs, positions, w_size = 10000, circular = FALSE){
-  
+
   # Check params
   if(!is.matrix(freqs)){
     stop("ERROR: freqs must be a numeric matrix", call. = TRUE)
@@ -248,22 +119,22 @@ contig_snv_cors <- function(freqs, positions, w_size = 10000, circular = FALSE){
   if(length(positions) != nrow(freqs)){
     stop("ERROR: positions must have the same length as the number of rows in freqs", call. = TRUE)
   }
-  
+
   Res <- NULL
   # Iterate over every
   for(i in 1:nrow(freqs)){
     if((i %% 500) == 0)
       cat("\tSNV:",i, "\n")
-    
+
     # Find incremental window
     pos <- positions[i]
     # min_pos <- max(0, pos - w_size)
     max_pos <- pos + w_size
-    
+
     # Determine indices of snvs to correlate
     # w_snvs <- which(positions != pos & positions > min_pos & positions < max_pos)
     w_snvs <- which(positions > pos & positions < max_pos)
-    
+
     # Correlate current SNV with other SNVs in window
     rho <- cor(freqs[i,], t(freqs[w_snvs,,drop = FALSE]), use = "pairwise.complete.obs")
     Res <- dplyr::bind_rows(Res,
@@ -271,12 +142,12 @@ contig_snv_cors <- function(freqs, positions, w_size = 10000, circular = FALSE){
                                            pos2 = positions[w_snvs],
                                            r2 = rho[1,]^2))
   }
-  
+
   return(Res)
 }
 
 #' SNV frequency correlations for a contig
-#' 
+#'
 #' Takes all data from one contig and returns the pairwise
 #' correlation between SNVs at a maximum distance.
 #'
@@ -298,13 +169,13 @@ contig_snv_cors <- function(freqs, positions, w_size = 10000, circular = FALSE){
 #' r2 and n.
 #' @export
 #' @author Sur from Fraser Lab
-#' 
+#'
 #' @importFrom magrittr %>%
 snv_cors <- function(Dat, contig, depth_thres = 1, w_size = 10000, snvs = "all"){
-  
+
   cat("Selecting contig", contig, "\n")
   Dat.contig <- subset_midas(Dat, contig = contig)
-  
+
   # Select subset of SNVs
   if(snvs %in% c("synonymous", "non-synonymous")){
     cat("Selecting", snvs,  "SNVs\n")
@@ -321,16 +192,16 @@ snv_cors <- function(Dat, contig, depth_thres = 1, w_size = 10000, snvs = "all")
   }else{
     stop("ERROR: invalid snvs specification.", call. = TRUE)
   }
-  
+
   # Remove sites and samples not passing depth_thres
   freq <- abun2mat(Dat.contig$freq)
   depth <- abun2mat(Dat.contig$depth)
   freq[ depth < depth_thres ] <- NA
   freq <- freq[ ,colSums(is.na(freq)) < nrow(freq) - 1]
-  
+
   # Calculate correlation
   Res <- contig_snv_cors(freqs = freq, positions = Dat.contig$info$ref_pos, w_size = w_size)
-  
+
   return(Res)
 }
 
@@ -338,16 +209,14 @@ snv_cors <- function(Dat, contig, depth_thres = 1, w_size = 10000, snvs = "all")
 #              map = "../../../../data/gathered_results/2019a.hmp.subsite/hmp.subsite_map.txt",
 #              depth_thres = 1,
 #              min_snvs = 5000,
-#              bigcor_dir = "./bigcor",
 #              clean = TRUE,
 #              w_size = 10000)
 args <- list(midas_dir = opts[1],
              map = opts[2],
              depth_thres = as.numeric(opts[3]),
              min_snvs = as.numeric(opts[4]),
-             bigcor_dir = opts[5],
-             clean = as.logical(opts[6]),
-             w_size = as.numeric(opts[7]))
+             w_size = opts[5],
+             clean = as.logical(opts[6]))
 
 # Read data
 map <- read_tsv(args$map) %>%
@@ -360,8 +229,6 @@ contigs <- names(contigs[ contigs >= args$min_snvs ])
 contigs <- setNames(contigs, contigs)
 
 # Calculate correlations
-options(fftempdir = args$bigcor_dir)
-dir.create(args$bigcor_dir)
 Cors <- contigs %>%
   map_dfr(~snv_cors(Dat, contig = .,
                     depth_thres = args$depth_thres,
@@ -393,10 +260,6 @@ filename <- "cors_synonymous.txt.gz"
 write_tsv(Cors.s, path = filename)
 filename <- "cors_nonsynonymous.txt.gz"
 write_tsv(Cors.ns, path = filename)
-
-if(args$clean){
-  unlink(args$bigcor_dir, recursive = TRUE)
-}
 
 # Plotting will be moved to another script
 
