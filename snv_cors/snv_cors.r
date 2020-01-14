@@ -123,7 +123,7 @@ contig_snv_cors <- function(freqs, positions, w_size = 10000, circular = FALSE){
   Res <- NULL
   # Iterate over every
   for(i in 1:nrow(freqs)){
-    if((i %% 500) == 0)
+    if((i %% 1000) == 0)
       cat("\tSNV:",i, "\n")
 
     # Find incremental window
@@ -197,7 +197,7 @@ snv_cors <- function(Dat, contig, depth_thres = 1, w_size = 10000, snvs = "all")
   freq <- abun2mat(Dat.contig$freq)
   depth <- abun2mat(Dat.contig$depth)
   freq[ depth < depth_thres ] <- NA
-  freq <- freq[ ,colSums(is.na(freq)) < nrow(freq) - 1]
+  freq <- freq[ ,colSums(is.na(freq)) < nrow(freq) - 1, drop = FALSE]
 
   # Calculate correlation
   Res <- contig_snv_cors(freqs = freq, positions = Dat.contig$info$ref_pos, w_size = w_size)
