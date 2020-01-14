@@ -198,9 +198,13 @@ snv_cors <- function(Dat, contig, depth_thres = 1, w_size = 10000, snvs = "all")
   depth <- abun2mat(Dat.contig$depth)
   freq[ depth < depth_thres ] <- NA
   freq <- freq[ ,colSums(is.na(freq)) < nrow(freq) - 1, drop = FALSE]
-
-  # Calculate correlation
-  Res <- contig_snv_cors(freqs = freq, positions = Dat.contig$info$ref_pos, w_size = w_size)
+  
+  if(ncol(freq) > 1){
+    # Calculate correlation
+    Res <- contig_snv_cors(freqs = freq, positions = Dat.contig$info$ref_pos, w_size = w_size)
+  }else{
+    Res <- NULL
+  }
 
   return(Res)
 }
