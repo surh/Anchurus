@@ -44,7 +44,7 @@ process rer_fdr{
   tuple spec, file("${spec}.rer.fdr.txt")
 
   """
-  stitch_file ${workflow.projectDir}/rer_perm_fdr.r \
+  stitch_file,r ${workflow.projectDir}/rer_perm_fdr.r \
     $rerperms \
     $rertest \
     ${spec}.rer.fdr.txt
