@@ -35,6 +35,7 @@ IN = RERTEST.join(RERPERMS)
 process rer_fdr{
   label 'r'
   tag "$spec"
+  publishDir params.outdir
 
   input:
   tuple val(spec), file(rertest), file(rerperms) from IN
