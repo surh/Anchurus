@@ -27,7 +27,7 @@ rerperms_dirs = file(params.rerperms)
 RERTEST = Channel.fromPath("$rertest_dirs/*", type:'dir', maxDepth:1)
   .map{dir -> spec = dir.name;
     tuple(spec, file("$rertest_dirs/$spec/${spec}.cors.txt"))}
-RERPERMS = Channel.fromPath("$rertest_dirs/*", type:'dir', maxDepth:1)
+RERPERMS = Channel.fromPath("$rerperms_dirs/*", type:'dir', maxDepth:1)
   .map{dir -> spec = dir.name;
     tuple(spec, file(dir))}
 IN = RERTEST.join(RERPERMS)
