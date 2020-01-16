@@ -17,7 +17,6 @@
 # You should have received a copy of the GNU General Public License
 # along with HMVAR.  If not, see <http://www.gnu.org/licenses/>.
 
-# setwd("/cashew/users/sur/exp/fraserv/2019/today2")
 library(tidyverse)
 
 # args <- list(permdir = "perm_res/rertest/Bacteroides_vulgatus_57955/",
@@ -26,7 +25,6 @@ library(tidyverse)
 args <- list(permdir = opts[1],
              res = opts[2],
              output = opts[3])
-
 
 # Read data
 cat("Read original results...\n")
@@ -51,25 +49,8 @@ for(i in 1:nrow(Res)){
     }) %>% mean
   Res$FDR[i] <- fdr
 }
-# Res
-# Res %>% print(n = 200)
 
 # Write output
 cat("Writing output...\n")
 write_tsv(Res, path = args$output)
 
-# Res[2880:2900, ]
-# 
-# p1 <- ggplot(Res, aes(x = FDR)) +
-#   geom_histogram(bins = 20) +
-#   AMOR::theme_blackbox()
-# p1
-# 
-# 
-# p1 <- ggplot(Res, aes(x = P)) +
-#   geom_histogram(bins = 20) +
-#   AMOR::theme_blackbox()
-# p1
-# 
-# HMVAR::pval_qqplot(pvector = Res$P)
-# HMVAR::pval_qqplot(pvector = Res$FDR)
