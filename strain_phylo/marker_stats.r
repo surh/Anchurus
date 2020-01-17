@@ -36,15 +36,22 @@ for(cov_file in args$gene_coverages){
   selected_samples <- ncol(Cov)
   selected_genes <- nrow(Cov)
   
-  aln <- seqinr::read.fasta(filtered_alns)
-  n_filtered <- length(aln)
   
-  n_snvs <- aln %>%
-    map_int(length) %>%
-    unique
-  if(length(n_snvs) != 1){
-    stop("ERROR: not all filtered sequences have the same length")
+  if(file.exists(filtered_alns)){
+    aln <- seqinr::read.fasta(filtered_alns)
+    n_filtered <- length(aln)
+    
+    n_snvs <- aln %>%
+      map_int(length) %>%
+      unique
+    if(length(n_snvs) != 1){
+      stop("ERROR: not all filtered sequences have the same length")
+    }
+  }else{
+    n_filtered <- 0
+    n_snvs <- 0
   }
+  
   
   Res <- Res %>% 
     bind_rows(tibble(spec = spec,
