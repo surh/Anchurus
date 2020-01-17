@@ -10,7 +10,7 @@ args <- list(gene_coverages = "gene_coverages/",
 
 args$gene_coverages <- list.files(args$gene_coverages, full.names = TRUE)
 Res <- NULL
-for(cov_file in args$gene_coverages[1:3]){
+for(cov_file in args$gene_coverages){
   # cov_file <- args$gene_coverages[1]
   
   spec <- stringr::str_remove(basename(cov_file),
@@ -55,7 +55,9 @@ for(cov_file in args$gene_coverages[1:3]){
                      filtered_samples = n_filtered,
                      filtered_snvs = n_snvs))
 }
+Res
 
+write_tsv(Res, "marker_stats.txt")
 
 
 
