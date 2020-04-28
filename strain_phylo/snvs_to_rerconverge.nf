@@ -54,6 +54,7 @@ params.map_dir = ""
 params.master_trees_dir = ""
 params.cov_dir = ""
 params.focal_phenotype = "USA"
+params.snvs = 'all'
 params.min_cov = 0.8
 params.outdir = "output/"
 params.baseml_threads = 1
@@ -109,6 +110,7 @@ process alns_from_metagenomes{
   input:
   tuple val(spec), file(midas_dir), file(map_file) from INDIRS
   file genomes_dir
+  val snvs from params.snvs
 
   output:
   tuple val(spec), file("output") into MIDAS2ALNS
@@ -124,6 +126,7 @@ process alns_from_metagenomes{
     --map_file $map_file \
     --outdir output/ \
     --type single
+    --snvs $snvs
   """
 }
 
