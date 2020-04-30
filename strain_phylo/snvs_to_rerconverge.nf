@@ -125,7 +125,7 @@ process alns_from_metagenomes{
     --min_cov ${params.min_cov} \
     --map_file $map_file \
     --outdir output/ \
-    --type single
+    --type single \
     --snvs $snvs
   """
 }
