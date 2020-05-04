@@ -152,8 +152,8 @@ process baseml{
     --master_tree $master_tree \
     --outdir output/ \
     --min_cov ${params.min_cov} \
-    --baseml baseml
-    --cpus ${params.baseml_threads}
+    --baseml baseml \
+    --cpus ${params.baseml_threads} \
     --resume
   """
 
