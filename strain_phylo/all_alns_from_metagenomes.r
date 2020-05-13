@@ -156,15 +156,15 @@ read_data <- function(spec, midas_dir, genomes_dir, snvs = "all"){
 ##################################
 
 args <- process_arguments()
-# setwd("~/micropopgen/exp/2019/today/")
+# setwd("/cashew/users/sur/exp/fraserv/2020/today4/test")
 # args <- list(depth_thres = 1,
 #              freq_thres =  1,
 #              min_cov =  0.8,
 #              keep_last_codon = TRUE,
 #              outdir = 'output/',
-#              genomes_dir = "genomes/",
-#              map_file = "map.txt",
-#              midas_dir = "Streptococcus_sp_60086/",
+#              genomes_dir = "rep_genomes/",
+#              map_file = "Collinsella_tanakaei_62212.map.txt",
+#              midas_dir = "Collinsella_tanakaei_62212/",
 #              missing_as = 'gap',
 #              snvs = 'ns')
 
