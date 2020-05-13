@@ -31,7 +31,7 @@ Filename mut match <species name>.map.txt
 --alns_dir (optional)
 Directory one directory per species containing all alignments for that
 species. Directories must match species name. Skips alns_from_metagenomes.
---gene_trees_dir
+--gene_trees_dir (optional)
 Directory with one directory per species containing all trees for that
 species. Directories must match species names.
 --master_trees_dir
@@ -40,6 +40,13 @@ Directory with core phylogeny of each species. Files must be named
 --cov_dir
 Directory with gene coverage matrices per species. Files must be named
 <species name>.gene_coverage.txt
+--focal_phenotype
+Value of phenotype to compare against all other samples.
+--svns
+Indicates which SNVs to keep. Either all ('all'), non-synonymous ('ns')
+or synonymous ('s')
+--min_cov
+Minimum coverage for genes in a given strain to be analyzed.
 --outdir
 Directory where to place output
 --baseml_threads
