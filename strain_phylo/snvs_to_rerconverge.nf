@@ -42,7 +42,7 @@ Directory with gene coverage matrices per species. Files must be named
 <species name>.gene_coverage.txt
 --focal_phenotype
 Value of phenotype to compare against all other samples.
---svns
+--snvs
 Indicates which SNVs to keep. Either all ('all'), non-synonymous ('ns')
 or synonymous ('s')
 --min_cov
