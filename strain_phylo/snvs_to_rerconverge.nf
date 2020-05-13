@@ -120,7 +120,7 @@ process alns_from_metagenomes{
   val snvs from params.snvs
 
   output:
-  tuple val(spec), file("output") into MIDAS2ALNS
+  tuple val(spec), file("output") optional true into MIDAS2ALNS
 
   when:
   map_file.exists()
