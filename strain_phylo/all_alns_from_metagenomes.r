@@ -173,10 +173,10 @@ library(tidyverse)
 library(HMVAR)
 library(seqinr)
 
-# Create ouput dir
-if(!dir.exists(args$outdir)){
-  dir.create(args$outdir)
-}
+# # Create ouput dir
+# if(!dir.exists(args$outdir)){
+#   dir.create(args$outdir)
+# }
 
 # Read map
 map <- read_tsv(args$map_file,
@@ -281,6 +281,11 @@ for(midas_dir in args$midas_dir){
                             keep_last_codon = TRUE)
         
         if(length(aln$seq) > 5){
+          # Create ouput dir
+          if(!dir.exists(args$outdir)){
+            dir.create(args$outdir)
+          }
+          
           # Write aln
           filename <- file.path(outdir, paste0(gene, ".aln.fasta"))
           seqinr::write.fasta(sequences = aln$seq, names = names(aln$seq), file.out = filename)
