@@ -31,7 +31,7 @@ Filename mut match <species name>.map.txt
 --alns_dir (optional)
 Directory one directory per species containing all alignments for that
 species. Directories must match species name. Skips alns_from_metagenomes.
---gene_trees_dir
+--gene_trees_dir (optional)
 Directory with one directory per species containing all trees for that
 species. Directories must match species names.
 --master_trees_dir
@@ -40,6 +40,13 @@ Directory with core phylogeny of each species. Files must be named
 --cov_dir
 Directory with gene coverage matrices per species. Files must be named
 <species name>.gene_coverage.txt
+--focal_phenotype
+Value of phenotype to compare against all other samples.
+--snvs
+Indicates which SNVs to keep. Either all ('all'), non-synonymous ('ns')
+or synonymous ('s')
+--min_cov
+Minimum coverage for genes in a given strain to be analyzed.
 --outdir
 Directory where to place output
 --baseml_threads
@@ -54,6 +61,7 @@ params.map_dir = ""
 params.master_trees_dir = ""
 params.cov_dir = ""
 params.focal_phenotype = "USA"
+params.snvs = 'all'
 params.min_cov = 0.8
 params.outdir = "output/"
 params.baseml_threads = 1
@@ -109,9 +117,10 @@ process alns_from_metagenomes{
   input:
   tuple val(spec), file(midas_dir), file(map_file) from INDIRS
   file genomes_dir
+  val snvs from params.snvs
 
   output:
-  tuple val(spec), file("output") into MIDAS2ALNS
+  tuple val(spec), file("output") optional true into MIDAS2ALNS
 
   when:
   map_file.exists()
@@ -123,7 +132,8 @@ process alns_from_metagenomes{
     --min_cov ${params.min_cov} \
     --map_file $map_file \
     --outdir output/ \
-    --type single
+    --type single \
+    --snvs $snvs
   """
 }
 
@@ -149,8 +159,8 @@ process baseml{
     --master_tree $master_tree \
     --outdir output/ \
     --min_cov ${params.min_cov} \
-    --baseml baseml
-    --cpus ${params.baseml_threads}
+    --baseml baseml \
+    --cpus ${params.baseml_threads} \
     --resume
   """
 

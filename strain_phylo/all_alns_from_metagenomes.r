@@ -61,7 +61,11 @@ process_arguments <- function(){
                                  "multiple species sub-directories ('multi')."),
                     default = "single",
                     type = "character")
-
+  p <- add_argument(p, "--snvs",
+                    help = paste("SNV effect type to use. Either 'all', 'ns' or 's'."),
+                    default = 'all',
+                    type = "character")
+  
   # Read arguments
   cat("Processing arguments...\n")
   args <- parse_args(p)
@@ -80,6 +84,10 @@ process_arguments <- function(){
   args$keep_last_codon <- TRUE
   args$missing_as <- "gap"
   
+  if(all(args$snvs != c('all', 'ns', 's'))){
+    stop("ERROR: snvs must be in c('all', 'ns', 's)", call. = TRUE)
+  }
+  
 
   return(args)
 }
@@ -95,7 +103,7 @@ process_arguments <- function(){
 #' @export
 #'
 #' @examples
-read_data <- function(spec, midas_dir, genomes_dir){
+read_data <- function(spec, midas_dir, genomes_dir, snvs = "all"){
   genome_fasta <- seqinr::read.fasta(file.path(genomes_dir, spec, 'genome.fna.gz'))
   genome_feats <- readr::read_tsv(file.path(genomes_dir, spec, 'genome.features.gz'),
                                   col_types = readr::cols(.default = readr::col_character(),
@@ -111,6 +119,35 @@ read_data <- function(spec, midas_dir, genomes_dir){
                          map = map,
                          genes = genome_feats$gene_id)
 
+  # Select SNVs by effect
+  if(snvs == "all"){
+    cat("Keep all SNVs.\n")
+  }else if(snvs == "ns"){
+    cat("Keep only non-synonymous SNVs.\n")
+    i <- determine_snp_effect(info = Dat$info) %>%
+      filter(snp_effect == "non-synonymous")
+    f <- Dat$freq %>%
+      filter(site_id %in% i$site_id)
+    d <- Dat$depth %>%
+      filter(site_id %in% i$site_id)
+    
+    Dat <- list(info = i, freq = f, depth = d)
+    
+  }else if(snvs == "s"){
+    cat("Keep only synonymous SNVs.\n")
+    i <- determine_snp_effect(info = Dat$info) %>%
+      filter(snp_effect == "synonymous")
+    f <- Dat$freq %>%
+      filter(site_id %in% i$site_id)
+    d <- Dat$depth %>%
+      filter(site_id %in% i$site_id)
+    
+    Dat <- list(info = i, freq = f, depth = d)
+    
+  }else{
+    stop("ERROR: snvs must be in c('all', 'ns', 's)", call. = TRUE)
+  }
+
 
   return(list(genome_fasta = genome_fasta,
               genome_feats = genome_feats,
@@ -119,26 +156,27 @@ read_data <- function(spec, midas_dir, genomes_dir){
 ##################################
 
 args <- process_arguments()
-# setwd("/home/sur/micropopgen/exp/2019/today4")
+# setwd("/cashew/users/sur/exp/fraserv/2020/today4/test")
 # args <- list(depth_thres = 1,
 #              freq_thres =  1,
 #              min_cov =  0.8,
 #              keep_last_codon = TRUE,
 #              outdir = 'output/',
-#              genomes_dir = "/home/sur/micropopgen/data/genomes/midas_db_v1.2/hmp.subsite/",
-#              map_file = "midas/map.txt",
-#              midas_dir = "midas/merged.snps/Veillonella_parvula_57794/",
-#              missing_as = 'gap')
+#              genomes_dir = "rep_genomes/",
+#              map_file = "Collinsella_tanakaei_62212.map.txt",
+#              midas_dir = "Collinsella_tanakaei_62212/",
+#              missing_as = 'gap',
+#              snvs = 'ns')
 
 # Load rest of libraries
 library(tidyverse)
 library(HMVAR)
 library(seqinr)
 
-# Create ouput dir
-if(!dir.exists(args$outdir)){
-  dir.create(args$outdir)
-}
+# # Create ouput dir
+# if(!dir.exists(args$outdir)){
+#   dir.create(args$outdir)
+# }
 
 # Read map
 map <- read_tsv(args$map_file,
@@ -154,7 +192,8 @@ for(midas_dir in args$midas_dir){
 
   # Read data
   cat("\tReading data...\n")
-  Dat <- read_data(spec = spec, midas_dir = midas_dir, genomes_dir = args$genomes_dir)
+  Dat <- read_data(spec = spec, midas_dir = midas_dir,
+                   genomes_dir = args$genomes_dir, snvs = args$snvs)
   # map %>% filter(sample %in% colnames(Dat$midas$freq)) %>% select(Group) %>% table
 
   if(ncol(Dat$midas$freq) > 2){
@@ -242,6 +281,11 @@ for(midas_dir in args$midas_dir){
                             keep_last_codon = TRUE)
         
         if(length(aln$seq) > 5){
+          # Create ouput dir
+          if(!dir.exists(args$outdir)){
+            dir.create(args$outdir)
+          }
+          
           # Write aln
           filename <- file.path(outdir, paste0(gene, ".aln.fasta"))
           seqinr::write.fasta(sequences = aln$seq, names = names(aln$seq), file.out = filename)
