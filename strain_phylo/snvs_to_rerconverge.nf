@@ -139,7 +139,7 @@ process alns_from_metagenomes{
 println "============="
 ALNDIR.mix(MIDAS2ALNS).subscribe{println it}
 // ALNDIR.mix(MIDAS2ALNS).join(MT_BASEML).subscribe{println it}
-MT_BASEML.subscribe(println it)
+MT_BASEML.subscribe{println it}
 // join(MT_BASEML).join(COV)
 println "#############"
 
