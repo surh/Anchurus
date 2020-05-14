@@ -136,6 +136,10 @@ process alns_from_metagenomes{
     --snvs $snvs
   """
 }
+println "============="
+from ALNDIR.mix(MIDAS2ALNS).subscribe{println it}
+// join(MT_BASEML).join(COV)
+println "#############"
 
 process baseml{
   label 'baseml'
