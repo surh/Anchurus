@@ -141,92 +141,92 @@ ALNDIR.mix(MIDAS2ALNS).subscribe{println it}
 // join(MT_BASEML).join(COV)
 println "#############"
 
-process baseml{
-  label 'baseml'
-  tag "$spec"
-  cpus params.baseml_threads
-  publishDir "${params.outdir}/gene_trees/",
-    pattern: "output/gene_trees",
-    saveAs: {"${spec}/"},
-    mode: 'rellink'
-
-  input:
-  tuple spec, file("alns_dir"), file(master_tree), file(cov) from ALNDIR.mix(MIDAS2ALNS).join(MT_BASEML).join(COV)
-
-  output:
-  tuple val(spec), file("output/gene_trees/") into ALNS2BASEML
-
-  """
-  ${workflow.projectDir}/baseml_all_genes.py \
-    --aln_dir alns_dir/ \
-    --cov_file $cov \
-    --master_tree $master_tree \
-    --outdir output/ \
-    --min_cov ${params.min_cov} \
-    --baseml baseml \
-    --cpus ${params.baseml_threads} \
-    --resume
-  """
-
-}
-
-// println "============="
-// GENETREESDIR.mix(ALNS2BASEML).subscribe{println it}
-// GENETREESDIR.subscribe{println it}
-// TEST = GENETREESDIR.mix(ALNS2BASEML)
-
-process trees2tab{
-  tag "$spec"
-  publishDir "${params.outdir}/tree_tabs",
-    pattern: 'trees_tab.txt',
-    saveAs: {"${spec}.trees.txt"},
-    mode: 'rellink'
-
-  input:
-  tuple val(spec), file("trees") from GENETREESDIR.mix(ALNS2BASEML)
-  // tuple val(spec), file("trees") from TEST
-
-  output:
-  tuple val(spec), file("trees_tab.txt") into TREETABS
-
-  """
-  for f in trees/*.tre; \
-    do echo -e `basename \$f`"\\t"`cat \$f`; \
-    done | sed 's/\\.baseml\\.tre//' > trees_tab.txt
-  """
-}
-
-process rertest{
-  tag "$spec"
-  label 'r'
-  publishDir "${params.outdir}/rertest/",
-    pattern: "output",
-    saveAs: {"${spec}/"},
-    mode: 'rellink'
-
-  input:
-  tuple val(spec),
-    file("trees_tab.txt"),
-    file("master_tree.tre"),
-    file("map.txt") from TREETABS.join(MT_RER).join(SPECMAPS)
-  val pheno from params.focal_phenotype
-
-  output:
-  path "output"
-  tuple val(spec), file("output/${spec}.cors.txt") into RERCORS
-  tuple val(spec), file("output/${spec}.rerw.dat") into RERWS
-  tuple val(spec), file("output/${spec}.Trees.dat") into RERTREES
-
-  """
-  ${workflow.projectDir}/rertest.r \
-    trees_tab.txt \
-    master_tree.tre \
-    --map_file map.txt \
-    --outdir output \
-    --focal_phenotype $pheno \
-    --spec $spec
-  """
-}
+// process baseml{
+//   label 'baseml'
+//   tag "$spec"
+//   cpus params.baseml_threads
+//   publishDir "${params.outdir}/gene_trees/",
+//     pattern: "output/gene_trees",
+//     saveAs: {"${spec}/"},
+//     mode: 'rellink'
+//
+//   input:
+//   tuple spec, file("alns_dir"), file(master_tree), file(cov) from ALNDIR.mix(MIDAS2ALNS).join(MT_BASEML).join(COV)
+//
+//   output:
+//   tuple val(spec), file("output/gene_trees/") into ALNS2BASEML
+//
+//   """
+//   ${workflow.projectDir}/baseml_all_genes.py \
+//     --aln_dir alns_dir/ \
+//     --cov_file $cov \
+//     --master_tree $master_tree \
+//     --outdir output/ \
+//     --min_cov ${params.min_cov} \
+//     --baseml baseml \
+//     --cpus ${params.baseml_threads} \
+//     --resume
+//   """
+//
+// }
+//
+// // println "============="
+// // GENETREESDIR.mix(ALNS2BASEML).subscribe{println it}
+// // GENETREESDIR.subscribe{println it}
+// // TEST = GENETREESDIR.mix(ALNS2BASEML)
+//
+// process trees2tab{
+//   tag "$spec"
+//   publishDir "${params.outdir}/tree_tabs",
+//     pattern: 'trees_tab.txt',
+//     saveAs: {"${spec}.trees.txt"},
+//     mode: 'rellink'
+//
+//   input:
+//   tuple val(spec), file("trees") from GENETREESDIR.mix(ALNS2BASEML)
+//   // tuple val(spec), file("trees") from TEST
+//
+//   output:
+//   tuple val(spec), file("trees_tab.txt") into TREETABS
+//
+//   """
+//   for f in trees/*.tre; \
+//     do echo -e `basename \$f`"\\t"`cat \$f`; \
+//     done | sed 's/\\.baseml\\.tre//' > trees_tab.txt
+//   """
+// }
+//
+// process rertest{
+//   tag "$spec"
+//   label 'r'
+//   publishDir "${params.outdir}/rertest/",
+//     pattern: "output",
+//     saveAs: {"${spec}/"},
+//     mode: 'rellink'
+//
+//   input:
+//   tuple val(spec),
+//     file("trees_tab.txt"),
+//     file("master_tree.tre"),
+//     file("map.txt") from TREETABS.join(MT_RER).join(SPECMAPS)
+//   val pheno from params.focal_phenotype
+//
+//   output:
+//   path "output"
+//   tuple val(spec), file("output/${spec}.cors.txt") into RERCORS
+//   tuple val(spec), file("output/${spec}.rerw.dat") into RERWS
+//   tuple val(spec), file("output/${spec}.Trees.dat") into RERTREES
+//
+//   """
+//   ${workflow.projectDir}/rertest.r \
+//     trees_tab.txt \
+//     master_tree.tre \
+//     --map_file map.txt \
+//     --outdir output \
+//     --focal_phenotype $pheno \
+//     --spec $spec
+//   """
+// }
 
 // Example nextflow.config
 /*
