@@ -76,7 +76,7 @@ genomes_dir = file(params.genomes_dir)
 INDIRS = (params.midas_dir == ""
   ? Channel.empty()
   : Channel.fromPath("${params.midas_dir}/*", type: 'dir')
-    .map{spec -> tuple(spec.fileName,
+    .map{spec -> tuple(spec.name,
       file(spec),
       file("${map_dir}/${spec.fileName}.map.txt"))})
 
@@ -136,6 +136,14 @@ process alns_from_metagenomes{
     --snvs $snvs
   """
 }
+
+// println "============="
+// ALNDIR.mix(MIDAS2ALNS).subscribe{println it}
+// ALNDIR.mix(MIDAS2ALNS).join(MT_BASEML).subscribe{println it}
+// MIDAS2ALNS.mix(ALNDIR).join(MT_BASEML).subscribe{println it}
+// MT_BASEML.subscribe{println it}
+// join(MT_BASEML).join(COV)
+// println "#############"
 
 process baseml{
   label 'baseml'
