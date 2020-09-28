@@ -76,7 +76,7 @@ process prepare{
 // Example nextflow.config
 /*
 process{
-  queue = 'hbfraser,hns, owners'
+  queue = 'hbfraser,hns,owners'
   maxForks = 500
   errorStrategy = 'finish'
   stageInMode = 'rellink'
