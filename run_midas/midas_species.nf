@@ -22,6 +22,7 @@
 params.samples = 'samples.txt'
 params.indir = 'samples/'
 params.outdir = 'midas/'
+params.db = 'midas_db'
 params.sample_col = 1
 // params.queue = 'hbfraser,bigmem,hns'
 // params.memory = '10G'
@@ -32,6 +33,7 @@ params.cpus = 8
 // Process params
 samples = file(params.samples)
 sample_col = params.sample_col - 1
+midas_db = file(params.db)
 
 // Read samples file
 reader = samples.newReader()
@@ -61,6 +63,7 @@ process midas_species{
 
   input:
   set sample, f_file, r_file from SAMPLES
+  file midas_db from midas_db
 
   output:
   set sample,
@@ -73,7 +76,7 @@ process midas_species{
     -1 ${f_file} \
     -2 ${r_file} \
     -t ${params.cpus} \
-    --remove_temp
+    -d $midas_db
   """
 }
 
@@ -97,4 +100,4 @@ executor{
   queueSize = 500
   submitRateLitmit = '30 min'
 }
-/*
+*/
