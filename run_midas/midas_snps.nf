@@ -1,5 +1,5 @@
 #!/usr/bin/env nextflow
-// Copyright (C) 2018 Sur Herrera Paredes
+// Copyright (C) 2018-2020 Sur Herrera Paredes
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -22,11 +22,11 @@ params.samples = 'samples.txt'
 params.indir = 'samples/'
 params.outdir = 'midas/'
 params.sample_col = 1
-params.queue = 'hbfraser,bigmem,hns,owners'
-params.memory = '10G'
-params.time = '4:00:00'
-params.cpus = 8
-params.njobs = 200
+// params.queue = 'hbfraser,bigmem,hns,owners'
+// params.memory = '10G'
+// params.time = '4:00:00'
+// params.cpus = 8
+// params.njobs = 200
 params.species_cov = 3.0
 params.mapid = 94.0
 params.mapq = 20
@@ -84,15 +84,16 @@ while(str = reader.readLine()){
 
 // Call run_midas.py species on every sample
 process midas_species{
-  cpus params.cpus
-  time params.time
-  memory params.memory
-  maxForks params.njobs
-  module 'MIDAS/1.3.1'
-  queue params.queue
+  label 'midas'
+  // cpus params.cpus
+  // time params.time
+  // memory params.memory
+  // maxForks params.njobs
+  // module 'MIDAS/1.3.1'
+  // queue params.queue
   publishDir params.outdir, mode: 'copy'
-  errorStrategy 'retry'
-  maxRetries 2
+  // errorStrategy 'retry'
+  // maxRetries 2
 
   input:
   set sample, f_file, r_file, spec_profile from SAMPLES
@@ -127,3 +128,29 @@ process midas_species{
     ${adjust_mq}
   """
 }
+
+
+/* Example nextflow.config
+process{
+  queue = 'hbfraser,hns,owners,bigmem'
+  maxForks = 500
+  errorStrategy = 'finish'
+  stageInMode = 'rellink'
+  time = '5h'
+  memory = '5G'
+  withLabel: 'midas'{
+    cpus = 4
+    module="MIDAS/1.3.1"
+    time = { 10.s * task.attempt }
+    memory = {15.G * task.attempt }
+    maxRetries = 5
+    errorStrategy = { task.attempt < 5 ? 'retry' : 'finish'}
+  }
+}
+
+executor{
+  name = 'slurm'
+  queueSize = 500
+  submitRateLitmit = '30 min'
+}
+*/
