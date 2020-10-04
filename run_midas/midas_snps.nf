@@ -135,7 +135,7 @@ process{
   withLabel: 'midas'{
     module="MIDAS/1.3.1"
     time = { task.attempt < 3 ? '12h' : '48h' }
-    memory = {15.G * task.attempt }
+    memory = { 15.GB * task.attempt }
     maxRetries = 5
     errorStrategy = { task.attempt < 5 ? 'retry' : 'finish'}
   }
