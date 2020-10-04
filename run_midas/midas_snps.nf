@@ -21,17 +21,14 @@
 params.samples = 'samples.txt'
 params.indir = 'samples/'
 params.outdir = 'midas/'
+params.db = 'midas_db'
 params.sample_col = 1
-// params.queue = 'hbfraser,bigmem,hns,owners'
-// params.memory = '10G'
-// params.time = '4:00:00'
-// params.cpus = 8
-// params.njobs = 200
+params.cpus = 4
 params.species_cov = 3.0
 params.mapid = 94.0
 params.mapq = 20
 params.baseq = 30
-params.readq = 30
+params.readq = 20
 params.aln_cov = 0.75
 params.trim = 0
 params.discard = false
@@ -41,6 +38,7 @@ params.adjust_mq = false
 
 // Process params
 samples = file(params.samples)
+midas_db = file(params.db)
 sample_col = params.sample_col - 1
 if( params.trim > 0 ) {
   trim = "--trim ${params.trim}"
@@ -85,18 +83,13 @@ while(str = reader.readLine()){
 // Call run_midas.py species on every sample
 process midas_species{
   label 'midas'
-  // cpus params.cpus
-  // time params.time
-  // memory params.memory
-  // maxForks params.njobs
-  // module 'MIDAS/1.3.1'
-  // queue params.queue
+  tag "$sample"
   publishDir params.outdir, mode: 'copy'
-  // errorStrategy 'retry'
-  // maxRetries 2
+  cpus params.cpus
 
   input:
   set sample, f_file, r_file, spec_profile from SAMPLES
+  file midas_db from midas_db
 
   output:
   set sample,
@@ -104,7 +97,8 @@ process midas_species{
     file("${sample}/snps/readme.txt"),
     file("${sample}/snps/species.txt"),
     file("${sample}/snps/summary.txt"),
-    file("${sample}/snps/output/*.snps.gz") into OUTPUTS
+    file("${sample}/snps/output/*.snps.gz"),
+    file("${sample}/temp/genomes*") into OUTPUTS
 
   """
   mkdir ${sample}
@@ -114,14 +108,14 @@ process midas_species{
     -1 ${f_file} \
     -2 ${r_file} \
     -t ${params.cpus} \
-    --remove_temp \
     --species_cov ${params.species_cov} \
     --mapid ${params.mapid} \
     --mapq ${params.mapq} \
     --baseq ${params.baseq} \
     --readq ${params.readq} \
     --aln_cov ${params.aln_cov} \
-    -m local \
+    -m global \
+    -d $midas_db \
     ${trim} \
     ${discard} \
     ${baq} \
@@ -141,7 +135,7 @@ process{
   withLabel: 'midas'{
     cpus = 4
     module="MIDAS/1.3.1"
-    time = { 10.s * task.attempt }
+    time = { task.attempt < 3 ? '12h' : '48h' }
     memory = {15.G * task.attempt }
     maxRetries = 5
     errorStrategy = { task.attempt < 5 ? 'retry' : 'finish'}
