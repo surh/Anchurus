@@ -133,7 +133,6 @@ process{
   time = '5h'
   memory = '5G'
   withLabel: 'midas'{
-    cpus = 4
     module="MIDAS/1.3.1"
     time = { task.attempt < 3 ? '12h' : '48h' }
     memory = {15.G * task.attempt }
