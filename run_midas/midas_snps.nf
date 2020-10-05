@@ -98,7 +98,7 @@ process midas_species{
     file("${sample}/snps/species.txt"),
     file("${sample}/snps/summary.txt"),
     file("${sample}/snps/output/*.snps.gz"),
-    file("${sample}/temp/genomes*") into OUTPUTS
+    file("${sample}/snps/temp/genomes*") into OUTPUTS
 
   """
   mkdir ${sample}
