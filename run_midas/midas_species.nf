@@ -1,5 +1,5 @@
 #!/usr/bin/env nextflow
-// Copyright (C) 2018 Sur Herrera Paredes
+// Copyright (C) 2018-2020 Sur Herrera Paredes
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -22,16 +22,18 @@
 params.samples = 'samples.txt'
 params.indir = 'samples/'
 params.outdir = 'midas/'
+params.db = 'midas_db'
 params.sample_col = 1
-params.queue = 'hbfraser,bigmem,hns'
-params.memory = '10G'
-params.time = '4:00:00'
+// params.queue = 'hbfraser,bigmem,hns'
+// params.memory = '10G'
+// params.time = '4:00:00'
 params.cpus = 8
-params.njobs = 200
+// params.njobs = 200
 
 // Process params
 samples = file(params.samples)
 sample_col = params.sample_col - 1
+midas_db = file(params.db)
 
 // Read samples file
 reader = samples.newReader()
@@ -47,18 +49,21 @@ while(str = reader.readLine()){
 
 // Call run_midas.py species on every sample
 process midas_species{
+  tag "$sample"
+  label "midas"
   cpus params.cpus
-  time params.time
-  memory params.memory
-  maxForks params.njobs
-  module 'MIDAS/1.3.1'
-  queue params.queue
+  // time params.time
+  // memory params.memory
+  // maxForks params.njobs
+  // module 'MIDAS/1.3.1'
+  // queue params.queue
   publishDir params.outdir, mode: 'copy'
-  errorStrategy 'retry'
-  maxRetries 2
+  // errorStrategy 'retry'
+  // maxRetries 2
 
   input:
   set sample, f_file, r_file from SAMPLES
+  file midas_db from midas_db
 
   output:
   set sample,
@@ -71,6 +76,28 @@ process midas_species{
     -1 ${f_file} \
     -2 ${r_file} \
     -t ${params.cpus} \
-    --remove_temp
+    -d $midas_db
   """
 }
+
+/* Example nextflow.config
+process{
+  queue = 'hbfraser,hns,owners'
+  maxForks = 500
+  errorStrategy = 'finish'
+  stageInMode = 'rellink'
+  time = '5h'
+  memory = '5G'
+  withLabel: 'midas'{
+    module="MIDAS/1.3.1"
+    memory="5G"
+    time="5h"
+  }
+}
+
+executor{
+  name = 'slurm'
+  queueSize = 500
+  submitRateLitmit = '30 min'
+}
+*/
