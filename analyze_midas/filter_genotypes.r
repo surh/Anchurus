@@ -1,3 +1,4 @@
+#!/usr/bin/env Rscript
 library(tidyverse)
 library(HMVAR)
 library(argparser)
@@ -13,20 +14,20 @@ process_arguments <- function(){
                                  "column per sample. A dot is interpreted",
                                  "as missing data."),
                     type = "character")
-  p <- add_argument("info",
+  p <- add_argument(p, "info",
                     help = paste("A file with SNV information. Must match the",
                                  "format of snps_info.txt created by MIDAS."),
                     type = "character")
-  p <- add_argument("map",
+  p <- add_argument(p, "map",
                     help = paste("Mapping file. Must have columns 'sample',",
                                  "and group."),
                     type = "character")
   
   # Optional arguments
   p <- add_argument(p, "--outdir",
-                     help = paste("Directory to write output"),
-                     type = "character",
-                     default = "output/")
+                    help = paste("Directory to write output"),
+                    type = "character",
+                    default = "output/")
   p <- add_argument(p, "--min_sample_per_group",
                     help = paste("Expects samples to belong to one of two",
                                  "groups. Minimun number of samples per",
@@ -52,17 +53,17 @@ process_arguments <- function(){
                                  "covered for that gene to be present."),
                     type = "numeric",
                     default = 0.8)
-  p <- add_arguments(p, "--min_core_genes",
-                     help = paste("Minimum proportion of core genes in a",
-                                  "sample."),
-                     type = "numeric",
-                     default = 0.8)
-  p <- add_arguments(p, "--process_info",
-                     help = c("Indicates whether the info file should also",
-                              "be proessed. Must be 'yes' or 'no'"),
-                     type = "character",
-                     default = "yes")
-                     
+  p <- add_argument(p, "--min_core_genes",
+                    help = paste("Minimum proportion of core genes in a",
+                                 "sample."),
+                    type = "numeric",
+                    default = 0.8)
+  p <- add_argument(p, "--process_info",
+                    help = paste("Indicates whether the info file should also",
+                                 "be proessed. Must be 'yes' or 'no'"),
+                    type = "character",
+                    default = "yes")
+  
   # Read arguments
   cat("Processing arguments...\n")
   args <- parse_args(p)
@@ -76,7 +77,7 @@ process_arguments <- function(){
     stop("ERROR: min_core_gene_cov must be in [0,1]", call. = TRUE)
   if(args$min_core_genes < 0 | args$min_core_genes < 0)
     stop("ERROR: min_core_genes must be in [0,1]", call. = TRUE)
-  if(args$process_info %in% c("yes", "no"))
+  if(!(args$process_info %in% c("yes", "no")))
     stop("ERROR: process_info must be 'yes' or 'no'", call. = TRUE)
   
   args$process_info <-  purrr::set_names(x = c(TRUE, FALSE),
@@ -90,16 +91,17 @@ check_groups <- function(vec, ngroups = 2, minsize = 5){
   length(tab) == ngroups && all(tab >= minsize)
 }
 
-args <- list(genotypes = "/home/sur/micropopgen/exp/2020/today/snps_alleles.txt",
-             info = "/home/sur/micropopgen/exp/2020/today/MGYG-HGUT-04165/snps_info.txt",
-             map = "/home/sur/micropopgen/exp/2020/today/example_map.txt",
-             outdir = "/home/sur/micropopgen/exp/2020/today/output",
-             min_samples_per_group = 2,
-             min_snv_prop_per_sample = 0.5,
-             min_core_gene_prev = 0.8,
-             min_core_gene_cov = 0.8,
-             min_core_genes = 0.8,
-             process_info = TRUE)
+args <- process_arguments()
+# args <- list(genotypes = "/home/sur/micropopgen/exp/2020/today/snps_alleles.txt",
+#              info = "/home/sur/micropopgen/exp/2020/today/MGYG-HGUT-04165/snps_info.txt",
+#              map = "/home/sur/micropopgen/exp/2020/today/example_map.txt",
+#              outdir = "/home/sur/micropopgen/exp/2020/today/output",
+#              min_samples_per_group = 2,
+#              min_snv_prop_per_sample = 0.5,
+#              min_core_gene_prev = 0.8,
+#              min_core_gene_cov = 0.8,
+#              min_core_genes = 0.8,
+#              process_info = TRUE)
 
 
 cat("Reading data...\n")
@@ -185,7 +187,7 @@ core_genes <- tibble(gene_id = gene_cov$gene_id,
 # core_genes
 # table(core_genes$core_gene)
 write_tsv(core_genes, file.path(args$outdir, "core_genes.tsv"))
- 
+
 # Find genotypes with enough core genes
 cat("Calculating core genes per genome...\n")
 # gene_cov[core_genes$core_gene,]
@@ -195,7 +197,7 @@ core_genes_per_genome <- gene_cov[core_genes$core_gene,] %>%
   summarise(across(.fns = function(x, min_core_gene_cov = 0.8){
     sum(x >= min_core_gene_cov) / length(x)
   }, min_core_gene_cov = args$min_core_gene_prev))
-core_genes_per_genome
+# core_genes_per_genome
 core_genes_per_genome <- purrr::set_names(x = as.numeric(core_genes_per_genome),
                                           nm = colnames(core_genes_per_genome))
 # core_genes_per_genome
@@ -224,10 +226,10 @@ cat("Filtering out SNVs without enough samples per group...\n")
 snvs_to_keep <- apply(geno[,-1], 1, function(vec, meta, min_samples_per_group = 5){
   vec <- vec[!is.na(vec)]
   tab <- table(meta[ names(vec) ])
-
+  
   length(tab) == 2 && all(tab >= min_samples_per_group)
-  }, meta = purrr::set_names(x = map$group, nm = map$sample),
-  min_samples_per_group = args$min_samples_per_group)
+}, meta = purrr::set_names(x = map$group, nm = map$sample),
+min_samples_per_group = args$min_samples_per_group)
 # sum(snvs_to_keep)
 geno <- geno[snvs_to_keep, ]
 # geno
@@ -250,5 +252,3 @@ if(args$process_info){
   cat("Wrting processed info...\n")
   write_tsv(info, file.path(args$outdir, "snps_info.txt"))
 }
-
-
