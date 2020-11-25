@@ -83,7 +83,7 @@ process filter_genotypes{
   tuple spec, file("snps_alleles.txt"),
     file("snps_info.txt") from QPALLELES.join(SNVINFOS)
   val map_file from params.map_file
-  val min_sample_per_group from arams.min_sample_per_group
+  val min_sample_per_group from params.min_sample_per_group
   val min_snv_prop_per_sample from params.min_snv_prop_per_sample
   val min_core_gene_prev from params.min_core_gene_prev
   val min_core_gene_cov from params.min_core_gene_cov
