@@ -5,7 +5,7 @@ library(argparser)
 
 process_arguments <- function(){
   p <- arg_parser(paste("Filters samples and genotype calls"))
-  
+
   # Positional arguments
   p <- add_argument(p, "genotypes",
                     help = paste("A genotype file in matrix format",
@@ -22,13 +22,13 @@ process_arguments <- function(){
                     help = paste("Mapping file. Must have columns 'sample',",
                                  "and group."),
                     type = "character")
-  
+
   # Optional arguments
   p <- add_argument(p, "--outdir",
                     help = paste("Directory to write output"),
                     type = "character",
                     default = "output/")
-  p <- add_argument(p, "--min_sample_per_group",
+  p <- add_argument(p, "--min_samples_per_group",
                     help = paste("Expects samples to belong to one of two",
                                  "groups. Minimun number of samples per",
                                  "group to keep whole species and SNVs.",
@@ -63,11 +63,11 @@ process_arguments <- function(){
                                  "be proessed. Must be 'yes' or 'no'"),
                     type = "character",
                     default = "yes")
-  
+
   # Read arguments
   cat("Processing arguments...\n")
   args <- parse_args(p)
-  
+
   # Process arguments
   if(args$min_snv_prop_per_sample < 0 | args$min_snv_prop_per_sample < 0)
     stop("ERROR: min_snv_prop_per_sample must be in [0,1]", call. = TRUE)
@@ -79,10 +79,10 @@ process_arguments <- function(){
     stop("ERROR: min_core_genes must be in [0,1]", call. = TRUE)
   if(!(args$process_info %in% c("yes", "no")))
     stop("ERROR: process_info must be 'yes' or 'no'", call. = TRUE)
-  
+
   args$process_info <-  purrr::set_names(x = c(TRUE, FALSE),
                                          nm = c("yes", "no"))[args$process_info]
-  
+
   return(args)
 }
 
@@ -111,11 +111,11 @@ map <- read_tsv(args$map,
                                  group = col_character()))
 
 # Read info file from midas merge
-info <- readr::read_tsv(args$info, 
-                        col_types = readr::cols(.default = readr::col_character(), 
-                                                ref_pos = readr::col_number(), count_samples = readr::col_number(), 
-                                                count_a = readr::col_number(), count_c = readr::col_number(), 
-                                                count_g = readr::col_number(), count_t = readr::col_number()), 
+info <- readr::read_tsv(args$info,
+                        col_types = readr::cols(.default = readr::col_character(),
+                                                ref_pos = readr::col_number(), count_samples = readr::col_number(),
+                                                count_a = readr::col_number(), count_c = readr::col_number(),
+                                                count_g = readr::col_number(), count_t = readr::col_number()),
                         na = "NA")
 
 # Read genotype calls in matrix format
@@ -181,7 +181,7 @@ cat("Finding core genes...\n")
 core_genes <- tibble(gene_id = gene_cov$gene_id,
                      core_gene = apply(gene_cov[,-1], 1, function(x, min_core_gene_prev = 0.8,
                                                                   min_core_gene_cov = 0.8){
-                       (sum(x >= min_core_gene_cov) / length(x)) >= min_core_gene_prev 
+                       (sum(x >= min_core_gene_cov) / length(x)) >= min_core_gene_prev
                      }, min_core_gene_prev = args$min_core_gene_prev,
                      min_core_gene_cov = args$min_core_gene_cov))
 # core_genes
@@ -226,7 +226,7 @@ cat("Filtering out SNVs without enough samples per group...\n")
 snvs_to_keep <- apply(geno[,-1], 1, function(vec, meta, min_samples_per_group = 5){
   vec <- vec[!is.na(vec)]
   tab <- table(meta[ names(vec) ])
-  
+
   length(tab) == 2 && all(tab >= min_samples_per_group)
 }, meta = purrr::set_names(x = map$group, nm = map$sample),
 min_samples_per_group = args$min_samples_per_group)
