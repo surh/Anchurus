@@ -60,11 +60,11 @@ process qp_genotypes{
 
   output:
   tuple spec, file("snps_alleles.txt") into QPALLELES
-  tuple spec, file("$indir/snps_info.txt") into SNVINFOS
+  tuple spec, file("$snvdir/snps_info.txt") into SNVINFOS
 
   """
   Rscript ${workflow.projectDir}/qp_snvs.r \
-    $indir \
+    $snvdir \
     snps_alleles.txt \
     --min_depth $min_depth \
     --min_svn_prop $min_snv_prop \
