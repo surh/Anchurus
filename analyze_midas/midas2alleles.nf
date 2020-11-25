@@ -67,7 +67,7 @@ process qp_genotypes{
     $snvdir \
     snps_alleles.txt \
     --min_depth $min_depth \
-    --min_svn_prop $min_snv_prop \
+    --min_snv_prop $min_snv_prop \
     --maf_thres $maf_thres
   """
 }
