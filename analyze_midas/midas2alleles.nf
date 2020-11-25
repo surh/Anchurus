@@ -75,7 +75,7 @@ process qp_genotypes{
 process filter_genotypes{
   label 'r'
   tag "$spec"
-  publishDir "$outdir/fltered_alleles", mode: 'rellink',
+  publishDir "$outdir/filtered_alleles", mode: 'rellink',
     pattern: "output",
     saveAs: {"$spec"}
 
