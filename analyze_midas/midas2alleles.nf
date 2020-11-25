@@ -39,7 +39,7 @@ map_file = file(params.map_file)
 indir = file(params.indir)
 outdir = file(params.outdir)
 
-println(indir)
+// println(indir)
 
 SNVDIRS = Channel.fromPath("${indir}/*", type: 'dir')
   .map{snvdir -> tuple(snvdir.name,
