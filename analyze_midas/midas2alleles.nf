@@ -88,6 +88,7 @@ process filter_genotypes{
   val min_core_genes from params.min_core_genes
 
   output:
+  tuple spec, file("output") optional true into FILTERED
 
   """
   Rscript ${workflow.projectDir}/filter_genotypes.r \
