@@ -102,3 +102,23 @@ process filter_genotypes{
     --process_info yes
   """
 }
+
+// Example nextflow.config
+/*
+process{
+  partition = 'hbfraser,hns,owners'
+  maxForks = 200
+  stageInMode = 'rellink'
+  errorStrategy = 'finish'
+  withLabel: 'r'{
+    module = 'R/3.6.1'
+    memory = '4G'
+    time  = '4h'
+  }
+}
+executor{
+  name = 'slurm'
+  submitRateLimit = '1 sec'
+  queueSize = 500
+}
+*/
