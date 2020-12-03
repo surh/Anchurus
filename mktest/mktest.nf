@@ -48,7 +48,6 @@ ALLELES = Channel.fromPath("${indir}/**/snps_alleles.txt")
   .map{infofile -> tuple(infofile.getParent().name,
     file(infofile))}
 
-
 process mktest{
   label 'r'
   tag "$spec"
@@ -63,9 +62,8 @@ process mktest{
   output:
   file  "mkres.txt"
 
-
   """
-  ${workflow.projectDir}/mktest.r \
+  Rscript ${workflow.projectDir}/mktest.r \
     $alleles \
     $info \
     $map \
@@ -73,9 +71,6 @@ process mktest{
 
 
   """
-
-
-
 }
 
 
