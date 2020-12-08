@@ -51,7 +51,7 @@ process mktest{
   file "output/singleton_tests.txt"
 
   """
-  Rscript ${workflow.projectDir}/mktest.r \
+  Rscript ${workflow.projectDir}/find_and_test_singletons.r \
     $alleles \
     $info \
     $map \
