@@ -29,49 +29,51 @@ ALLELES = Channel.fromPath("${indir}/**/snps_alleles.txt")
   .map{infofile -> tuple(infofile.getParent().name,
     file(infofile))}
 COREGENES = Channel.fromPath("${indir}/**/core_genes.tsv")
-  .map{infofile -> tuple(infofile.getParent().name,
-    file(infofile))}
+  .map{corefile -> tuple(infofile.getParent().name,
+    file(corefile))}
 
-process core_alns{
-  label 'r'
-  tag "$spec"
-  publishDir "$params.outdir/core_alns", mode: 'rellink',
-    saveAs: {"${spec}.aln.fasta"}
+ALLELES.join(INFOS).join(COREGENES).subscribe{println it}
 
-  input:
-  tuple spec, file(alleles), file(info), fille(coregenes)
-    from ALLELES.join(INFOS).join(COREGENES)
-
-  output:
-  tuple spec, file("core_aln.fasta") into COREALNS
-
-  """
-  Rscript ${workflow.projectDir}/get_core_gene_alns.r \
-    $info \
-    $alleles \
-    $coregenes \
-    core_aln.fasta
-  """
-}
-
-process fasttree{
-  label 'FastTree'
-  tag "$spec"
-  cpus params.fasttree_threads
-
-  input:
-  tuple spec, file(corealn) from COREALNS
-  val threads from params.fasttree_threads
-
-  output:
-  file "core.tre"
-
-  """
-  export OMP_NUM_THREADS=$threads
-  FastTree \
-    -nt -gtr < $corealn > core.tre
-  """
-}
+// process core_alns{
+//   label 'r'
+//   tag "$spec"
+//   publishDir "$params.outdir/core_alns", mode: 'rellink',
+//     saveAs: {"${spec}.aln.fasta"}
+//
+//   input:
+//   tuple spec, file(alleles), file(info), fille(coregenes)
+//     from ALLELES.join(INFOS).join(COREGENES)
+//
+//   output:
+//   tuple spec, file("core_aln.fasta") into COREALNS
+//
+//   """
+//   Rscript ${workflow.projectDir}/get_core_gene_alns.r \
+//     $info \
+//     $alleles \
+//     $coregenes \
+//     core_aln.fasta
+//   """
+// }
+//
+// process fasttree{
+//   label 'FastTree'
+//   tag "$spec"
+//   cpus params.fasttree_threads
+//
+//   input:
+//   tuple spec, file(corealn) from COREALNS
+//   val threads from params.fasttree_threads
+//
+//   output:
+//   file "core.tre"
+//
+//   """
+//   export OMP_NUM_THREADS=$threads
+//   FastTree \
+//     -nt -gtr < $corealn > core.tre
+//   """
+// }
 
 
 // Example nextflow.config
