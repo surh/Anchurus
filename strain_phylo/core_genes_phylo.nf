@@ -32,9 +32,6 @@ COREGENES = Channel.fromPath("${indir}/**/core_genes.tsv")
   .map{corefile -> tuple(corefile.getParent().name,
     file(corefile))}
 
-TOALN = ALLELES.join(INFOS).join(COREGENES)
-TOALN.view()
-
 process core_alns{
   label 'r'
   tag "$spec"
@@ -42,7 +39,8 @@ process core_alns{
     saveAs: {"${spec}.aln.fasta"}
 
   input:
-  tuple spec, file(alleles), file(info), fille(coregenes) from TOALN
+  tuple spec, file(alleles), file(info), file(coregenes)
+    from ALLELES.join(INFOS).join(COREGENES)
 
   output:
   tuple spec, file("core_aln.fasta") into COREALNS
