@@ -29,7 +29,7 @@ ALLELES = Channel.fromPath("${indir}/**/snps_alleles.txt")
   .map{infofile -> tuple(infofile.getParent().name,
     file(infofile))}
 COREGENES = Channel.fromPath("${indir}/**/core_genes.tsv")
-  .map{corefile -> tuple(infofile.getParent().name,
+  .map{corefile -> tuple(corefile.getParent().name,
     file(corefile))}
 
 ALLELES.join(INFOS).join(COREGENES).subscribe{println it}
