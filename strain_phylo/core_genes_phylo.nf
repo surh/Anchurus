@@ -39,8 +39,8 @@ process core_alns{
     saveAs: {"${spec}.aln.fasta"}
 
   input:
-  tuple spec, file(alleles), file(info), file(coregenes) from
-    ALLELES.join(INFOS).join(COREGENES)
+  tuple spec, file(alleles), file(info),
+    file(coregenes) from ALLELES.join(INFOS).join(COREGENES)
 
   output:
   tuple spec, file("core_aln.fasta") into COREALNS
