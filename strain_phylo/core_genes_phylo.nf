@@ -58,6 +58,8 @@ process fasttree{
   label 'FastTree'
   tag "$spec"
   cpus params.fasttree_threads
+  publishDir "$params.outdir/core_phylo", mode: 'rellink',
+    saveAs: {"${spec}.tre"}
 
   input:
   tuple spec, file(corealn) from COREALNS
@@ -83,6 +85,11 @@ process{
   errorStrategy = 'finish'
   withLabel: 'r'{
     module = 'R/3.6.1'
+    memory = '4G'
+    time  = '4h'
+  }
+  withLabel: 'FastTree'{
+    module = 'FastTree'
     memory = '4G'
     time  = '4h'
   }
