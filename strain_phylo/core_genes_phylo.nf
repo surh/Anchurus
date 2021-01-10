@@ -33,6 +33,7 @@ COREGENES = Channel.fromPath("${indir}/**/core_genes.tsv")
     file(corefile))}
 
 TOALN = ALLELES.join(INFOS).join(COREGENES)
+TOALN.view()
 
 process core_alns{
   label 'r'
