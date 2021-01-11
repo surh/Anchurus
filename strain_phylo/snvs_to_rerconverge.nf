@@ -55,11 +55,11 @@ Default: 1.
 */
 
 // parameters
-params.midas_dir = ""
-params.genomes_dir = ""
+params.snps_dir = ""
+// params.genomes_dir = ""
 params.map_dir = ""
 params.master_trees_dir = ""
-params.cov_dir = ""
+// params.cov_dir = ""
 params.focal_phenotype = "USA"
 params.snvs = 'all'
 params.min_cov = 0.8
@@ -70,43 +70,52 @@ params.baseml_threads = 1
 params.alns_dir = ""
 params.gene_trees_dir = ""
 
-
+// Peocess params
 map_dir = file(params.map_dir)
-genomes_dir = file(params.genomes_dir)
-INDIRS = (params.midas_dir == ""
-  ? Channel.empty()
-  : Channel.fromPath("${params.midas_dir}/*", type: 'dir')
-    .map{spec -> tuple(spec.name,
-      file(spec),
-      file("${map_dir}/${spec.fileName}.map.txt"))})
+snps_dir = file(params.snps_dir)
 
-// Create channel with gene level alignments
-ALNDIR = (params.alns_dir == ""
-  ? Channel.empty()
-  : Channel.fromPath("${params.alns_dir}/*", type: 'dir')
-      .map{spec -> tuple(spec.name, file(spec))})
+// Create Channels
+INFOS = Channel.fromPath("${snps_dir}/**/snps_info.txt")
+  .map{infofile -> tuple(infofile.getParent().name,
+    file(infofile))}
+ALLELES = Channel.fromPath("${snps_dir}/**/snps_alleles.txt")
+  .map{infofile -> tuple(infofile.getParent().name,
+    file(infofile))}
 
-// Channel with master trees
-MASTERTREE = Channel.fromPath("${params.master_trees_dir}/*.tre")
-  .map{filename -> tuple(filename.name.replace('.tre', ''), file(filename))}
-  .into{MT_BASEML; MT_RER}
-// MT_BASEML.subscribe{println it}
+// INDIRS = (params.midas_dir == ""
+//   ? Channel.empty()
+//   : Channel.fromPath("${params.midas_dir}/*", type: 'dir')
+//     .map{spec -> tuple(spec.name,
+//       file(spec),
+//       file("${map_dir}/${spec.fileName}.map.txt"))})
+//
+// // Create channel with gene level alignments
+// ALNDIR = (params.alns_dir == ""
+//   ? Channel.empty()
+//   : Channel.fromPath("${params.alns_dir}/*", type: 'dir')
+//       .map{spec -> tuple(spec.name, file(spec))})
+//
+// // Channel with master trees
+// MASTERTREE = Channel.fromPath("${params.master_trees_dir}/*.tre")
+//   .map{filename -> tuple(filename.name.replace('.tre', ''), file(filename))}
+//   .into{MT_BASEML; MT_RER}
+// // MT_BASEML.subscribe{println it}
+//
+// // Channel with gene coverages
+// COV = Channel.fromPath("${params.cov_dir}/*.gene_coverage.txt")
+//   .map{filename -> tuple(filename.name.replace('.gene_coverage.txt', ''), file(filename))}
+//
+// // Channel with gene level trees
+// // Create channel with gene level alignments
+// GENETREESDIR = (params.gene_trees_dir == ""
+//   ? Channel.empty()
+//   : Channel.fromPath("${params.gene_trees_dir}/*", type: 'dir')
+//       .map{spec -> tuple(spec.name, file(spec))})
+//
+// SPECMAPS = Channel.fromPath("${map_dir}/*")
+//   .map{filename -> tuple(filename.name.replace('.map.txt', ''), file(filename))}
 
-// Channel with gene coverages
-COV = Channel.fromPath("${params.cov_dir}/*.gene_coverage.txt")
-  .map{filename -> tuple(filename.name.replace('.gene_coverage.txt', ''), file(filename))}
-
-// Channel with gene level trees
-// Create channel with gene level alignments
-GENETREESDIR = (params.gene_trees_dir == ""
-  ? Channel.empty()
-  : Channel.fromPath("${params.gene_trees_dir}/*", type: 'dir')
-      .map{spec -> tuple(spec.name, file(spec))})
-
-SPECMAPS = Channel.fromPath("${map_dir}/*")
-  .map{filename -> tuple(filename.name.replace('.map.txt', ''), file(filename))}
-
-process alns_from_metagenomes{
+process get_gene_alns{
   label 'r'
   tag "$spec"
   publishDir "${params.outdir}/gene_alns/",
@@ -115,24 +124,20 @@ process alns_from_metagenomes{
     mode: 'rellink'
 
   input:
-  tuple val(spec), file(midas_dir), file(map_file) from INDIRS
-  file genomes_dir
+  tuple val(spec), file(info), file(alleles) from ALLELES.join(INFOS)
   val snvs from params.snvs
 
   output:
-  tuple val(spec), file("output") optional true into MIDAS2ALNS
+  tuple val(spec), file("output") into GENEALNS
 
   when:
   map_file.exists()
 
   """
-  ${workflow.projectDir}/all_alns_from_metagenomes.r \
-    $midas_dir \
-    $genomes_dir \
-    --min_cov ${params.min_cov} \
-    --map_file $map_file \
+  ${workflow.projectDir}/get_all_gene_alns.r \
+    $info \
+    $alleles \
     --outdir output/ \
-    --type single \
     --snvs $snvs
   """
 }
