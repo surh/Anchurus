@@ -252,10 +252,6 @@ process{
     module = 'anaconda'
     conda = '/opt/modules/pkgs/anaconda/3.6/envs/fraserconda'
   }
-  withLabel: 'fasttree'{
-    module = 'FastTree/2.1.10'
-    time = '12h'
-  }
   withLabel: 'baseml'{
     module = "anaconda:paml/4.9i"
     conda = '/opt/modules/pkgs/anaconda/3.6/envs/fraserconda'
