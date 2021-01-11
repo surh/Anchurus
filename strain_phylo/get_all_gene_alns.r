@@ -27,7 +27,7 @@ process_arguments <- function(){
   p <- add_argument(p, "info",
                     help = paste("snps_info.txt file"),
                     type = "character")
-  
+
   p <- add_argument(p, "alleles",
                     help = paste("snps_alleles.txt file"),
                     type = "character")
@@ -47,7 +47,7 @@ process_arguments <- function(){
                     help = paste("SNV effect type to use. Either 'all', 'ns' or 's'."),
                     default = 'all',
                     type = "character")
-  
+
   # Read arguments
   cat("Processing arguments...\n")
   args <- parse_args(p)
@@ -62,11 +62,11 @@ process_arguments <- function(){
   # args$freq_thres <- 1
   # args$keep_last_codon <- TRUE
   # args$missing_as <- "gap"
-  
+
   if(all(args$snvs != c('all', 'ns', 's'))){
     stop("ERROR: snvs must be in c('all', 'ns', 's)", call. = TRUE)
   }
-  
+
 
   return(args)
 }
@@ -74,9 +74,9 @@ process_arguments <- function(){
 
 #' Read data
 #'
-#' @param info_file 
-#' @param alleles_file 
-#' @param snvs 
+#' @param info_file
+#' @param alleles_file
+#' @param snvs
 #'
 #' @return
 #' @export
@@ -90,8 +90,8 @@ read_data <- function(info_file, alleles_file, snvs = "all"){
                                     gene_id = col_character(),
                                     snp_effect = col_character(),
                                     locus_type = col_character()))
-  
-  
+
+
   # Select SNVs by snp_effect
   if(snvs == "ns"){
     info <- info %>%
@@ -109,21 +109,21 @@ read_data <- function(info_file, alleles_file, snvs = "all"){
     filter(locus_type == "CDS") %>%
     select(site_id) %>%
     unlist()
-  
+
   # Select only SNVs from genes
   info <- info %>%
     filter(site_id %in% snps) %>%
     select(site_id, gene_id)
-  
+
   # Get alleles
   alleles <- read_tsv(alleles_file,
                       col_types = cols(site_id = col_character(),
                                        .default = col_character()))
   alleles <- alleles %>%
     filter(site_id %in% snps)
-  
+
   # Create final data and return
-  alleles <- alleles %>% 
+  alleles <- alleles %>%
     left_join(info, by = "site_id")
 
   return(alleles)
@@ -156,13 +156,13 @@ Res <- alleles %>%
   split(.$gene_id) %>%
   map(function(a, outdir){
     gene <- unique(a$gene_id)
-    
+
     # Create aln object
     aln <- a %>%
       select(-site_id, -gene_id) %>%
       as.list %>%
       map(~ replace_na(.x, "-"))
-    
+
     # Write
     filename <- file.path(outdir, paste0(gene, ".aln.fasta"))
     write.fasta(aln, names = names(aln), file.out = filename)
