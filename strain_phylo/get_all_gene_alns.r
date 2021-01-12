@@ -130,12 +130,12 @@ read_data <- function(info_file, alleles_file, snvs = "all"){
 }
 ##################################
 
-# args <- process_arguments()
+args <- process_arguments()
 # setwd("/home/sur/micropopgen/exp/2021/today2")
-args <- list(info = "test_in/snps_info.txt",
-             alleles =  "test_in/snps_alleles.txt",
-             snvs = 'all',
-             outdir = "output")
+# args <- list(info = "test_in/snps_info.txt",
+#              alleles =  "test_in/snps_alleles.txt",
+#              snvs = 'all',
+#              outdir = "output")
 
 # Load rest of libraries
 library(tidyverse)
