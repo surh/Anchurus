@@ -118,6 +118,9 @@ Channel.fromPath("${params.master_trees_dir}/*.tre")
 // SPECMAPS = Channel.fromPath("${map_dir}/*")
 //   .map{filename -> tuple(filename.name.replace('.map.txt', ''), file(filename))}
 
+
+ALLELES.join(INFOS).view()
+
 process get_gene_alns{
   label 'r'
   tag "$spec"
