@@ -188,58 +188,58 @@ process baseml{
 // GENETREESDIR.subscribe{println it}
 // TEST = GENETREESDIR.mix(ALNS2BASEML)
 
-process trees2tab{
-  tag "$spec"
-  publishDir "${params.outdir}/tree_tabs",
-    pattern: 'trees_tab.txt',
-    saveAs: {"${spec}.trees.txt"},
-    mode: 'rellink'
-
-  input:
-  tuple val(spec), file("trees") from GENETREESDIR.mix(ALNS2BASEML)
-  // tuple val(spec), file("trees") from TEST
-
-  output:
-  tuple val(spec), file("trees_tab.txt") into TREETABS
-
-  """
-  for f in trees/*.tre; \
-    do echo -e `basename \$f`"\\t"`cat \$f`; \
-    done | sed 's/\\.baseml\\.tre//' > trees_tab.txt
-  """
-}
-
-process rertest{
-  tag "$spec"
-  label 'r'
-  publishDir "${params.outdir}/rertest/",
-    pattern: "output",
-    saveAs: {"${spec}/"},
-    mode: 'rellink'
-
-  input:
-  tuple val(spec),
-    file("trees_tab.txt"),
-    file("master_tree.tre"),
-    file("map.txt") from TREETABS.join(MT_RER).join(SPECMAPS)
-  val pheno from params.focal_phenotype
-
-  output:
-  path "output"
-  tuple val(spec), file("output/${spec}.cors.txt") into RERCORS
-  tuple val(spec), file("output/${spec}.rerw.dat") into RERWS
-  tuple val(spec), file("output/${spec}.Trees.dat") into RERTREES
-
-  """
-  ${workflow.projectDir}/rertest.r \
-    trees_tab.txt \
-    master_tree.tre \
-    --map_file map.txt \
-    --outdir output \
-    --focal_phenotype $pheno \
-    --spec $spec
-  """
-}
+// process trees2tab{
+//   tag "$spec"
+//   publishDir "${params.outdir}/tree_tabs",
+//     pattern: 'trees_tab.txt',
+//     saveAs: {"${spec}.trees.txt"},
+//     mode: 'rellink'
+//
+//   input:
+//   tuple val(spec), file("trees") from GENETREESDIR.mix(ALNS2BASEML)
+//   // tuple val(spec), file("trees") from TEST
+//
+//   output:
+//   tuple val(spec), file("trees_tab.txt") into TREETABS
+//
+//   """
+//   for f in trees/*.tre; \
+//     do echo -e `basename \$f`"\\t"`cat \$f`; \
+//     done | sed 's/\\.baseml\\.tre//' > trees_tab.txt
+//   """
+// }
+//
+// process rertest{
+//   tag "$spec"
+//   label 'r'
+//   publishDir "${params.outdir}/rertest/",
+//     pattern: "output",
+//     saveAs: {"${spec}/"},
+//     mode: 'rellink'
+//
+//   input:
+//   tuple val(spec),
+//     file("trees_tab.txt"),
+//     file("master_tree.tre"),
+//     file("map.txt") from TREETABS.join(MT_RER).join(SPECMAPS)
+//   val pheno from params.focal_phenotype
+//
+//   output:
+//   path "output"
+//   tuple val(spec), file("output/${spec}.cors.txt") into RERCORS
+//   tuple val(spec), file("output/${spec}.rerw.dat") into RERWS
+//   tuple val(spec), file("output/${spec}.Trees.dat") into RERTREES
+//
+//   """
+//   ${workflow.projectDir}/rertest.r \
+//     trees_tab.txt \
+//     master_tree.tre \
+//     --map_file map.txt \
+//     --outdir output \
+//     --focal_phenotype $pheno \
+//     --spec $spec
+//   """
+// }
 
 // Example nextflow.config
 /*
