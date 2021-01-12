@@ -136,9 +136,6 @@ process get_gene_alns{
   output:
   tuple val(spec), file("output") into GENEALNS
 
-  when:
-  map_file.exists()
-
   """
   ${workflow.projectDir}/get_all_gene_alns.r \
     $info \
