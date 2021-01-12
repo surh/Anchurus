@@ -127,7 +127,7 @@ process get_gene_alns{
     mode: 'rellink'
 
   input:
-  tuple val(spec), file(info), file(alleles) from ALLELES.join(INFOS)
+  tuple val(spec), file(alleles), file(info) from ALLELES.join(INFOS)
   val snvs from params.snvs
 
   output:
