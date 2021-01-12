@@ -164,7 +164,7 @@ process baseml{
 
   input:
   tuple spec, file("alns_dir"), file(master_tree),
-    file(cov) from GENEALNS.join(MT_BASEML).join(COV)
+    file(cov) from GENEALNS.join(MT_BASEML).join(GENECOVS)
 
   output:
   tuple val(spec), file("output/gene_trees/") into ALNS2BASEML
