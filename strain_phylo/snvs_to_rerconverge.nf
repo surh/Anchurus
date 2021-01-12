@@ -57,7 +57,7 @@ Default: 1.
 // parameters
 params.snps_dir = ""
 // params.genomes_dir = ""
-params.map_dir = ""
+// params.map_dir = ""
 params.master_trees_dir = ""
 // params.cov_dir = ""
 params.focal_phenotype = "USA"
@@ -71,8 +71,8 @@ params.alns_dir = ""
 params.gene_trees_dir = ""
 
 // Peocess params
-map_dir = file(params.map_dir)
 snps_dir = file(params.snps_dir)
+// map_dir = file(params.map_dir)
 
 // Create Channels
 INFOS = Channel.fromPath("${snps_dir}/**/snps_info.txt")
@@ -81,6 +81,9 @@ INFOS = Channel.fromPath("${snps_dir}/**/snps_info.txt")
 ALLELES = Channel.fromPath("${snps_dir}/**/snps_alleles.txt")
   .map{infofile -> tuple(infofile.getParent().name,
     file(infofile))}
+GENECOVS = Channel.fromPath("${snps_dir}/**/gene_coverage.tsv")
+  .map{covfile -> tuple(covfile.getParent().name,
+    file(covfile))}
 
 // INDIRS = (params.midas_dir == ""
 //   ? Channel.empty()
@@ -95,11 +98,11 @@ ALLELES = Channel.fromPath("${snps_dir}/**/snps_alleles.txt")
 //   : Channel.fromPath("${params.alns_dir}/*", type: 'dir')
 //       .map{spec -> tuple(spec.name, file(spec))})
 //
-// // Channel with master trees
-// MASTERTREE = Channel.fromPath("${params.master_trees_dir}/*.tre")
-//   .map{filename -> tuple(filename.name.replace('.tre', ''), file(filename))}
-//   .into{MT_BASEML; MT_RER}
-// // MT_BASEML.subscribe{println it}
+// Channel with master trees
+Channel.fromPath("${params.master_trees_dir}/*.tre")
+  .map{filename -> tuple(filename.name.replace('.tre', ''), file(filename))}
+  .into{MT_BASEML; MT_RER}
+// MT_BASEML.subscribe{println it}
 //
 // // Channel with gene coverages
 // COV = Channel.fromPath("${params.cov_dir}/*.gene_coverage.txt")
@@ -160,7 +163,8 @@ process baseml{
     mode: 'rellink'
 
   input:
-  tuple spec, file("alns_dir"), file(master_tree), file(cov) from ALNDIR.mix(MIDAS2ALNS).join(MT_BASEML).join(COV)
+  tuple spec, file("alns_dir"), file(master_tree),
+    file(cov) from GENEALNS.join(MT_BASEML).join(COV)
 
   output:
   tuple val(spec), file("output/gene_trees/") into ALNS2BASEML
