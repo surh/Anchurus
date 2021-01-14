@@ -152,6 +152,7 @@ process get_gene_alns{
 
 process baseml{
   label 'baseml'
+  label 'py3'
   tag "$spec"
   cpus params.baseml_threads
   publishDir "${params.outdir}/gene_trees/",
@@ -254,8 +255,7 @@ process{
     conda = '/opt/modules/pkgs/anaconda/3.6/envs/fraserconda'
   }
   withLabel: 'baseml'{
-    module = "anaconda:paml/4.9i"
-    conda = '/opt/modules/pkgs/anaconda/3.6/envs/fraserconda'
+    module = "paml/4.9i"
     time = '200h'
   }
 }
