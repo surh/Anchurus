@@ -22,7 +22,7 @@ library(argparser)
 
 process_arguments <- function(){
   p <- arg_parser(paste("Code that runs RERconverge test on a binary phenotype"))
-  
+
   # Positional arguments
   p <- add_argument(p, "trees",
                     help = paste("Table file containing all trees from a given species",
@@ -35,7 +35,7 @@ process_arguments <- function(){
                     help = paste("Path to master phylogenetic tree file. Must include",
                                  "all species"),
                     type = "character")
-  
+
   # Optional arguments
   # p <- add_argument(p, "--type",
   #                    help = paste("Indicates if <indir> corresponds to a single species",
@@ -44,7 +44,7 @@ process_arguments <- function(){
   #                    type = "character",
   #                    default = "single")
   p <- add_argument(p, "--map_file",
-                    help = paste("Path to file with map. Should have 'ID' and 'Group'",
+                    help = paste("Path to file with map. Should have 'sample' and 'group'",
                                  "columns."),
                     type = "character",
                     default = "map.txt")
@@ -56,7 +56,7 @@ process_arguments <- function(){
                     help = paste("Phenotypic value to be tested. Internally, tree tips",
                                  "with this value will be set to one, and to zero",
                                  "otherwise. If nothing passed, the script assumes that",
-                                 "there are only two values in the Group column of the",
+                                 "there are only two values in the group column of the",
                                  "<--map_file>."),
                     default = NULL,
                     type = "character")
@@ -65,11 +65,11 @@ process_arguments <- function(){
                                  "filenames."),
                     type = "character",
                     default = NULL)
-  
+
   # Read arguments
   cat("Processing arguments...\n")
   args <- parse_args(p)
-  
+
   # Process arguments
   # if(!(args$type %in% c('single', 'multi'))){
   #   stop("ERROR: --type must be 'single' or 'multi'", call. = TRUE)
@@ -77,7 +77,7 @@ process_arguments <- function(){
   if(is.na(args$spec)){
     args$spec <- NULL
   }
-  
+
   # Set other arguments
   args$scale <- TRUE
   args$weight <- TRUE
@@ -86,7 +86,7 @@ process_arguments <- function(){
   args$clade <- "all"
   args$min.sp <- 5
   args$min.pos <- 2
-  
+
   return(args)
 }
 
@@ -128,7 +128,7 @@ getAllCor <- function(RERmat, charP, method="auto",min.sp=10, min.pos=2,
   # winsorizeRER <- NULL
   # winsorizetrait <- NULL
   # weighted <- TRUE
-  
+
   RERna=(apply(is.na(RERmat),2,all))
   iicharPna=which(is.na(charP))
   if(!all(RERna[iicharPna])){
@@ -161,28 +161,28 @@ getAllCor <- function(RERmat, charP, method="auto",min.sp=10, min.pos=2,
     xs=sort(x[!is.na(x)], decreasing = T)
     xmax=xs[w]
     xmin=xs[length(xs)-w+1]
-    
+
     x[x>xmax]=xmax
     x[x<xmin]=xmin
     x
   }
   corout=matrix(nrow=nrow(RERmat), ncol=3)
   rownames(corout)=rownames(RERmat)
-  
+
   colnames(corout)=c("Rho", "N", "P")
-  
+
   for( i in 1:nrow(corout)){
     cat(row.names(corout)[i], "\n")
-    
+
     if(((nb<-sum(ii<-(!is.na(charP)&!is.na(RERmat[i,]))))>=min.sp)){
       if (method!="p"&&sum(charP[ii]!=0)<min.pos){
         next
       }
-      
+
       if(!weighted){
-        
+
         x=RERmat[i,]
-        
+
         #winsorize
         indstouse=which(!is.na(x) & !is.na(charP))
         if(!is.null(winsorizeRER)){
@@ -195,16 +195,16 @@ getAllCor <- function(RERmat, charP, method="auto",min.sp=10, min.pos=2,
         }else{
           y=charP[indstouse]
         }
-        
+
         cres=cor.test(x, y, method=method, exact=F)
         corout[i,1:3]=c(cres$estimate, nb, cres$p.value)
       }
       else{
         charPb=(charP[ii]>0)+1-1
-        
+
         weights=charP[ii]
         weights[weights==0]=1
-        
+
         cres <- tryCatch(wtd.cor(RERmat[i,ii], charPb, weight = weights, mean1 = F),
                          error = function(e){
                            cat("\tskipping...\n")
@@ -220,32 +220,32 @@ getAllCor <- function(RERmat, charP, method="auto",min.sp=10, min.pos=2,
       #show(i)
       #show(c(nb, charP[ii]))
     }
-    
+
   }
-  
+
   corout=as.data.frame(corout)
   corout$p.adj=p.adjust(corout$P, method="BH")
   corout
 }
 
 getAllResiduals <- function(treesObj, cutoff=NULL, transform="sqrt", weighted=T,
-                            useSpecies=NULL,  min.sp=10, scale=T, 
+                            useSpecies=NULL,  min.sp=10, scale=T,
                             doOnly=NULL, maxT=NULL, scaleForPproj=F, mean.trim=0.05, plot=T){
-  
+
   # treesObj <- Trees
   # cutoff <- NULL
   # transform <- args$transform
   # weighted <- args$weight
   # useSpecies <- NULL
-  # min.sp <- 10 
+  # min.sp <- 10
   # scale <- args$scale
   # doOnly <- NULL
   # maxT <- NULL
   # scaleForPproj <- FALSE
   # mean.trim <- 0.05
   # plot <- FALSE
-  # 
-  
+  #
+
   if(is.null(cutoff)){
     cutoff=quantile(treesObj$paths, 0.05, na.rm=T)
     message(paste("cutoff is set to", cutoff))
@@ -257,7 +257,7 @@ getAllResiduals <- function(treesObj, cutoff=NULL, transform="sqrt", weighted=T,
     residfunc=fastLmResidMat
   }
   # residfunc=naresid
-  
+
   if (is.null(useSpecies)){
     useSpecies=treesObj$masterTree$tip.label
     #mappedEdges=trees$mappedEdges
@@ -271,9 +271,9 @@ getAllResiduals <- function(treesObj, cutoff=NULL, transform="sqrt", weighted=T,
   }else{
     transform=NULL
   }
-  
-  
-  
+
+
+
   #cm is the names of species that are included in useSpecies and the master tree
   cm=intersect(treesObj$masterTree$tip.label, useSpecies)
   sp.miss = setdiff(treesObj$masterTree$tip.label, useSpecies)
@@ -281,12 +281,12 @@ getAllResiduals <- function(treesObj, cutoff=NULL, transform="sqrt", weighted=T,
     message(paste0("Species from master tree not present in useSpecies: ", paste(sp.miss,
                                                                                  collapse = ",")))
   }
-  
+
   rr=matrix(nrow=nrow(treesObj$paths), ncol=ncol(treesObj$paths))
-  
+
   #maximum number of present species
   maxn=rowSums(treesObj$report[,cm])
-  
+
   if(is.null(doOnly)){
     doOnly=1
   }else{
@@ -294,25 +294,25 @@ getAllResiduals <- function(treesObj, cutoff=NULL, transform="sqrt", weighted=T,
   }
   skipped=double(nrow(rr))
   skipped[]=0
-  
+
   for (i in doOnly:(doOnly+maxT-1)){
-    
+
     if(sum(!is.na(rr[i,]))==0&&!skipped[i]==1){
-      
-      
+
+
       #get the ith tree
       tree1=treesObj$trees[[i]]
-      
+
       #get the common species, prune and unroot
       both=intersect(tree1$tip.label, cm)
       if(length(both)<min.sp){
         next
       }
       tree1=unroot(pruneTree(tree1,both))
-      
+
       #do the same for the refTree
-      
-      
+
+
       #find all the genes that contain all of the species in tree1
       allreport=treesObj$report[,both]
       ss=rowSums(allreport)
@@ -321,26 +321,26 @@ getAllResiduals <- function(treesObj, cutoff=NULL, transform="sqrt", weighted=T,
         message(paste("Skipping i =",i,"(no other genes with same species set)"))
         next
       }
-      
+
       nb=length(both)
       ai=which(maxn[iiboth]==nb)
-      
-      
+
+
       message(paste("i=", i))
-      
-      
+
+
       if(T){
-        
+
         ee=RERconverge:::edgeIndexRelativeMaster(tree1, treesObj$masterTree)
-        
+
         ii= treesObj$matIndex[ee[, c(2,1)]]
-        
+
         allbranch=treesObj$paths[iiboth,ii]
         if (is.null(dim(allbranch))) {
           message(paste("Issue with gettiing paths for genes with same species as tree",i))
           return(list("iiboth"=iiboth,"ii"=ii))
         }
-        
+
         if(weighted){
           allbranchw=weights[iiboth,ii]
         }
@@ -349,7 +349,7 @@ getAllResiduals <- function(treesObj, cutoff=NULL, transform="sqrt", weighted=T,
         }else{
           nv=apply(allbranch, 2, mean, na.rm=T, trim=mean.trim)
         }
-        
+
         iibad=which(allbranch<cutoff)
         #don't scale
         #allbranch=scaleMat(allbranch)
@@ -358,25 +358,25 @@ getAllResiduals <- function(treesObj, cutoff=NULL, transform="sqrt", weighted=T,
           allbranch=transform(allbranch)
         }
         allbranch[iibad]=NA
-        
-        
-        
+
+
+
         # cat("\thello...\n")
         if(!scale){
           if(!weighted){
             proj=residfunc(allbranch[ai, ,drop=F], model.matrix(~1+nv))
-            
+
           }else{
-            
+
             proj=residfunc(allbranch[ai, ,drop=F], model.matrix(~1+nv), allbranchw[ai, ,drop=F])
-            
+
           }
         }else{
           if(!weighted){
             proj=residfunc(allbranch[, ,drop=F], model.matrix(~1+nv))
           }else{
             # proj=residfunc(allbranch[, ,drop=F], model.matrix(~1+nv),allbranchw)
-            
+
             proj <- tryCatch(residfunc(allbranch[, ,drop=F], model.matrix(~1+nv),allbranchw),
                              error = function(e){
                                cat("\tskipping...\n")
@@ -386,18 +386,18 @@ getAllResiduals <- function(treesObj, cutoff=NULL, transform="sqrt", weighted=T,
             }
           }
           proj=scale(proj, center = F)[ai, , drop=F]
-          
+
         }
-        
-        
+
+
         #we have the projection
-        
-        
-        
+
+
+
         rr[iiboth[ai],ii]=proj
-        
+
       }
-      
+
     }}
   message("Naming rows and columns of RER matrix")
   rownames(rr)=names(treesObj$trees)
@@ -418,14 +418,14 @@ getAllResiduals <- function(treesObj, cutoff=NULL, transform="sqrt", weighted=T,
 #' @export
 #' @author RERconverge package. Modified by Sur
 readTrees=function(file, max.read=NA, masterTree=NULL, minTreesAll=20){
-  
+
   tmp=scan(file, sep="\t", what="character", quiet = T)
   message(paste0("Read ",length(tmp)/2, " items", collapse=""))
   trees=vector(mode = "list", length = min(length(tmp)/2,max.read, na.rm = T))
   treenames=character()
   maxsp=0; # maximum number of species
   allnames=NA # unique tip labels in gene trees
-  
+
   #create trees object, get species names and max number of species
   for ( i in 1:min(length(tmp),max.read*2, na.rm = T)){
     if (i %% 2==1){
@@ -441,7 +441,7 @@ readTrees=function(file, max.read=NA, masterTree=NULL, minTreesAll=20){
       if (!is.null(masterTree)) {
         trees[[i/2]] = pruneTree(trees[[i/2]],intersect(trees[[i/2]]$tip.label,masterTree$tip.label))
       }
-      
+
       #check if it has more species
       # cat("===========\n")
       # cat("maxsp:", maxsp, "\n")
@@ -454,84 +454,84 @@ readTrees=function(file, max.read=NA, masterTree=NULL, minTreesAll=20){
       if (sum(trees[[i/2]]$tip.label %in% allnames == F) > 0) {
         allnames = unique(c(allnames,trees[[i/2]]$tip.label))
         maxsp = length(allnames) - 1
-        
+
       }
       #if(length(trees[[i/2]]$tip.label)>maxsp){
       #  maxsp=length(trees[[i/2]]$tip.label)
       #  allnames=trees[[i/2]]$tip.label
       #}
     }
-    
+
   }
   allnames = allnames[!is.na(allnames)]
-  
+
   maxsp <- length(allnames)
-  
+
   names(trees)=treenames
   treesObj=vector(mode = "list")
   treesObj$trees=trees
   treesObj$numTrees=length(trees)
   treesObj$maxSp=maxsp
-  
+
   message(paste("max is", maxsp))
-  
+
   report=matrix(nrow=treesObj$numTrees, ncol=maxsp)
   colnames(report)=allnames
-  
+
   rownames(report)=treenames
   for ( i in 1:nrow(report)){
     ii=match(allnames, trees[[i]]$tip.label)
     report[i,]=1-is.na(ii)
-    
+
   }
   treesObj$report=report
-  
-  
-  
+
+
+
   ii=which(rowSums(report)==maxsp)
-  
+
   #Create a master tree with no edge lengths
   if (is.null(masterTree)) {
     master=trees[[ii[1]]]
     master$edge.length[]=1
     treesObj$masterTree=master
   } else {
-    
+
     master=pruneTree(masterTree, intersect(masterTree$tip.label,allnames))
     #prune tree to just the species names in the largest gene tree
     master$edge.length[]=1
-    
+
     master=unroot(pruneTree(masterTree, intersect(masterTree$tip.label,allnames)))
     #prune tree to just the species names in the gene trees
     #master$edge.length[]=1
-    
+
     treesObj$masterTree=master
   }
-  
-  
-  
-  
+
+
+
+
   treesObj$masterTree=rotateConstr(treesObj$masterTree, sort(treesObj$masterTree$tip.label))
   #this gets the abolute alphabetically constrained order when all branches
   #are present
   tiporder=RERconverge:::treeTraverse(treesObj$masterTree)
-  
+
   #treesObj$masterTree=CanonicalForm(treesObj$masterTree)
   message("Rotating trees")
-  
+
   for ( i in 1:treesObj$numTrees){
-    
+
     treesObj$trees[[i]]=rotateConstr(treesObj$trees[[i]], tiporder)
-    
+
   }
-  
-  
-  
+
+
+
   ap=RERconverge:::allPaths(master)
   treesObj$ap=ap
   matAnc=(ap$matIndex>0)+1-1
   matAnc[is.na(matAnc)]=0
-  
+
   paths=matrix(nrow=treesObj$numTrees, ncol=length(ap$dist))
   for( i in 1:treesObj$numTrees){
     #Make paths all NA if tree topology is discordant
@@ -543,16 +543,16 @@ readTrees=function(file, max.read=NA, masterTree=NULL, minTreesAll=20){
   treesObj$matAnc=matAnc
   treesObj$matIndex=ap$matIndex
   treesObj$lengths=unlist(lapply(treesObj$trees, function(x){sqrt(sum(x$edge.length^2))}))
-  
+
   #require all species and tree compatibility
   #ii=which(rowSums(report)==maxsp)
   ii=intersect(which(rowSums(report)==maxsp),which(is.na(paths[,1])==FALSE))
-  
+
   if (is.null(masterTree)) {
     if(length(ii)>=minTreesAll){
       message (paste0("estimating master tree branch lengths from ", length(ii), " genes"))
       tmp=lapply( treesObj$trees[ii], function(x){x$edge.length})
-      
+
       allEdge=matrix(unlist(tmp), ncol=2*maxsp-3, byrow = T)
       allEdge=RERconverge:::scaleMat(allEdge)
       allEdgeM=apply(allEdge,2,mean)
@@ -562,9 +562,9 @@ readTrees=function(file, max.read=NA, masterTree=NULL, minTreesAll=20){
     }
   } else {
     message("Using user-specified master tree")
-    
+
   }
-  
+
   message("Naming columns of paths matrix")
   colnames(treesObj$paths)=namePathsWSpecies(treesObj$masterTree)
   class(treesObj)=append(class(treesObj), "treesObj")
@@ -595,7 +595,7 @@ library(RERconverge)
 master_tre <- ape::read.tree(args$master_tree)
 
 map <- read_tsv(args$map_file)
-map <- setNames(map$Group, map$ID)
+map <- setNames(map$group, map$sample)
 
 # Prepare output dir
 if(!dir.exists(args$outdir)){
@@ -605,38 +605,38 @@ if(!dir.exists(args$outdir)){
 for(specfile in args$trees){
   specfile <- args$trees[1]
   cat(basename(specfile), "\n")
-  
+
   # Read trees
   Trees <- readTrees(specfile, masterTree = master_tre)
   filename <- file.path(args$outdir, paste(c(args$spec, "Trees.dat"), collapse = "."))
   cat("\twriting ", filename, "\n")
   save(Trees, file = filename)
   # load(file = filename)
-  
+
   # Process map (probably need to change variable name for multi dir).
   map <- map[ Trees$masterTree$tip.label ]
   if(is.na(args$focal_phenotype)){
     args$focal_phenotype <- map[1]
   }
   map <- 1*(map == args$focal_phenotype)
-  
+
   op <- par()
   # Calculate RERs
   rerw <- getAllResiduals(Trees, transform = args$transform, weighted = args$weight, scale = args$scale, plot = FALSE)
   filename <- file.path(args$outdir, paste(c(args$spec, "rerw.dat"), collapse = "."))
   cat("\twriting ", filename, "\n")
   save(rerw, file = filename)
-  
+
   # Prepare binary tree
   bintre <- foreground2Tree(foreground = names(map)[map == 1],
                             treesObj = Trees,
                             plotTree = FALSE,
                             clade = args$clade,
                             weighted = TRUE)
-  
+
   # Prepare phenotypes
   phenv <- tree2Paths(tree = bintre, treesObj = Trees)
-  
+
   # Calculate correlatiob between phenotypes and rers
   # cor.res <- correlateWithBinaryPhenotype(RERmat = rerw, charP = phenv, min.sp = args$min.sp, min.pos = args$min.pos)
   cor.res <- getAllCor(RERmat = rerw, charP = phenv, min.sp = args$min.sp,
@@ -646,7 +646,3 @@ for(specfile in args$trees){
   cat("\twriting ", filename, "\n")
   write_tsv(cor.res, path = filename)
 }
-
-
-
-
