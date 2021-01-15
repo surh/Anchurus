@@ -239,7 +239,7 @@ def baseml_all_genes(cov_file, aln_dir, tre_file, outdir="./output/",
                                 'n_threshold': n_threshold,
                                 'resume': resume,
                                 'baseml_bin': baseml_bin})
-        p.close()
+        # p.close()
         print("Submitted {} processes".format(str(cpus)))
         p.join()
 
