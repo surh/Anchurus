@@ -93,7 +93,7 @@ process rertest{
   tuple val(spec), file("output/perm_${nperm}.Trees.dat") into RERTREES
 
   """
-  ${workflow.projectDir}/rertest.r \
+  Rscript ${workflow.projectDir}/rertest.r \
     trees_tab.txt \
     master_tree.tre \
     --map_file map.txt \
