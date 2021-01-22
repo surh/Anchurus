@@ -22,6 +22,7 @@ library(tidyverse)
 # args <- list(permdir = "perm_res/rertest/Bacteroides_vulgatus_57955/",
 #              res = "../2019-11-19.rertest/gut/rer/rer_output/rertest/Bacteroides_vulgatus_57955/Bacteroides_vulgatus_57955.cors.txt",
 #              output = "Bacterioides_vulgatus_57955.rer.fdr.txt")
+optz <- commandArgs(trailingOnly=TRUEs)
 args <- list(permdir = opts[1],
              res = opts[2],
              output = opts[3])
@@ -41,7 +42,7 @@ cat("Calculating FDR...\n")
 Res$FDR <- NA
 for(i in 1:nrow(Res)){
   pval <- Res$P[i]
-  
+
   fdr <- Perms %>%
     map_dbl(function(x){
       x <- x[!is.na(x)]
@@ -53,4 +54,3 @@ for(i in 1:nrow(Res)){
 # Write output
 cat("Writing output...\n")
 write_tsv(Res, path = args$output)
-
