@@ -112,7 +112,7 @@ process rertest{
 process rer_fdr{
   label 'r'
   tag "$spec"
-  publishDir params.outdir
+  publishDir "${params.outdir}/rerperms"
 
   input:
   tuple spec, file(rertest),
