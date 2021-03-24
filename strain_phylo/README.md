@@ -4,5 +4,10 @@
 create alignment fasta files and uses FastTree to make phylogenetic
 reconstruction.
 
-2. Run **snvs_to_rerconverge.nf**
+2. Run **snvs_to_rerconverge.nf**. Performs RERconverge test
     * First runs **get_all_gene_alns.r**
+
+3. **create_permuted_maps.r**: Custom script that creates set of permuted
+maps.s
+
+4. **permute_rer.nf**
