@@ -85,7 +85,7 @@ READS = Channel
   .fromFilePairs("$indir/*_{1,2}.fq.gz")
 
 // Get specfiles
-SPECFILES = Channel.fromPath("$specdir/*/species/species_profile.txt")
+SPECPROFS = Channel.fromPath("$specdir/*/species/species_profile.txt")
   .map{specfile -> tuple(specfile.getParent().getParent().name,
     file(specfile))}
 
@@ -97,8 +97,8 @@ process midas_species{
   cpus params.cpus
 
   input:
-  set sample, f_file, r_file, spec_profile from SAMPLES
-  set sample, file(reads), file(spec_profile) from READS.join(SPECFILES)
+  // set sample, f_file, r_file, spec_profile from SAMPLES
+  set sample, file(reads), file(spec_profile) from READS.join(SPECPROFS)
   file midas_db from midas_db
 
   output:
