@@ -38,6 +38,7 @@ will be 0.
 params.maps_dirs = ''
 params.tree_tabs_dir = ''
 params.master_trees_dir = ''
+params.rertest_dirs = ''
 params.outdir = 'output/'
 params.focal_phenotype = "USA"
 
@@ -45,6 +46,7 @@ params.focal_phenotype = "USA"
 maps_dir = file(params.maps_dirs)
 tree_tabs_dir = file(params.tree_tabs_dir)
 master_trees_dir = file(params.master_trees_dir)
+rertest_dirs = file(params.rertest_dirs)
 
 INPUTS = Channel.fromPath("$maps_dir/**", type: 'file', maxDepth: 2)
   .map{map_file -> tuple(map_file.getParent().name,
@@ -62,6 +64,11 @@ INPUTS = Channel.fromPath("$maps_dir/**", type: 'file', maxDepth: 2)
 // There is no left join!!!
 // MAPS.join(TREETABS, remainder: true).subscribe{println it}
 // MAPS.join(TREETABS, remainder: true).filter{items -> items[1] != null}.subscribe{println it}
+
+// Results from RERConverge on real labels
+RERTEST = Channel.fromPath("$rertest_dirs/*", type:'dir', maxDepth:1)
+  .map{dir -> spec = dir.name;
+    tuple(spec, file("$rertest_dirs/$spec/${spec}.cors.txt"))}
 
 process rertest{
   tag "${spec}.perm_$nperm"
@@ -86,7 +93,7 @@ process rertest{
   tuple val(spec), file("output/perm_${nperm}.Trees.dat") into RERTREES
 
   """
-  ${workflow.projectDir}/rertest.r \
+  Rscript ${workflow.projectDir}/rertest.r \
     trees_tab.txt \
     master_tree.tre \
     --map_file map.txt \
@@ -95,6 +102,34 @@ process rertest{
     --spec perm_$nperm
   """
 }
+
+
+
+// RERPERMS = Channel.fromPath("$rerperms_dirs/*", type:'dir', maxDepth:1)
+//   .map{dir -> spec = dir.name;
+//     tuple(spec, file(dir))}
+
+process rer_fdr{
+  label 'r'
+  tag "$spec"
+  publishDir "${params.outdir}/rerperms"
+
+  input:
+  tuple spec, file(rertest),
+    file("rerperms/") from RERTEST.join(RERCORS.groupTuple())
+
+  output:
+  tuple spec, file("${spec}.rer.fdr.txt")
+
+  """
+  Rscript ${workflow.projectDir}/rer_perm_fdr.r \
+    "rerperms/" \
+    $rertest \
+    ${spec}.rer.fdr.txt
+  """
+}
+
+
 
 // Example nextflow.config
 /*

@@ -55,11 +55,12 @@ Default: 1.
 */
 
 // parameters
-params.midas_dir = ""
-params.genomes_dir = ""
-params.map_dir = ""
+params.snps_dir = ""
+params.map_file = ""
+// params.genomes_dir = ""
+// params.map_dir = ""
 params.master_trees_dir = ""
-params.cov_dir = ""
+// params.cov_dir = ""
 params.focal_phenotype = "USA"
 params.snvs = 'all'
 params.min_cov = 0.8
@@ -70,43 +71,56 @@ params.baseml_threads = 1
 params.alns_dir = ""
 params.gene_trees_dir = ""
 
+// Peocess params
+snps_dir = file(params.snps_dir)
+map_file = file(params.map_file)
+// map_dir = file(params.map_dir)
 
-map_dir = file(params.map_dir)
-genomes_dir = file(params.genomes_dir)
-INDIRS = (params.midas_dir == ""
-  ? Channel.empty()
-  : Channel.fromPath("${params.midas_dir}/*", type: 'dir')
-    .map{spec -> tuple(spec.name,
-      file(spec),
-      file("${map_dir}/${spec.fileName}.map.txt"))})
+// Create Channels
+INFOS = Channel.fromPath("${snps_dir}/**/snps_info.txt")
+  .map{infofile -> tuple(infofile.getParent().name,
+    file(infofile))}
+ALLELES = Channel.fromPath("${snps_dir}/**/snps_alleles.txt")
+  .map{infofile -> tuple(infofile.getParent().name,
+    file(infofile))}
+GENECOVS = Channel.fromPath("${snps_dir}/**/gene_coverage.tsv")
+  .map{covfile -> tuple(covfile.getParent().name,
+    file(covfile))}
 
-// Create channel with gene level alignments
-ALNDIR = (params.alns_dir == ""
-  ? Channel.empty()
-  : Channel.fromPath("${params.alns_dir}/*", type: 'dir')
-      .map{spec -> tuple(spec.name, file(spec))})
-
+// INDIRS = (params.midas_dir == ""
+//   ? Channel.empty()
+//   : Channel.fromPath("${params.midas_dir}/*", type: 'dir')
+//     .map{spec -> tuple(spec.name,
+//       file(spec),
+//       file("${map_dir}/${spec.fileName}.map.txt"))})
+//
+// // Create channel with gene level alignments
+// ALNDIR = (params.alns_dir == ""
+//   ? Channel.empty()
+//   : Channel.fromPath("${params.alns_dir}/*", type: 'dir')
+//       .map{spec -> tuple(spec.name, file(spec))})
+//
 // Channel with master trees
-MASTERTREE = Channel.fromPath("${params.master_trees_dir}/*.tre")
+Channel.fromPath("${params.master_trees_dir}/*.tre")
   .map{filename -> tuple(filename.name.replace('.tre', ''), file(filename))}
   .into{MT_BASEML; MT_RER}
 // MT_BASEML.subscribe{println it}
+//
+// // Channel with gene coverages
+// COV = Channel.fromPath("${params.cov_dir}/*.gene_coverage.txt")
+//   .map{filename -> tuple(filename.name.replace('.gene_coverage.txt', ''), file(filename))}
+//
+// // Channel with gene level trees
+// // Create channel with gene level alignments
+// GENETREESDIR = (params.gene_trees_dir == ""
+//   ? Channel.empty()
+//   : Channel.fromPath("${params.gene_trees_dir}/*", type: 'dir')
+//       .map{spec -> tuple(spec.name, file(spec))})
+//
+// SPECMAPS = Channel.fromPath("${map_dir}/*")
+//   .map{filename -> tuple(filename.name.replace('.map.txt', ''), file(filename))}
 
-// Channel with gene coverages
-COV = Channel.fromPath("${params.cov_dir}/*.gene_coverage.txt")
-  .map{filename -> tuple(filename.name.replace('.gene_coverage.txt', ''), file(filename))}
-
-// Channel with gene level trees
-// Create channel with gene level alignments
-GENETREESDIR = (params.gene_trees_dir == ""
-  ? Channel.empty()
-  : Channel.fromPath("${params.gene_trees_dir}/*", type: 'dir')
-      .map{spec -> tuple(spec.name, file(spec))})
-
-SPECMAPS = Channel.fromPath("${map_dir}/*")
-  .map{filename -> tuple(filename.name.replace('.map.txt', ''), file(filename))}
-
-process alns_from_metagenomes{
+process get_gene_alns{
   label 'r'
   tag "$spec"
   publishDir "${params.outdir}/gene_alns/",
@@ -115,24 +129,17 @@ process alns_from_metagenomes{
     mode: 'rellink'
 
   input:
-  tuple val(spec), file(midas_dir), file(map_file) from INDIRS
-  file genomes_dir
+  tuple val(spec), file(alleles), file(info) from ALLELES.join(INFOS)
   val snvs from params.snvs
 
   output:
-  tuple val(spec), file("output") optional true into MIDAS2ALNS
-
-  when:
-  map_file.exists()
+  tuple val(spec), file("output") into GENEALNS
 
   """
-  ${workflow.projectDir}/all_alns_from_metagenomes.r \
-    $midas_dir \
-    $genomes_dir \
-    --min_cov ${params.min_cov} \
-    --map_file $map_file \
+  ${workflow.projectDir}/get_all_gene_alns.r \
+    $info \
+    $alleles \
     --outdir output/ \
-    --type single \
     --snvs $snvs
   """
 }
@@ -147,6 +154,7 @@ process alns_from_metagenomes{
 
 process baseml{
   label 'baseml'
+  label 'py3'
   tag "$spec"
   cpus params.baseml_threads
   publishDir "${params.outdir}/gene_trees/",
@@ -155,7 +163,8 @@ process baseml{
     mode: 'rellink'
 
   input:
-  tuple spec, file("alns_dir"), file(master_tree), file(cov) from ALNDIR.mix(MIDAS2ALNS).join(MT_BASEML).join(COV)
+  tuple spec, file("alns_dir"), file(master_tree),
+    file(cov) from GENEALNS.join(MT_BASEML).join(GENECOVS)
 
   output:
   tuple val(spec), file("output/gene_trees/") into ALNS2BASEML
@@ -187,7 +196,7 @@ process trees2tab{
     mode: 'rellink'
 
   input:
-  tuple val(spec), file("trees") from GENETREESDIR.mix(ALNS2BASEML)
+  tuple val(spec), file("trees") from ALNS2BASEML
   // tuple val(spec), file("trees") from TEST
 
   output:
@@ -211,8 +220,8 @@ process rertest{
   input:
   tuple val(spec),
     file("trees_tab.txt"),
-    file("master_tree.tre"),
-    file("map.txt") from TREETABS.join(MT_RER).join(SPECMAPS)
+    file("master_tree.tre") from TREETABS.join(MT_RER)
+  file "map.txt" from map_file
   val pheno from params.focal_phenotype
 
   output:
@@ -247,13 +256,8 @@ process{
     module = 'anaconda'
     conda = '/opt/modules/pkgs/anaconda/3.6/envs/fraserconda'
   }
-  withLabel: 'fasttree'{
-    module = 'FastTree/2.1.10'
-    time = '12h'
-  }
   withLabel: 'baseml'{
-    module = "anaconda:paml/4.9i"
-    conda = '/opt/modules/pkgs/anaconda/3.6/envs/fraserconda'
+    module = "paml/4.9i"
     time = '200h'
   }
 }

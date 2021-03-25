@@ -14,7 +14,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
 from Bio import AlignIO
 from skbio import TreeNode
 from Bio import Align
@@ -213,8 +212,8 @@ def baseml_all_genes(cov_file, aln_dir, tre_file, outdir="./output/",
         os.mkdir(gene_trees_dir)
 
     # Read coverage information
-    covs = pd.read_csv(cov_file, sep="\t", dtype={'gene': np.character})
-    covs = covs.set_index('gene')
+    covs = pd.read_csv(cov_file, sep="\t", dtype={'gene_id': np.character})
+    covs = covs.set_index('gene_id')
 
     # Parallelize with multiprocessing
     with mp.Pool(cpus) as p:

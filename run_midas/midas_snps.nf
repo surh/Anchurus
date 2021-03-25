@@ -18,11 +18,12 @@
 // snp profiles
 
 // Main parameters
-params.samples = 'samples.txt'
+// params.samples = 'samples.txt'
 params.indir = 'samples/'
+params.specdir = "species/"
 params.outdir = 'midas/'
 params.db = 'midas_db'
-params.sample_col = 1
+// params.sample_col = 1
 params.cpus = 4
 params.species_cov = 3.0
 params.mapid = 94.0
@@ -37,9 +38,11 @@ params.adjust_mq = false
 // Steps argument needs to be implemented
 
 // Process params
-samples = file(params.samples)
+// samples = file(params.samples)
 midas_db = file(params.db)
-sample_col = params.sample_col - 1
+// sample_col = params.sample_col - 1
+indir = file(params.indir)
+specdir = file(params.specdir)
 if( params.trim > 0 ) {
   trim = "--trim ${params.trim}"
 }
@@ -66,19 +69,25 @@ else {
 }
 
 
-// Read samples file
-reader = samples.newReader()
-SAMPLES = []
-while(str = reader.readLine()){
-  // Extract sample and run IDs
-  sample = str.split("\t")[sample_col]
-  SAMPLES = SAMPLES + [tuple(sample,
-    file("${params.indir}/${sample}_read1.fastq.bz2"),
-    file("${params.indir}/${sample}_read2.fastq.bz2"),
-    file("${params.outdir}/${sample}/species/species_profile.txt"))]
-}
+// // Read samples file
+// reader = samples.newReader()
+// SAMPLES = []
+// while(str = reader.readLine()){
+//   // Extract sample and run IDs
+//   sample = str.split("\t")[sample_col]
+//   SAMPLES = SAMPLES + [tuple(sample,
+//     file("${params.indir}/${sample}_read1.fastq.bz2"),
+//     file("${params.indir}/${sample}_read2.fastq.bz2"),
+//     file("${params.outdir}/${sample}/species/species_profile.txt"))]
+// }
+// Get read file
+READS = Channel
+  .fromFilePairs("$indir/*_{1,2}.fq.gz")
 
-
+// Get specfiles
+SPECFILES = Channel.fromPath("$specdir/*/species/species_profile.txt")
+  .map{specfile -> tuple(specfile.getParent().getParent().name,
+    file(specfile))}
 
 // Call run_midas.py species on every sample
 process midas_species{
@@ -89,6 +98,7 @@ process midas_species{
 
   input:
   set sample, f_file, r_file, spec_profile from SAMPLES
+  set sample, file(reads), file(spec_profile) from READS.join(SPECFILES)
   file midas_db from midas_db
 
   output:
@@ -105,8 +115,8 @@ process midas_species{
   mkdir ${sample}/species
   cp ${spec_profile} ${sample}/species/
   run_midas.py snps ${sample} \
-    -1 ${f_file} \
-    -2 ${r_file} \
+    -1 ${reads[0]} \
+    -2 ${reads[1]} \
     -t ${params.cpus} \
     --species_cov ${params.species_cov} \
     --mapid ${params.mapid} \

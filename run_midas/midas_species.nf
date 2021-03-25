@@ -17,52 +17,43 @@
 // Nextflow pipeline that submits sample fastq files to midas to obtain
 // species profiles
 
-
 // Main parameters
-params.samples = 'samples.txt'
+// params.samples = 'samples.txt'
 params.indir = 'samples/'
 params.outdir = 'midas/'
 params.db = 'midas_db'
-params.sample_col = 1
-// params.queue = 'hbfraser,bigmem,hns'
-// params.memory = '10G'
-// params.time = '4:00:00'
+// params.sample_col = 1
 params.cpus = 8
-// params.njobs = 200
 
 // Process params
-samples = file(params.samples)
-sample_col = params.sample_col - 1
+// samples = file(params.samples)
+// sample_col = params.sample_col - 1
+indir = file(params.indir)
 midas_db = file(params.db)
 
-// Read samples file
-reader = samples.newReader()
-SAMPLES = []
-while(str = reader.readLine()){
-  // Extract sample and run IDs
-  sample = str.split("\t")[sample_col]
-  SAMPLES = SAMPLES + [tuple(sample,
-    file("${params.indir}/${sample}_read1.fastq.bz2"),
-    file("${params.indir}/${sample}_read2.fastq.bz2"))]
-}
-
+// // Read samples file
+// reader = samples.newReader()
+// SAMPLES = []
+// while(str = reader.readLine()){
+//   // Extract sample and run IDs
+//   sample = str.split("\t")[sample_col]
+//   SAMPLES = SAMPLES + [tuple(sample,
+//     file("${params.indir}/${sample}_read1.fastq.bz2"),
+//     file("${params.indir}/${sample}_read2.fastq.bz2"))]
+// }
+// Use file pairs to create list of files
+SAMPLES = Channel
+  .fromFilePairs("$indir/*_{1,2}.fq.gz")
 
 // Call run_midas.py species on every sample
 process midas_species{
   tag "$sample"
   label "midas"
   cpus params.cpus
-  // time params.time
-  // memory params.memory
-  // maxForks params.njobs
-  // module 'MIDAS/1.3.1'
-  // queue params.queue
-  publishDir params.outdir, mode: 'copy'
-  // errorStrategy 'retry'
-  // maxRetries 2
+  publishDir params.outdir, mode: 'rellink'
 
   input:
-  set sample, f_file, r_file from SAMPLES
+  set sample, file(reads) from SAMPLES
   file midas_db from midas_db
 
   output:
@@ -73,8 +64,8 @@ process midas_species{
 
   """
   run_midas.py species ${sample} \
-    -1 ${f_file} \
-    -2 ${r_file} \
+    -1 ${reads[0]} \
+    -2 ${reads[1]} \
     -t ${params.cpus} \
     -d $midas_db
   """
