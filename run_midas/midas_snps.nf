@@ -90,7 +90,7 @@ SPECPROFS = Channel.fromPath("$specdir/*/species/species_profile.txt")
     file(specfile))}
 
 // Call run_midas.py species on every sample
-process midas_species{
+process midas_snps{
   label 'midas'
   tag "$sample"
   publishDir params.outdir, mode: 'copy'
