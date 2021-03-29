@@ -119,22 +119,22 @@ process midas_snps{
   cp ${spec_profile} ${sample}/species/
 
   # Need to check if fail is because there is no species or actual failure
-  {run_midas.py snps ${sample} \
-    -1 ${reads[0]} \
-    -2 ${reads[1]} \
-    -t ${params.cpus} \
-    --species_cov ${params.species_cov} \
-    --mapid ${params.mapid} \
-    --mapq ${params.mapq} \
-    --baseq ${params.baseq} \
-    --readq ${params.readq} \
-    --aln_cov ${params.aln_cov} \
-    -m global \
-    -d $midas_db \
-    ${trim} \
-    ${discard} \
-    ${baq} \
-    ${adjust_mq};} || {
+  { run_midas.py snps ${sample} \
+      -1 ${reads[0]} \
+      -2 ${reads[1]} \
+      -t ${params.cpus} \
+      --species_cov ${params.species_cov} \
+      --mapid ${params.mapid} \
+      --mapq ${params.mapq} \
+      --baseq ${params.baseq} \
+      --readq ${params.readq} \
+      --aln_cov ${params.aln_cov} \
+      -m global \
+      -d $midas_db \
+      ${trim} \
+      ${discard} \
+      ${baq} \
+      ${adjust_mq}; } || {
       # If the previous command failed, check if there are species
       if [ -f  $sample/snps/species.txt ]; then
         nspecs=`wc -l $sample/snps/species.txt | awk '{print \$1}'`;
