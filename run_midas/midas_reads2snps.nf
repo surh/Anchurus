@@ -140,12 +140,12 @@ process midas_snps{
         nspecs=`wc -l $sample/snps/species.txt | awk '{print \$1}'`;
         # If no species then finish correctly, if species give error
         if [ \$nspecs -gt o ]; then
-          exit 1
+          exit 2
         else
           exit 0
         fi
       else
-        exit \$?
+        exit 3
       fi;
     }
 
