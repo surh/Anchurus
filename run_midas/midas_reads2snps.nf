@@ -106,17 +106,19 @@ process midas_snps{
   output:
   set sample,
     file("${sample}/snps/log.txt"),
-    file("${sample}/snps/readme.txt"),
+    file("${sample}/snps/readme.txt") optional true,
     file("${sample}/snps/species.txt"),
-    file("${sample}/snps/summary.txt"),
-    file("${sample}/snps/output/*.snps.gz"),
-    file("${sample}/snps/temp/genomes*") into OUTPUTS
+    file("${sample}/snps/summary.txt") optional true,
+    file("${sample}/snps/output/"),
+    file("${sample}/snps/temp/") into OUTPUTS
 
   """
   mkdir ${sample}
   mkdir ${sample}/species
   cp ${spec_profile} ${sample}/species/
-  run_midas.py snps ${sample} \
+
+  # Need to check if fail is because there is no species or actual failure
+  {run_midas.py snps ${sample} \
     -1 ${reads[0]} \
     -2 ${reads[1]} \
     -t ${params.cpus} \
@@ -131,7 +133,21 @@ process midas_snps{
     ${trim} \
     ${discard} \
     ${baq} \
-    ${adjust_mq}
+    ${adjust_mq};} || {
+      # If the previous command failed, check if there are species
+      if [ -f  $sample/snps/species.txt ]; then
+        nspecs=`wc -l $sample/snps/species.txt | awk '{print $1}'`;
+        # If no species then finish correctly, if species give error
+        if [ \$nspecs -gt o ]; then
+          exit 1
+        else
+          exit 0
+        fi
+      else
+        exit 1
+      fi;
+    }
+
   """
 }
 
