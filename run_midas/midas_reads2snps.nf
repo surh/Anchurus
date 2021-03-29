@@ -136,7 +136,7 @@ process midas_snps{
     ${adjust_mq};} || {
       # If the previous command failed, check if there are species
       if [ -f  $sample/snps/species.txt ]; then
-        nspecs=`wc -l $sample/snps/species.txt | awk '{print $1}'`;
+        nspecs=`wc -l $sample/snps/species.txt | awk '{print \$1}'`;
         # If no species then finish correctly, if species give error
         if [ \$nspecs -gt o ]; then
           exit 1
@@ -144,7 +144,7 @@ process midas_snps{
           exit 0
         fi
       else
-        exit 1
+        exit \$?
       fi;
     }
 
