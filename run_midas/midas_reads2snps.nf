@@ -100,17 +100,18 @@ process midas_snps{
   cpus params.cpus
 
   input:
-  set sample, file(reads), file(spec_profile) from READS2.join(SPECPROFS)
+  tuple sample, file(reads), file(spec_profile) from READS2.join(SPECPROFS)
   file midas_db from midas_db
 
   output:
-  set sample,
+  tuple sample,
     file("${sample}/snps/log.txt"),
-    file("${sample}/snps/readme.txt") optional true,
     file("${sample}/snps/species.txt"),
-    file("${sample}/snps/summary.txt") optional true,
     file("${sample}/snps/output/"),
     file("${sample}/snps/temp/") into OUTPUTS
+  file "${sample}/snps/readme.txt" optional true
+  file "${sample}/snps/summary.txt" optional true
+
 
   """
   mkdir ${sample}
