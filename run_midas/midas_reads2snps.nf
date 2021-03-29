@@ -100,38 +100,55 @@ process midas_snps{
   cpus params.cpus
 
   input:
-  set sample, file(reads), file(spec_profile) from READS2.join(SPECPROFS)
+  tuple sample, file(reads), file(spec_profile) from READS2.join(SPECPROFS)
   file midas_db from midas_db
 
   output:
-  set sample,
+  tuple sample,
     file("${sample}/snps/log.txt"),
-    file("${sample}/snps/readme.txt"),
     file("${sample}/snps/species.txt"),
-    file("${sample}/snps/summary.txt"),
-    file("${sample}/snps/output/*.snps.gz"),
-    file("${sample}/snps/temp/genomes*") into OUTPUTS
+    file("${sample}/snps/output/"),
+    file("${sample}/snps/temp/") into OUTPUTS
+  file "${sample}/snps/readme.txt" optional true
+  file "${sample}/snps/summary.txt" optional true
+
 
   """
   mkdir ${sample}
   mkdir ${sample}/species
   cp ${spec_profile} ${sample}/species/
-  run_midas.py snps ${sample} \
-    -1 ${reads[0]} \
-    -2 ${reads[1]} \
-    -t ${params.cpus} \
-    --species_cov ${params.species_cov} \
-    --mapid ${params.mapid} \
-    --mapq ${params.mapq} \
-    --baseq ${params.baseq} \
-    --readq ${params.readq} \
-    --aln_cov ${params.aln_cov} \
-    -m global \
-    -d $midas_db \
-    ${trim} \
-    ${discard} \
-    ${baq} \
-    ${adjust_mq}
+
+  # Need to check if fail is because there is no species or actual failure
+  { run_midas.py snps ${sample} \
+      -1 ${reads[0]} \
+      -2 ${reads[1]} \
+      -t ${params.cpus} \
+      --species_cov ${params.species_cov} \
+      --mapid ${params.mapid} \
+      --mapq ${params.mapq} \
+      --baseq ${params.baseq} \
+      --readq ${params.readq} \
+      --aln_cov ${params.aln_cov} \
+      -m global \
+      -d $midas_db \
+      ${trim} \
+      ${discard} \
+      ${baq} \
+      ${adjust_mq}; } || {
+      # If the previous command failed, check if there are species
+      if [ -f  $sample/snps/species.txt ]; then
+        nspecs=`wc -l $sample/snps/species.txt | awk '{print \$1}'`;
+        # If no species then finish correctly, if species give error
+        if [ \$nspecs -gt o ]; then
+          exit 2
+        else
+          exit 0
+        fi
+      else
+        exit 3
+      fi;
+    }
+
   """
 }
 
