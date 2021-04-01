@@ -26,8 +26,8 @@ indir = file(params.indir)
 snps_file = "snv_catalogue/MGYG-HGUT-00022_snvs.tsv"
 
 SNPS = Channel.fromPath("${params.indir}/*.tsv")
-  map{ snpfile -> tuple(snpfile.name.replaceAll('_snvs\\.tsv$', ""),
-  file(snpfile)) }
+  .map{ snpfile -> tuple(snpfile.name.replaceAll('_snvs\\.tsv$', ""),
+    file(snpfile)) }
 
 process snps2corealns{
   label 'py3'
