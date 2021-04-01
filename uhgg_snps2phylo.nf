@@ -59,7 +59,7 @@ process fasttree{
   cpus params.phylocpus
 
   input:
-  tuple spec, file(aln) from SNPS
+  tuple spec, file(aln) from ALNS
   val phylocpus from params.phylocpus
 
   output:
