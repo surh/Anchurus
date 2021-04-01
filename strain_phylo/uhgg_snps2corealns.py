@@ -66,6 +66,11 @@ if __name__ == "__main__":
     meta = meta.loc[meta.Country.isin(["United States", "China"]), ]
     selected_genomes = meta.Genome
 
+    # Check if enough genomes
+    if not (meta.Country.value_counts() >= args.min_genomes).all():
+        print("Not enough genomes")
+        quit()
+
     with open(args.snps, 'r') as snps:
         # Read and process header
         header = snps.readline()

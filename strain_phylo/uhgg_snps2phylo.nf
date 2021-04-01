@@ -38,7 +38,7 @@ process snps2corealns{
   file meta from meta
 
   output:
-  tuple spec, file("${spec}.core.aln.fasta") into ALNS
+  tuple spec, file("${spec}.core.aln.fasta") optional true into ALNS
 
   """
   ${workflow.projectDir}/uhgg_snps2corealns.py \
