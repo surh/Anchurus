@@ -22,8 +22,7 @@ params.phylocpus = 4
 
 // Process params
 indir = file(params.indir)
-
-snps_file = "snv_catalogue/MGYG-HGUT-00022_snvs.tsv"
+meta = file(params.meta)
 
 SNPS = Channel.fromPath("${params.indir}/*.tsv")
   .map{ snpfile -> tuple(snpfile.name.replaceAll('_snvs\\.tsv$', ""),
@@ -36,7 +35,7 @@ process snps2corealns{
 
   input:
   tuple spec, file(snpfile) from SNPS
-  file meta from params.meta
+  file meta from meta
 
   output:
   tuple spec, file("${spec}.core.aln.fasta") into ALNS
