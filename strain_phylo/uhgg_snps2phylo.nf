@@ -31,7 +31,7 @@ SNPS = Channel.fromPath("${params.indir}/*.tsv")
 process snps2corealns{
   label 'py3'
   tag "$spec"
-  publishDir "${param.outdir}/corelans", mode: 'rellink'
+  publishDir "${params.outdir}/corelans", mode: 'rellink'
 
   input:
   tuple spec, file(snpfile) from SNPS
@@ -54,7 +54,7 @@ process snps2corealns{
 process fasttree{
   label 'fasttree'
   tag "$spec"
-  publishDir "${param.outdir}/phylo", mode: 'rellink'
+  publishDir "${params.outdir}/phylo", mode: 'rellink'
   cpus params.phylocpus
 
   input:
