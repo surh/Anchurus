@@ -43,7 +43,7 @@ def process_arguments():
     parser.add_argument("--presence_thres", help=("Presence threshold"),
                         type=float,
                         default=0.8)
-    parser.add_argument("--min_genoomes", help=("Minimum number of genomes"),
+    parser.add_argument("--min_genomes", help=("Minimum number of genomes"),
                         type=int,
                         default=5)
 
