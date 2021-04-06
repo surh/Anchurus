@@ -33,11 +33,17 @@ params.min_snv_prop_per_sample = 0.5
 params.min_core_gene_prev = 0.8
 params.min_core_gene_cov = 0.8
 params.min_core_genes = 0.8
+params.ignore_map = 0
 
 // Proess params
 map_file = file(params.map_file)
 indir = file(params.indir)
 outdir = file(params.outdir)
+if(params.ignore_map){
+  ignore_map = "--ignore_map"
+}else{
+  ignore_map = ""
+}
 
 // println(indir)
 
@@ -88,6 +94,7 @@ process filter_genotypes{
   val min_core_gene_prev from params.min_core_gene_prev
   val min_core_gene_cov from params.min_core_gene_cov
   val min_core_genes from params.min_core_genes
+  val ignore_map from ignore_map
 
   output:
   tuple spec, file("output") optional true into FILTERED
@@ -103,7 +110,8 @@ process filter_genotypes{
     --min_core_gene_prev $min_core_gene_prev \
     --min_core_gene_cov $min_core_gene_cov \
     --min_core_genes $min_core_genes \
-    --process_info yes
+    --process_info yes \
+    $ignore_map
   """
 }
 
