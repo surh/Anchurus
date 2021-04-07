@@ -60,4 +60,8 @@ args <- process_arguments()
 res <- qp_genotypes(midas_dir = args$midas_dir, min_depth = args$min_depth,
              min_snv_prop = args$min_snv_prop,
              maf_thres = args$maf_thres)
-readr::write_tsv(res, args$output, na = ".")
+if(nrow(res) > 0){
+  readr::write_tsv(res, args$output, na = ".")
+}else{
+  cat("No samples passed the thresholds")
+}

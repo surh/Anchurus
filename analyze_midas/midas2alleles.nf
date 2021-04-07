@@ -65,7 +65,7 @@ process qp_genotypes{
   val maf_thres from params.maf_thres
 
   output:
-  tuple spec, file("snps_alleles.txt") into QPALLELES
+  tuple spec, file("snps_alleles.txt") optional true into QPALLELES
   tuple spec, file("$snvdir/snps_info.txt") into SNVINFOS
 
   """
