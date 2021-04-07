@@ -63,7 +63,11 @@ process_arguments <- function(){
                                  "be proessed. Must be 'yes' or 'no'"),
                     type = "character",
                     default = "yes")
-
+  p <- add_argument(p, "--ignore_map",
+                    help = paste("If passed, the map check is not performed.",
+                                 "This means all samples are kept."),
+                    flag = TRUE)
+  
   # Read arguments
   cat("Processing arguments...\n")
   args <- parse_args(p)
@@ -92,23 +96,25 @@ check_groups <- function(vec, ngroups = 2, minsize = 5){
 }
 
 args <- process_arguments()
-# args <- list(genotypes = "/home/sur/micropopgen/exp/2020/today/snps_alleles.txt",
-#              info = "/home/sur/micropopgen/exp/2020/today/MGYG-HGUT-04165/snps_info.txt",
-#              map = "/home/sur/micropopgen/exp/2020/today/example_map.txt",
-#              outdir = "/home/sur/micropopgen/exp/2020/today/output",
+# args <- list(genotypes = "/home/sur/micropopgen/exp/2020/2020-11-19.filter_snvs_samples/snps_alleles.txt",
+#              info = "/home/sur/micropopgen/exp/2020/2020-11-19.filter_snvs_samples/MGYG-HGUT-04165/snps_info.txt",
+#              map = "/home/sur/micropopgen/exp/2020/2020-11-19.filter_snvs_samples/example_map.txt",
+#              outdir = "/home/sur/micropopgen/exp/2021/today/output",
 #              min_samples_per_group = 2,
 #              min_snv_prop_per_sample = 0.5,
 #              min_core_gene_prev = 0.8,
 #              min_core_gene_cov = 0.8,
 #              min_core_genes = 0.8,
-#              process_info = TRUE)
-
+#              process_info = TRUE,
+#              ignore_map = TRUE)
 
 cat("Reading data...\n")
 # Read file with grouping variable
-map <- read_tsv(args$map,
-                col_types = cols(sample = col_character(),
-                                 group = col_character()))
+if(!args$ignore_map){
+  map <- read_tsv(args$map,
+                  col_types = cols(sample = col_character(),
+                                   group = col_character()))
+}
 
 # Read info file from midas merge
 info <- readr::read_tsv(args$info,
@@ -125,13 +131,15 @@ geno <- read_tsv(file = args$genotypes,
                  na = c(".", "NA", ""))
 
 # Select samples in map
-geno <- geno[ ,colnames(geno) %in% c("site_id", map$sample) ]
-map <- map %>%
-  filter(sample %in% colnames(geno)[-1])
-if(!check_groups(map$group, ngroups = 2,
-                 minsize = args$min_samples_per_group)){
-  cat("Not enough initial samples with enough SNVs...")
-  quit(save = "no")
+if(!args$ignore_map){
+  geno <- geno[ ,colnames(geno) %in% c("site_id", map$sample) ]
+  map <- map %>%
+    filter(sample %in% colnames(geno)[-1])
+  if(!check_groups(map$group, ngroups = 2,
+                   minsize = args$min_samples_per_group)){
+    cat("Not enough initial samples with enough SNVs...")
+    quit(save = "no")
+  }
 }
 
 # Filter samples
@@ -145,12 +153,14 @@ n_missing_per_sample <- colSums(is.na(geno[, -1]))
 selected_samples <- names(n_missing_per_sample)[1 - n_missing_per_sample / n_snvs > args$min_snv_prop_per_sample]
 geno <- geno %>%
   dplyr::select(site_id, all_of(selected_samples))
-map <- map %>%
-  filter(sample %in% colnames(geno)[-1])
-if(!check_groups(map$group, ngroups = 2,
-                 minsize = args$min_samples_per_group)){
-  cat("Not enough samples per group with enough SNVs...")
-  quit(save = "no")
+if(!args$ignore_map){
+  map <- map %>%
+    filter(sample %in% colnames(geno)[-1])
+  if(!check_groups(map$group, ngroups = 2,
+                   minsize = args$min_samples_per_group)){
+    cat("Not enough samples per group with enough SNVs...")
+    quit(save = "no")
+  }
 }
 
 # Prepare output dir
@@ -205,12 +215,14 @@ write_tsv(tibble::tibble(sample = names(core_genes_per_genome),
                          core_genes_per_genome = as.numeric(core_genes_per_genome)),
           file.path(args$outdir, "core_genes_per_sample.tsv"))
 geno <- geno[ ,c(TRUE, core_genes_per_genome >= args$min_core_genes)]
-map <- map %>%
-  filter(sample %in% colnames(geno)[-1])
-if(!check_groups(map$group, ngroups = 2,
-                 minsize = args$min_samples_per_group)){
-  cat("Not enough samples per group with enough core genes...\n")
-  quit(save = "no")
+if(!args$ignore_map){
+  map <- map %>%
+    filter(sample %in% colnames(geno)[-1])
+  if(!check_groups(map$group, ngroups = 2,
+                   minsize = args$min_samples_per_group)){
+    cat("Not enough samples per group with enough core genes...\n")
+    quit(save = "no")
+  }
 }
 
 # Filter constant SNVs
@@ -222,16 +234,18 @@ geno <- geno[bi_snvs, ]
 # geno
 
 # Filter SNVs that are not in enough samples
-cat("Filtering out SNVs without enough samples per group...\n")
-snvs_to_keep <- apply(geno[,-1], 1, function(vec, meta, min_samples_per_group = 5){
-  vec <- vec[!is.na(vec)]
-  tab <- table(meta[ names(vec) ])
-
-  length(tab) == 2 && all(tab >= min_samples_per_group)
-}, meta = purrr::set_names(x = map$group, nm = map$sample),
-min_samples_per_group = args$min_samples_per_group)
-# sum(snvs_to_keep)
-geno <- geno[snvs_to_keep, ]
+if(!args$ignore_map){
+  cat("Filtering out SNVs without enough samples per group...\n")
+  snvs_to_keep <- apply(geno[,-1], 1, function(vec, meta, min_samples_per_group = 5){
+    vec <- vec[!is.na(vec)]
+    tab <- table(meta[ names(vec) ])
+    
+    length(tab) == 2 && all(tab >= min_samples_per_group)
+  }, meta = purrr::set_names(x = map$group, nm = map$sample),
+  min_samples_per_group = args$min_samples_per_group)
+  # sum(snvs_to_keep)
+  geno <- geno[snvs_to_keep, ]
+}
 # geno
 cat("Writing final set of genotypes...\n")
 write_tsv(geno, file.path(args$outdir, "snps_alleles.txt"))
