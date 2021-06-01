@@ -35,7 +35,7 @@ params.min_core_gene_cov = 0.8
 params.min_core_genes = 0.8
 params.ignore_map = 0
 
-// Proess params
+// Process params
 map_file = file(params.map_file)
 indir = file(params.indir)
 outdir = file(params.outdir)
