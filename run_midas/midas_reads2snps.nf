@@ -1,5 +1,5 @@
 #!/usr/bin/env nextflow
-// Copyright (C) 2018-2021 Sur Herrera Paredes
+// Copyright (C) 2021 Sur Herrera Paredes
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,16 +15,15 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // Nextflow pipeline that submits sample fastq files to midas to obtain
-// snp profiles
+// species profiles and snps
 
 // Main parameters
-// params.samples = 'samples.txt'
 params.indir = 'samples/'
-params.specdir = "species/"
 params.outdir = 'midas/'
 params.db = 'midas_db'
-// params.sample_col = 1
 params.cpus = 4
+
+// SNPs params
 params.species_cov = 3.0
 params.mapid = 94.0
 params.mapq = 20
@@ -35,14 +34,10 @@ params.trim = 0
 params.discard = false
 params.baq = false
 params.adjust_mq = false
-// Steps argument needs to be implemented
 
 // Process params
-// samples = file(params.samples)
-midas_db = file(params.db)
-// sample_col = params.sample_col - 1
 indir = file(params.indir)
-specdir = file(params.specdir)
+midas_db = file(params.db)
 if( params.trim > 0 ) {
   trim = "--trim ${params.trim}"
 }
@@ -68,71 +63,94 @@ else {
   adjust_mq = ''
 }
 
-
-// // Read samples file
-// reader = samples.newReader()
-// SAMPLES = []
-// while(str = reader.readLine()){
-//   // Extract sample and run IDs
-//   sample = str.split("\t")[sample_col]
-//   SAMPLES = SAMPLES + [tuple(sample,
-//     file("${params.indir}/${sample}_read1.fastq.bz2"),
-//     file("${params.indir}/${sample}_read2.fastq.bz2"),
-//     file("${params.outdir}/${sample}/species/species_profile.txt"))]
-// }
-// Get read file
-READS = Channel
+// Use file pairs to create list of files
+Channel
   .fromFilePairs("$indir/*_{1,2}.fq.gz")
+  .into{READS1; READS2}
 
-// Get specfiles
-SPECPROFS = Channel.fromPath("$specdir/*/species/species_profile.txt")
-  .map{specfile -> tuple(specfile.getParent().getParent().name,
-    file(specfile))}
-
-// Call run_midas.py species on every sample
-process midas_snps{
-  label 'midas'
+process midas_species{
   tag "$sample"
-  publishDir params.outdir, mode: 'copy'
+  label "midas"
   cpus params.cpus
+  publishDir params.outdir, mode: 'rellink'
 
   input:
-  // set sample, f_file, r_file, spec_profile from SAMPLES
-  set sample, file(reads), file(spec_profile) from READS.join(SPECPROFS)
+  set sample, file(reads) from READS1
   file midas_db from midas_db
 
   output:
   set sample,
+    file("${sample}/species/log.txt"),
+    file("${sample}/species/readme.txt") into SPECLOGS
+  set sample, file("${sample}/species/species_profile.txt") into SPECPROFS
+
+  """
+  run_midas.py species ${sample} \
+    -1 ${reads[0]} \
+    -2 ${reads[1]} \
+    -t ${params.cpus} \
+    -d $midas_db
+  """
+}
+
+process midas_snps{
+  label 'midas'
+  tag "$sample"
+  publishDir params.outdir, mode: 'rellink'
+  cpus params.cpus
+
+  input:
+  tuple sample, file(reads), file(spec_profile) from READS2.join(SPECPROFS)
+  file midas_db from midas_db
+
+  output:
+  tuple sample,
     file("${sample}/snps/log.txt"),
-    file("${sample}/snps/readme.txt"),
     file("${sample}/snps/species.txt"),
-    file("${sample}/snps/summary.txt"),
-    file("${sample}/snps/output/*.snps.gz"),
-    file("${sample}/snps/temp/genomes*") into OUTPUTS
+    file("${sample}/snps/output/"),
+    file("${sample}/snps/temp/") into OUTPUTS
+  file "${sample}/snps/readme.txt" optional true
+  file "${sample}/snps/summary.txt" optional true
+
 
   """
   mkdir ${sample}
   mkdir ${sample}/species
   cp ${spec_profile} ${sample}/species/
-  run_midas.py snps ${sample} \
-    -1 ${reads[0]} \
-    -2 ${reads[1]} \
-    -t ${params.cpus} \
-    --species_cov ${params.species_cov} \
-    --mapid ${params.mapid} \
-    --mapq ${params.mapq} \
-    --baseq ${params.baseq} \
-    --readq ${params.readq} \
-    --aln_cov ${params.aln_cov} \
-    -m global \
-    -d $midas_db \
-    ${trim} \
-    ${discard} \
-    ${baq} \
-    ${adjust_mq}
+
+  # Need to check if fail is because there is no species or actual failure
+  { run_midas.py snps ${sample} \
+      -1 ${reads[0]} \
+      -2 ${reads[1]} \
+      -t ${params.cpus} \
+      --species_cov ${params.species_cov} \
+      --mapid ${params.mapid} \
+      --mapq ${params.mapq} \
+      --baseq ${params.baseq} \
+      --readq ${params.readq} \
+      --aln_cov ${params.aln_cov} \
+      -m global \
+      -d $midas_db \
+      ${trim} \
+      ${discard} \
+      ${baq} \
+      ${adjust_mq}; } || {
+      # If the previous command failed, check if there are species
+      if [ -f  $sample/snps/species.txt ]; then
+        nspecs=`wc -l $sample/snps/species.txt | awk '{print \$1}'`;
+        # If no species then finish correctly, if species give error
+        if [ \$nspecs -gt o ]; then
+          exit 2
+        else
+          exit 0
+        fi
+      else
+        exit 3
+      fi;
+    }
+
   """
 }
-
 
 /* Example nextflow.config
 process{
