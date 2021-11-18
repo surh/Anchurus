@@ -43,6 +43,8 @@ midas_db = file(params.db)
 //     file("${params.indir}/${sample}_read2.fastq.bz2"))]
 // }
 // Use file pairs to create list of files
+SAMPLESP = Channel.empty()
+SAMPLESU = Channel.emtpy()
 if(params.paired){
   println("paired=======")
   SAMPLESP = Channel
