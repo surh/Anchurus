@@ -48,7 +48,7 @@ if(params.paired){
   SAMPLESP = Channel
     .fromFilePairs("$indir/*_{1,2}.fq.gz")
 }else{
-  printl("unpaired===========")
+  println("unpaired===========")
   SAMPLESU = Channel
     .fromPath("$indir/*.fastq.gz")
     .map{ infile -> tuple(infile.name.replaceAll(/\.fastq\.gz/, ''),
