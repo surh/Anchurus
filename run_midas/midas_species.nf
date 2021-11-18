@@ -46,11 +46,9 @@ midas_db = file(params.db)
 SAMPLESP = Channel.empty()
 SAMPLESU = Channel.empty()
 if(params.paired){
-  println("paired=======")
   SAMPLESP = Channel
     .fromFilePairs("$indir/*_{1,2}.fq.gz")
 }else{
-  println("unpaired===========")
   SAMPLESU = Channel
     .fromPath("$indir/*.fastq.gz")
     .map{ infile -> tuple(infile.name.replaceAll(/\.fastq\.gz/, ''),
