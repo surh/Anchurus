@@ -44,7 +44,7 @@ midas_db = file(params.db)
 // }
 // Use file pairs to create list of files
 SAMPLESP = Channel.empty()
-SAMPLESU = Channel.emtpy()
+SAMPLESU = Channel.empty()
 if(params.paired){
   println("paired=======")
   SAMPLESP = Channel
