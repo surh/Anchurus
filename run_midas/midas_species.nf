@@ -72,7 +72,7 @@ process midas_species_paired{
     file("${sample}/species/species_profile.txt") into OUTPUTSP
 
   when:
-  params.flag
+  params.paired
 
   """
   run_midas.py species ${sample} \
@@ -100,7 +100,7 @@ process midas_species_unpaired{
     file("${sample}/species/species_profile.txt") into OUTPUTSU
 
   when:
-  !params.flag
+  !params.paired
 
   """
   run_midas.py species ${sample} \
