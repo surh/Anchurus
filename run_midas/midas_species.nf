@@ -44,10 +44,10 @@ midas_db = file(params.db)
 // }
 // Use file pairs to create list of files
 if(params.paired){
-  SAMPLES = Channel
+  SAMPLESP = Channel
     .fromFilePairs("$indir/*_{1,2}.fq.gz")
 }else{
-  SAMPLES = Channel
+  SAMPLESU = Channel
     .fromPath("$indir/*.fastq.gz")
     .map{ infile -> tuple(infile.name.replaceAll(/\.fastq\.gz/, ''),
       file(infile)) }
@@ -62,14 +62,14 @@ process midas_species_paired{
   publishDir params.outdir, mode: 'rellink'
 
   input:
-  set sample, file(reads) from SAMPLES
+  set sample, file(reads) from SAMPLESP
   file midas_db from midas_db
 
   output:
   set sample,
     file("${sample}/species/log.txt"),
     file("${sample}/species/readme.txt"),
-    file("${sample}/species/species_profile.txt") into OUTPUTS
+    file("${sample}/species/species_profile.txt") into OUTPUTSP
 
   when:
   params.flag
@@ -90,14 +90,14 @@ process midas_species_unpaired{
   publishDir params.outdir, mode: 'rellink'
 
   input:
-  set sample, file(reads) from SAMPLES
+  set sample, file(reads) from SAMPLESU
   file midas_db from midas_db
 
   output:
   set sample,
     file("${sample}/species/log.txt"),
     file("${sample}/species/readme.txt"),
-    file("${sample}/species/species_profile.txt") into OUTPUTS
+    file("${sample}/species/species_profile.txt") into OUTPUTSU
 
   when:
   !params.flag
