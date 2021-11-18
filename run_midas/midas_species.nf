@@ -24,6 +24,7 @@ params.outdir = 'midas/'
 params.db = 'midas_db'
 // params.sample_col = 1
 params.cpus = 8
+params.paired = false
 
 // Process params
 // samples = file(params.samples)
@@ -42,11 +43,19 @@ midas_db = file(params.db)
 //     file("${params.indir}/${sample}_read2.fastq.bz2"))]
 // }
 // Use file pairs to create list of files
-SAMPLES = Channel
-  .fromFilePairs("$indir/*_{1,2}.fq.gz")
+if(params.paired){
+  SAMPLES = Channel
+    .fromFilePairs("$indir/*_{1,2}.fq.gz")
+}else{
+  SAMPLES = Channel
+    .fromFile("$indir/*.fastq.gz")
+    .map{ infile -> tuple(infile.name.replaceAll(/\.fastq\.gz/, ''),
+      file(infile)) }
+}
+
 
 // Call run_midas.py species on every sample
-process midas_species{
+process midas_species_paired{
   tag "$sample"
   label "midas"
   cpus params.cpus
@@ -62,6 +71,9 @@ process midas_species{
     file("${sample}/species/readme.txt"),
     file("${sample}/species/species_profile.txt") into OUTPUTS
 
+  when:
+  params.flag
+
   """
   run_midas.py species ${sample} \
     -1 ${reads[0]} \
@@ -70,6 +82,35 @@ process midas_species{
     -d $midas_db
   """
 }
+
+process midas_species_unpaired{
+  tag "$sample"
+  label "midas"
+  cpus params.cpus
+  publishDir params.outdir, mode: 'rellink'
+
+  input:
+  set sample, file(reads) from SAMPLES
+  file midas_db from midas_db
+
+  output:
+  set sample,
+    file("${sample}/species/log.txt"),
+    file("${sample}/species/readme.txt"),
+    file("${sample}/species/species_profile.txt") into OUTPUTS
+
+  when:
+  !params.flag
+
+  """
+  run_midas.py species ${sample} \
+    -1 ${reads[0]} \
+    -t ${params.cpus} \
+    -d $midas_db
+  """
+}
+
+
 
 /* Example nextflow.config
 process{
