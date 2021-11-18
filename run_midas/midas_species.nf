@@ -48,7 +48,7 @@ if(params.paired){
     .fromFilePairs("$indir/*_{1,2}.fq.gz")
 }else{
   SAMPLES = Channel
-    .fromFile("$indir/*.fastq.gz")
+    .fromPath("$indir/*.fastq.gz")
     .map{ infile -> tuple(infile.name.replaceAll(/\.fastq\.gz/, ''),
       file(infile)) }
 }
