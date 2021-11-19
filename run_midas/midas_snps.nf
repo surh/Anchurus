@@ -35,6 +35,7 @@ params.trim = 0
 params.discard = false
 params.baq = false
 params.adjust_mq = false
+params.paired = false
 // Steps argument needs to be implemented
 
 // Process params
@@ -81,16 +82,25 @@ else {
 //     file("${params.outdir}/${sample}/species/species_profile.txt"))]
 // }
 // Get read file
-READS = Channel
-  .fromFilePairs("$indir/*_{1,2}.fq.gz")
+if(params.paired){
+  READSP = Channel
+    .fromFilePairs("$indir/*_{1,2}.fq.gz")
+}else{
+  READSU = Channel
+    .fromPath("$indir/*.fastq.gz")
+    .map{ infile -> tuple(infile.name.replaceAll(/\.fastq\.gz/, ''),
+      file(infile)) }
+}
+
 
 // Get specfiles
-SPECPROFS = Channel.fromPath("$specdir/*/species/species_profile.txt")
+Channel.fromPath("$specdir/*/species/species_profile.txt")
   .map{specfile -> tuple(specfile.getParent().getParent().name,
     file(specfile))}
+  .into{SPECPROFSP; SPECPROFSU}
 
 // Call run_midas.py species on every sample
-process midas_snps{
+process midas_snps_paired{
   label 'midas'
   tag "$sample"
   publishDir params.outdir, mode: 'copy'
@@ -98,7 +108,7 @@ process midas_snps{
 
   input:
   // set sample, f_file, r_file, spec_profile from SAMPLES
-  set sample, file(reads), file(spec_profile) from READS.join(SPECPROFS)
+  set sample, file(reads), file(spec_profile) from READSP.join(SPECPROFSP)
   file midas_db from midas_db
 
   output:
@@ -108,7 +118,10 @@ process midas_snps{
     file("${sample}/snps/species.txt"),
     file("${sample}/snps/summary.txt"),
     file("${sample}/snps/output/*.snps.gz"),
-    file("${sample}/snps/temp/genomes*") into OUTPUTS
+    file("${sample}/snps/temp/genomes*") into OUTPUTSP
+
+  when:
+  params.paired
 
   """
   mkdir ${sample}
@@ -117,6 +130,51 @@ process midas_snps{
   run_midas.py snps ${sample} \
     -1 ${reads[0]} \
     -2 ${reads[1]} \
+    -t ${params.cpus} \
+    --species_cov ${params.species_cov} \
+    --mapid ${params.mapid} \
+    --mapq ${params.mapq} \
+    --baseq ${params.baseq} \
+    --readq ${params.readq} \
+    --aln_cov ${params.aln_cov} \
+    -m global \
+    -d $midas_db \
+    ${trim} \
+    ${discard} \
+    ${baq} \
+    ${adjust_mq}
+  """
+}
+
+process midas_snps_unpaired{
+  label 'midas'
+  tag "$sample"
+  publishDir params.outdir, mode: 'copy'
+  cpus params.cpus
+
+  input:
+  // set sample, f_file, r_file, spec_profile from SAMPLES
+  set sample, file(reads), file(spec_profile) from READSU.join(SPECPROFSU)
+  file midas_db from midas_db
+
+  output:
+  set sample,
+    file("${sample}/snps/log.txt"),
+    file("${sample}/snps/readme.txt"),
+    file("${sample}/snps/species.txt"),
+    file("${sample}/snps/summary.txt"),
+    file("${sample}/snps/output/*.snps.gz"),
+    file("${sample}/snps/temp/genomes*") into OUTPUTSU
+
+  when:
+  !params.paired
+
+  """
+  mkdir ${sample}
+  mkdir ${sample}/species
+  cp ${spec_profile} ${sample}/species/
+  run_midas.py snps ${sample} \
+    -1 ${reads[0]} \
     -t ${params.cpus} \
     --species_cov ${params.species_cov} \
     --mapid ${params.mapid} \
