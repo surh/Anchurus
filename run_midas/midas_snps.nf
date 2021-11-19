@@ -82,6 +82,8 @@ else {
 //     file("${params.outdir}/${sample}/species/species_profile.txt"))]
 // }
 // Get read file
+READSP = Channel.empty()
+READSU = Channel.empty()
 if(params.paired){
   READSP = Channel
     .fromFilePairs("$indir/*_{1,2}.fq.gz")
