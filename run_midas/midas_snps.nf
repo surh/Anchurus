@@ -105,7 +105,7 @@ Channel.fromPath("$specdir/*/species/species_profile.txt")
 process midas_snps_paired{
   label 'midas'
   tag "$sample"
-  publishDir params.outdir, mode: 'copy'
+  publishDir params.outdir, mode: 'rellink'
   cpus params.cpus
 
   input:
@@ -151,7 +151,7 @@ process midas_snps_paired{
 process midas_snps_unpaired{
   label 'midas'
   tag "$sample"
-  publishDir params.outdir, mode: 'copy'
+  publishDir params.outdir, mode: 'rellink'
   cpus params.cpus
 
   input:
