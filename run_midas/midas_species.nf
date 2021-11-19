@@ -105,6 +105,7 @@ process midas_species_unpaired{
   !params.paired
 
   """
+  conda activate python-midas
   run_midas.py species ${sample} \
     -1 ${reads[0]} \
     -t ${params.cpus} \
