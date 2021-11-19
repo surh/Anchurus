@@ -172,6 +172,7 @@ process midas_snps_unpaired{
   !params.paired
 
   """
+  conda activate python-midas
   mkdir ${sample}
   mkdir ${sample}/species
   cp ${spec_profile} ${sample}/species/
